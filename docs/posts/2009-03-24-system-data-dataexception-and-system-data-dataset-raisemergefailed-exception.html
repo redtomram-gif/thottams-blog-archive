@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System.Data.DataException and System.Data.DataSet.RaiseMergeFailed exception</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>System.Data.DataException and System.Data.DataSet.RaiseMergeFailed exception</h1>
+<p class="meta">
+  <time>2009-03-24</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/system-data-dataexception-and-system-data-dataset-raisemergefailed-exception">original post</a>
+  <a class="repo" href="https://github.com/redtomram-gif/blog-dataset-merge-constraint-failure">code sample &rarr;</a>
+</p>
+<p>This was another interesting issue I encountered recently. The error presented itself as an event log entry from our logging as below:</p>
+<p>Unhandled Exception: System.Data.DataException: <target>.Column2 and <source>.Column2 have conflicting properties: DataType property mismatch.</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">   at System.Data.DataSet.RaiseMergeFailed(DataTable table, String conflict, MissingSchemaAction missingSchemaAction)
+   at System.Data.Merger.MergeSchema(DataTable table)
+   at System.Data.Merger.MergeTableData(DataTable src)
+   at System.Data.Merger.MergeDataSet(DataSet source)
+   at System.Data.DataSet.Merge(DataSet dataSet, Boolean preserveChanges, MissingSchemaAction missingSchemaAction)
+   at System.Data.DataSet.Merge(DataSet dataSet)
+   at ConsoleApplication1.Program.TryMerge(DataSet original)
+   at ConsoleApplication1.Program.DemonstrateMerge()
+   at ConsoleApplication1.Program.Main(String[] args)</code></pre>
+</figure>
+<p>If you look deeper in to the exception it tells you the column that Merge is complaining about. You get into this problem if the data type of the columns that you are merging are different. Now, you might wonder how you could run into an issue like this.</p>
+<p>The scenario in which I ran into this issue was interesting. If one of your stored procedures returns a nvarchar in one case and returns a null in another, you will run into this error. One the merge when C# tries to merge the nvarchar and null it does not know the type of null and fails with a DataException. Another interesting observation is that the same error does not happen when you return a variable of a defined type and assign null to it.</p>
+<p>Hope it is useful to others who have run into a similar stack and are trying to debug it.</p>
+<p>I have tweaked a sample from MSDN to expose the same stack.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Collections.Generic;
+<span class="hljs-keyword">using</span> System.Linq;
+<span class="hljs-keyword">using</span> System.Text;
+<span class="hljs-keyword">using</span> System.Data;
+<span class="hljs-keyword">namespace</span> <span class="hljs-title">ConsoleApplication1</span>
+{
+    <span class="hljs-keyword">class</span> <span class="hljs-title">Program</span>
+    {
+        <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>(<span class="hljs-params"><span class="hljs-built_in">string</span>[] <span class="hljs-keyword">args</span></span>)</span>
+        {
+            Program p = <span class="hljs-keyword">new</span> Program();
+            p.DemonstrateMerge();
+        }
+        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">DemonstrateMerge</span>()</span>
+        {
+            DataSet dataSet = <span class="hljs-keyword">new</span> DataSet(<span class="hljs-string">&quot;dataSet&quot;</span>);
+            DataTable table = <span class="hljs-keyword">new</span> DataTable(<span class="hljs-string">&quot;Table1&quot;</span>);
+            DataColumn idColumn = <span class="hljs-keyword">new</span> DataColumn(<span class="hljs-string">&quot;Column1&quot;</span>, Type.GetType(<span class="hljs-string">&quot;System.Int32&quot;</span>));
+            idColumn.AutoIncrement = <span class="hljs-literal">true</span>;
+            DataColumn itemColumn = <span class="hljs-keyword">new</span> DataColumn(<span class="hljs-string">&quot;Column2&quot;</span>, Type.GetType(<span class="hljs-string">&quot;System.Int32&quot;</span>));
+            itemColumn.Unique = <span class="hljs-literal">true</span>;
+            DataColumn[] keyColumn = <span class="hljs-keyword">new</span> DataColumn[<span class="hljs-number">1</span>];
+            DataRow row;
+            table.Columns.Add(idColumn);
+            table.Columns.Add(itemColumn);
+            dataSet.Tables.Add(table);
+            keyColumn[<span class="hljs-number">0</span>] = idColumn;
+            table.PrimaryKey = keyColumn;
+            <span class="hljs-keyword">for</span> (<span class="hljs-built_in">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">3</span>; i++)
+            {
+                row = table.NewRow();
+                row[<span class="hljs-string">&quot;Column2&quot;</span>] = i+<span class="hljs-number">100</span>;
+                table.Rows.Add(row);
+            }
+            dataSet.AcceptChanges();
+            PrintValues(dataSet, <span class="hljs-string">&quot;Original values&quot;</span>);
+            dataSet.EnforceConstraints = <span class="hljs-literal">true</span>;
+            TryMerge(dataSet);
+        }
+        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">TryMerge</span>(<span class="hljs-params">DataSet original</span>)</span>
+        {
+            DataSet dataSet = <span class="hljs-keyword">new</span> DataSet(<span class="hljs-string">&quot;dataSet&quot;</span>);
+            DataTable table = <span class="hljs-keyword">new</span> DataTable(<span class="hljs-string">&quot;Table1&quot;</span>);
+            DataColumn idColumn = <span class="hljs-keyword">new</span> DataColumn(<span class="hljs-string">&quot;Column1&quot;</span>, Type.GetType(<span class="hljs-string">&quot;System.Int32&quot;</span>));
+            idColumn.AutoIncrement = <span class="hljs-literal">true</span>;
+            DataColumn itemColumn = <span class="hljs-keyword">new</span> DataColumn(<span class="hljs-string">&quot;Column2&quot;</span>, Type.GetType(<span class="hljs-string">&quot;System.Int64&quot;</span>));
+            itemColumn.Unique = <span class="hljs-literal">false</span>;
+            DataColumn[] keyColumn = <span class="hljs-keyword">new</span> DataColumn[<span class="hljs-number">1</span>];
+            DataRow row;
+            table.Columns.Add(idColumn);
+            table.Columns.Add(itemColumn);
+            dataSet.Tables.Add(table);
+            keyColumn[<span class="hljs-number">0</span>] = idColumn;
+            table.PrimaryKey = keyColumn;
+            <span class="hljs-keyword">for</span> (<span class="hljs-built_in">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">3</span>; i++)
+            {
+                row = table.NewRow();
+                row[<span class="hljs-string">&quot;Column2&quot;</span>] = <span class="hljs-number">100</span>;
+                table.Rows.Add(row);
+            }
+            dataSet.AcceptChanges();
+            original.Merge(dataSet);
+            PrintValues(original, <span class="hljs-string">&quot;Merged values&quot;</span>);
+        }
+        <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">PrintValues</span>(<span class="hljs-params">DataSet dataSet, <span class="hljs-built_in">string</span> label</span>)</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;\n&quot;</span> + label);
+            <span class="hljs-keyword">foreach</span> (DataTable table <span class="hljs-keyword">in</span> dataSet.Tables)
+            {
+                Console.WriteLine(<span class="hljs-string">&quot;TableName: &quot;</span> + table.TableName);
+                <span class="hljs-keyword">foreach</span> (DataRow row <span class="hljs-keyword">in</span> table.Rows)
+                {
+                    <span class="hljs-keyword">foreach</span> (DataColumn column <span class="hljs-keyword">in</span> table.Columns)
+                    {
+                        Console.Write(<span class="hljs-string">&quot;\t table &quot;</span> + row[column]);
+                    }
+                    Console.WriteLine();
+                }
+            }
+        }
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><strong>Anonymous</strong><br>March 24, 2009<br>PingBack from <a href="http://www.anith.com/?p=22312">http://www.anith.com/?p=22312</a></li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

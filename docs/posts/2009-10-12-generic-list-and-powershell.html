@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generic list and powershell</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Generic list and powershell</h1>
+<p class="meta">
+  <time>2009-10-12</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/generic-list-and-powershell">original post</a>
+  
+</p>
+<p>I met with an accident recently riding my motorcycle and hence was unable to blog for some time. Here is my post after a brief break.</p>
+<p>I wanted to create a generic list of my class in power shell. It was an interesting experience. Here is what I found.</p>
+<p>When I tried to create a generic list of say type int it was straight forward ... well sort of ... the syntax was awkward, but still worked.</p>
+<figure class="code">
+<figcaption>PowerShell</figcaption>
+<pre><code class="hljs"><span class="hljs-variable">$list</span> = <span class="hljs-built_in">New-Object</span> <span class="hljs-string">&quot;System.Collections.Generic.List``1[System.Int32]&quot;</span>
+<span class="hljs-variable">$list</span>.Add(<span class="hljs-number">3</span>)
+<span class="hljs-variable">$list</span></code></pre>
+</figure>
+<p>I wrote a sample assembly as below:</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Sample</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Sample</span>()</span> {}
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">SampleMethod</span>()</span> { Console.WriteLine(<span class="hljs-string">&quot;Hello&quot;</span>);}
+
+}</code></pre>
+</figure>
+<p>Compiled this to sample.dll as csc /target:library sample.cs</p>
+<p><code>[Reflection.Assembly]::LoadFrom(&quot;c:\Sample\Sample.dll&quot;)</code></p>
+<p>Make sure if the assembly is loaded</p>
+<p><code>[System.AppDomain]::CurrentDomain.GetAssemblies()</code></p>
+<p>Now add the class Sample to the list. It gave me the error below.</p>
+<p><code>$list = New-Object &quot;System.Collections.Generic.List``1[Sample]&quot;</code></p>
+<p>New-Object : Cannot find type [System.Collections.Generic.List`1[Test]]: make sure the assembly containing this type is loaded.</p>
+<p>At line:1 char:19 + $list = New-Object &lt;&lt;&lt;&lt; &quot;System.Collections.Generic.List``1[Test]&quot;</p>
+<p>I am not sure why this is not working as the syntax is very similar to the one I had above for Int32. After some search and experimenting I figured out another way to get the generic list working.</p>
+<figure class="code">
+<figcaption>PowerShell</figcaption>
+<pre><code class="hljs"><span class="hljs-variable">$si</span> = <span class="hljs-built_in">new-object</span> Sample
+<span class="hljs-variable">$st</span> = [<span class="hljs-type">Type</span>] <span class="hljs-variable">$si</span>.GetType()
+<span class="hljs-variable">$base</span> = [<span class="hljs-type">System.Collections.Generic.List</span>``<span class="hljs-number">1</span>]
+<span class="hljs-variable">$qt</span> = <span class="hljs-variable">$base</span>.MakeGenericType(<span class="hljs-selector-tag">@</span>(<span class="hljs-variable">$st</span>))
+<span class="hljs-variable">$so</span> = [<span class="hljs-type">Activator</span>]::CreateInstance(<span class="hljs-variable">$qt</span>)
+<span class="hljs-variable">$so</span>.Add(<span class="hljs-variable">$si</span>)</code></pre>
+</figure>
+<p>write-host $so</p>
+<p>Sample</p>
+<p><code>$so[0].SampleMethod()</code></p>
+<p>Hello</p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>October 14, 2009<br>Man, hope you&#39;re OK. I am also riding a bike and other people simply don&#39;t see us on the road. Nice post, will bookmark it for future reference.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 10, 2013<br>Very good post, simple and effective !!</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

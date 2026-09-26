@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NTSD and SOS: StopOnException</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>NTSD and SOS: StopOnException</h1>
+<p class="meta">
+  <time>2009-01-15</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/ntsd-and-sos-stoponexception">original post</a>
+  <a class="repo" href="https://github.com/redtomram-gif/blog-ntsd-stoponexception-sample">code sample &rarr;</a>
+</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">using System;
+class Program
+{
+    static void Main(string[] args)
+    {
+        Program p = new Program();
+        p.ExceptionSample();
+    }
+    private void ExceptionSample()
+    {
+        int i=0;
+        while (i &lt; 100)
+        {
+            if (i == 60)
+            {
+                try
+                {
+                    throw new ArgumentException();
+                }
+                catch (Exception)
+                {
+                }
+            }
+            else
+            {
+                try
+                {
+                    throw new OutOfMemoryException();
+                }
+                catch (Exception)
+                {
+                }
+            }
+            i++;
+        }
+    }
+}
+
+!StopOnException comes in handy when you want if you want to break when a specific exception occurs.</code></pre>
+</figure>
+<p>csc /debug Program.cs</p>
+<p>ntsd program.exe</p>
+<p><code>.sympath+ .</code></p>
+<p>sxe ld mscorwks</p>
+<p>g</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">.loadby sos msorwks
+!StopOnException -Create System.ArgumentException 1</code></pre>
+</figure>
+<p>g</p>
+<p><code>!ClrStack -a</code></p>
+<p>OS Thread Id: 0x103c (0)</p>
+<p>Child-SP RetAddr Call Site</p>
+<p>000000000019ee50 000007ff00180182 Program.ExceptionSample()</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">    PARAMETERS:
+        this = 0x0000000002603358
+    LOCALS:
+        0x000000000019ee78 = 0x000000000000003c
+        0x000000000019ee7c = 0x0000000000000000
+000000000019eec0 000007fefa3f2672 Program.Main(System.String[])
+    PARAMETERS:
+        args = 0x0000000002603338
+    LOCALS:
+        0x000000000019eee0 = 0x0000000002603358
+!pe</code></pre>
+</figure>
+<p>Exception object: 00000000026087d0</p>
+<p>Exception type: System.ArgumentException</p>
+<p>Message: Value does not fall within the expected range.</p>
+<p>InnerException: <none></p>
+<p><code>StackTrace (generated):</code></p>
+<none><p>StackTraceString: <none></p>
+<p>HResult: 80070057</p>
+<p>This will stop when the exception occurs. You can print the details of the exception using pe and look into locals using the clrstack -a. This comes in handy if you want to debug some problem and want to break when the exception occurs.</p>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

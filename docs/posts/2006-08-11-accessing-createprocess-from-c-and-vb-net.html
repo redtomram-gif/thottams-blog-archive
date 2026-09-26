@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accessing CreateProcess from C# and VB.NET</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Accessing CreateProcess from C# and VB.NET</h1>
+<p class="meta">
+  <time>2006-08-11</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/accessing-createprocess-from-c-and-vb-net">original post</a>
+  
+</p>
+<p>I came across this issue recently. I was trying to access CreateProcess using DLLImport from managed code using C# and VB.Net. Here is my code from C#:</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Diagnostics;
+<span class="hljs-keyword">using</span> System.Runtime.InteropServices;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">struct</span> PROCESS_INFORMATION
+{
+    <span class="hljs-keyword">public</span> IntPtr hProcess;
+    <span class="hljs-keyword">public</span> IntPtr hThread;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">uint</span> dwProcessId;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">uint</span> dwThreadId;
+}
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">struct</span> STARTUPINFO
+{
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">uint</span> cb;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">string</span> lpReserved;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">string</span> lpDesktop;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">string</span> lpTitle;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">uint</span> dwX;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">uint</span> dwY;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">uint</span> dwXSize;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">uint</span> dwYSize;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">uint</span> dwXCountChars;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">uint</span> dwYCountChars;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">uint</span> dwFillAttribute;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">uint</span> dwFlags;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">short</span> wShowWindow;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">short</span> cbReserved2;
+    <span class="hljs-keyword">public</span> IntPtr lpReserved2;
+    <span class="hljs-keyword">public</span> IntPtr hStdInput;
+    <span class="hljs-keyword">public</span> IntPtr hStdOutput;
+    <span class="hljs-keyword">public</span> IntPtr hStdError;
+}
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">struct</span> SECURITY_ATTRIBUTES
+{
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">int</span> length;
+    <span class="hljs-keyword">public</span> IntPtr lpSecurityDescriptor;
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">bool</span> bInheritHandle;
+}
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Program</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        STARTUPINFO si = <span class="hljs-keyword">new</span> STARTUPINFO();
+        PROCESS_INFORMATION pi = <span class="hljs-keyword">new</span> PROCESS_INFORMATION();
+        CreateProcess(<span class="hljs-string">&quot;C:\\WINDOWS\\SYSTEM32\\Calc.exe&quot;</span>, <span class="hljs-literal">null</span>, IntPtr.Zero, IntPtr.Zero, <span class="hljs-literal">false</span>, <span class="hljs-number">0</span>, IntPtr.Zero, <span class="hljs-literal">null</span>, <span class="hljs-keyword">ref</span> si, <span class="hljs-keyword">out</span> pi);
+        Console.ReadLine();
+    }
+    [<span class="hljs-meta">DllImport(<span class="hljs-string">&quot;kernel32.dll&quot;</span>)</span>]
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">extern</span> <span class="hljs-built_in">bool</span> <span class="hljs-title">CreateProcess</span>(<span class="hljs-params"><span class="hljs-built_in">string</span> lpApplicationName, <span class="hljs-built_in">string</span> lpCommandLine, IntPtr lpProcessAttributes, IntPtr lpThreadAttributes,
+        <span class="hljs-built_in">bool</span> bInheritHandles, <span class="hljs-built_in">uint</span> dwCreationFlags, IntPtr lpEnvironment,
+        <span class="hljs-built_in">string</span> lpCurrentDirectory, <span class="hljs-keyword">ref</span> STARTUPINFO lpStartupInfo,<span class="hljs-keyword">out</span> PROCESS_INFORMATION lpProcessInformation</span>)</span>;
+}</code></pre>
+</figure>
+<p>This works like a charm. I initially had problems with this VB code. I looked at the IL code for both and figured out that I had constructed structures in C# for Process_Information, Security_Attricutes etc, but had marked them as classes in VB. This was mking the call to fail. I figured this out after looking into the IL from VB and C# to see what was different between the two. I changed the VB to struct and it works like a charm in VB too. Check the VB code below!</p>
+<figure class="code">
+<figcaption>VB.NET</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">Imports</span> System.Runtime.InteropServices
+<span class="hljs-keyword">Imports</span> System.Security.Permissions
+<span class="hljs-keyword">Imports</span> System.Reflection
+<span class="hljs-keyword">Module</span> Module1
+<span class="hljs-keyword">Sub</span> Main()
+StartupNotepad()
+Console.ReadLine()
+<span class="hljs-keyword">End</span> <span class="hljs-keyword">Sub</span>
+<span class="hljs-keyword">Sub</span> StartupNotepad()
+<span class="hljs-keyword">Dim</span> retValue <span class="hljs-keyword">As</span> <span class="hljs-type">Boolean</span>
+<span class="hljs-keyword">Dim</span> pInfo <span class="hljs-keyword">As</span> PROCESS_INFORMATION = <span class="hljs-built_in">New</span> PROCESS_INFORMATION()
+<span class="hljs-keyword">Dim</span> sInfo <span class="hljs-keyword">As</span> STARTUPINFO = <span class="hljs-built_in">New</span> STARTUPINFO()
+retValue = CreateProcess(<span class="hljs-string">&quot;c:\\windows\\system32\\NotePad.exe&quot;</span>, <span class="hljs-literal">Nothing</span>, IntPtr.Zero, IntPtr.Zero, <span class="hljs-literal">False</span>, <span class="hljs-number">0</span>, IntPtr.Zero, <span class="hljs-literal">Nothing</span>, sInfo, pInfo)
+<span class="hljs-keyword">End</span> <span class="hljs-keyword">Sub</span></code></pre>
+</figure>
+<p>&lt;StructLayout(LayoutKind.Sequential)&gt; _</p>
+<p>Public Structure PROCESS_INFORMATION</p>
+<p>Public hProcess As IntPtr</p>
+<p>Public hThread As IntPtr</p>
+<p>Public dwProcessID As UInteger</p>
+<p>Public dwThreadID As UInteger</p>
+<p><code>End Structure &#39;PROCESS_INFORMATION</code></p>
+<p>&lt;StructLayout(LayoutKind.Sequential)&gt; _</p>
+<p>Public Structure SECURITY_ATTRIBUTES</p>
+<p>Public nLength As Integer</p>
+<p>Public lpSecurityDescriptor As IntPtr</p>
+<p>Public bInheritHandle As Boolean</p>
+<p><code>End Structure &#39;SECURITY_ATTRIBUTES</code></p>
+<p>&lt;StructLayout(LayoutKind.Sequential)&gt; _</p>
+<p>Public Structure STARTUPINFO</p>
+<p>Public cb As UInteger</p>
+<p>Public lpReserved As String</p>
+<p>Public lpDesktop As String</p>
+<p>Public lpTitle As String</p>
+<p>Public dwX As UInteger</p>
+<p>Public dwY As UInteger</p>
+<p>Public dwXSize As UInteger</p>
+<p>Public dwYSize As UInteger</p>
+<p>Public dwXCountChars As UInteger</p>
+<p>Public dwYCountChars As UInteger</p>
+<p>Public dwFillAttribute As UInteger</p>
+<p>Public dwFlags As UInteger</p>
+<p>Public wShowWindow As Short</p>
+<p>Public cbReserved2 As Short</p>
+<p>Public lpReserved2 As IntPtr</p>
+<p>Public hStdInput As IntPtr</p>
+<p>Public hStdOutput As IntPtr</p>
+<p>Public hStdError As IntPtr</p>
+<p><code>End Structure &#39;STARTINFO</code></p>
+<p>&lt;DllImport(&quot;kernel32.dll&quot;)&gt; _</p>
+<p><code>Function CreateProcess( _</code></p>
+<p>ByVal lpApplicationName As String, _</p>
+<p>ByVal lpCommandLine As String, _</p>
+<p>ByVal lpProcessAttributes As IntPtr, _</p>
+<p>ByVal lpThreadAttributes As IntPtr, _</p>
+<p>ByVal bInheritHandles As Boolean, _</p>
+<p>ByVal dwCreationFlags As UInteger, _</p>
+<p>ByVal lpEnvironment As IntPtr, _</p>
+<p>ByVal lpCurrentDirectory As String, _</p>
+<p>ByRef lpStartupInfo As STARTUPINFO, _</p>
+<p>ByRef lpProcessInformation As PROCESS_INFORMATION) As Boolean</p>
+<figure class="code">
+<figcaption>VB.NET</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">End</span> <span class="hljs-keyword">Function</span>
+<span class="hljs-keyword">End</span> <span class="hljs-keyword">Module</span></code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>August 12, 2006<br>a. Any reason why the Process class is not enough?<br>b. are you aware of <a href="http://www.pinvoke.net/default.aspx/coredll/CreateProcess.html">http://www.pinvoke.net/default.aspx/coredll/CreateProcess.html</a>  </p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 13, 2006<br>Could you explain a little bit more about why structs are compiled as classes and what are the implications of that? What about that attribute??  </p>
+<p>Thanks  </p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 14, 2006<br>Using porocess is another alternative. I am aware of pinvoke.net. The sample for CreateProcess from there did not work for me.  </p>
+<p>It was my mistake on the wording. I had authored the struct as classes in VB and hence the problem. I changed them to structs and it worked fine.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 14, 2006<br>Did you update the sample (and anything else you found to be incorrect) for the pinvoke entry?  :)</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 14, 2006<br>The sample represented PROCESS_INFORMATION and SECURITY_ATTRIBUTES and STARTUPINFO as classes in VB. This made the call to fail. I changed them to struct in VB and I could get notepad up and running from the VB code! The working sample is the code above.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 16, 2006<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 16, 2006<br>I totally agree with you and would think that to be a better decision.  </p>
+<p>There were a few questions on the web relating to this not working and I just wanted to aaddress that. Regardig using this over existing Process class, I agree with you that it will be a better choice.  </p>
+<p>Question to users:<br>If you are using it, can you explain the scenario that force you to using this?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 22, 2006<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>December 07, 2006<br>Here&#39;s one reason why one would prefer to use CreateProcess this way as opposed to the managed code of System.Diagnostics.Process is that the Process class quite simply does not exist in the .NET Compact Framework 1.0 So while Microst assumes that the minute hey shipped the newer version of the compact framework all older devices stopped existing, a few unlucy souls such as myself still have to develop for devices running the CF 1.0 I am very grateful to have stmbled across this article for that very reason.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>January 30, 2007<br>Sorry to be a month late on this&gt;  you also have to pInvoke to create a process if you are trying to run the process in a different user context (some WTS applications).</p>
+</li>
+<li><p><strong>Anonymous</strong><br>February 07, 2007<br>These are some good scenarios for this. Can&#39;t you use System.Diagnostics.Process to create a process after you impersonate an user? I have not tried it, but would be interesting to know.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 06, 2007<br>Great article!!! Thanks for help :) Vlada, <a href="mailto:jelovac.vladimir@cont.co.yu">jelovac.vladimir@cont.co.yu</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 02, 2007<br>Another reason would be that you cannot create a process in suspended mode with the .NET Process class.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 24, 2007<br>Beauty lies in utility &amp; simplicity. Thank you!</p>
+</li>
+<li><p><strong>Anonymous</strong><br>September 22, 2008<br>One reason to use this instead of Process.Start is that Process.Start has a upper limit of maximum 2048 characters passed as parameter to the process. This method has a maximum of 32000-something</p>
+</li>
+<li><p><strong>Anonymous</strong><br>November 24, 2008<br>thanks very useful in creating a new Process group with C#, i think System.Diagnostics.Process lacks this</p>
+</li>
+<li><p><strong>Anonymous</strong><br>December 11, 2008<br>Thank you, that was very very useful. Tell me, how do you find the Window&#39;s handle ? (HWND) from createprocess ?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 30, 2009<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 11, 2009<br>I tried this code, it works on Win xp and does not on citrix. I use createprocess to call AcroRd32.exe with switches (args) to print. AcroRd32.exe /h /t &quot;mypdf&quot; &quot;myprinter&quot; Any ideas why this does not work on citrix? How can i debug this code.? Appreciate any input. Thanks.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 18, 2013<br>That worked fine but how could we spawn this process in C#.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 18, 2013<br>Problem found in spawning the ftp process. Kindly help out !!</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

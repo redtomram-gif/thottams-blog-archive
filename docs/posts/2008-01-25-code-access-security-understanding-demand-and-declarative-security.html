@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code Access Security - Understanding Demand and Declarative Security</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Code Access Security - Understanding Demand and Declarative Security</h1>
+<p class="meta">
+  <time>2008-01-25</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/code-access-security-understanding-demand-and-declarative-security">original post</a>
+  
+</p>
+<p>I wanted to talk about Code Access Security this time. Code Access Security is a big in itself. In this post I wanted to talk about Declarative Security. Declarative security uses attributes to place security information on assemblies, classes and methods.</p>
+<p>In the sample below I have defined a method “MethodDemandingFileIOPermission” which demands “FileIOPermission” declaratively. In Main I deny FileIOPermission to begin with and try calling this method. The call to this method should fail as we have denied this permission. The first output from the code proves this.</p>
+<p>Deny FileIOPermission</p>
+<p>Unable to access MethodDemandingFileIOPermission after Deny</p>
+<p>Now, I call into another method which asserts FileIOPermission and calls the same method. This time call should succeed as a Demand stops walking the stack wen it encounters an Assert. So, in this case the Deny from Main has no effect on the call and it succeeds. The output is shown as below</p>
+<p>Assert FileIOPermission from another method</p>
+<p>Calling method MethodDemandingFileIOPermission succeeded</p>
+<p>Next, we revert the assert in the method where we asserted to make sure that the call indeed succeeded because of the assert. We make the same call again and as expected it fails this time. The output from the code is shown below.</p>
+<p>RevertAssert in AssertAndCall and call again</p>
+<p>Unable to access MethodDemandingFileIOPermission Assert reverted in AssertAndCall</p>
+<p>We Assert one more time and make the call to ensure the call succeeds this time. The output is as below.</p>
+<p>Assert FileIOPermission one more time from another method</p>
+<p>Calling method MethodDemandingFileIOPermission succeeded</p>
+<p>When the call returns to Main the Assert is reverted. The Deny takes effect and so a subsequent call to the method from Main fails. The output from the code shows the following result.</p>
+<p>Assert permission reverted when returned to Main()</p>
+<p>Unable to access MethodDemandingFileIOPermission Assert reverted on return</p>
+<p>We now Assert declaratively and make the call and the call succeeds this time also. On return the Assert is reverted and the call fails as expected.</p>
+<p>Assert FileIOPermission Declaratively</p>
+<p>Calling method MethodDemandingFileIOPermission succeeded</p>
+<p>Assert permission reverted when returned to Main()</p>
+<p>Unable to access MethodDemandingFileIOPermission Assert reverted on return</p>
+<p>We now revert the Deny from Main and make the call to make sure that it was the Deny that was failing the call. As expected the call succeeds as soon as the Deny is reverted.</p>
+<p>RevertDeny from Main()</p>
+<p>Calling method MethodDemandingFileIOPermission succeeded</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">using</span> System.Security.Permissions;
+<span class="hljs-keyword">using</span> System.Security;
+<span class="hljs-keyword">using</span> System.IO;
+<span class="hljs-keyword">class</span> <span class="hljs-title">Sample</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        FileIOPermission fileIOPerm = <span class="hljs-keyword">new</span> FileIOPermission(PermissionState.Unrestricted);
+        fileIOPerm.Deny();
+
+        Console.WriteLine(<span class="hljs-string">&quot;Deny FileIOPermission&quot;</span>);
+        <span class="hljs-keyword">try</span>
+        {
+            Sample.MethodDemandingFileIOPermission();
+        }
+        <span class="hljs-keyword">catch</span>(Exception e)
+        {
+            Console.WriteLine(<span class="hljs-string">&quot; Unable to access MethodDemandingFileIOPermission after Deny&quot;</span>);
+        }
+        Sample.AssertAndCall(fileIOPerm);
+        Console.WriteLine(<span class="hljs-string">&quot;Assert permission reverted when returned to Main()&quot;</span>);
+        <span class="hljs-keyword">try</span>
+        {
+            Sample.MethodDemandingFileIOPermission();
+        }
+        <span class="hljs-keyword">catch</span> (Exception e)
+        {
+            Console.WriteLine(<span class="hljs-string">&quot; Unable to access MethodDemandingFileIOPermission Assert reverted on return&quot;</span>);
+        }
+        CodeAccessPermission.RevertDeny();
+        Console.WriteLine(<span class="hljs-string">&quot;RevertDeny from Main()&quot;</span>);
+        <span class="hljs-keyword">try</span>
+        {
+            Sample.MethodDemandingFileIOPermission();
+        }
+        <span class="hljs-keyword">catch</span> (Exception e)
+        {
+            Console.WriteLine(<span class="hljs-string">&quot; Unable to access MethodDemandingFileIOPermission Assert reverted on return&quot;</span>);
+        }
+        Sample.AssertDeclarativelyAndCall();
+    }
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">AssertAndCall</span>(<span class="hljs-params">FileIOPermission fileIOPerm</span>)</span>
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;Assert FileIOPermission from another method&quot;</span>);
+        fileIOPerm.Assert();
+        Sample.MethodDemandingFileIOPermission();
+        CodeAccessPermission.RevertAssert();
+        Console.WriteLine(<span class="hljs-string">&quot;RevertAssert in AssertAndCall and call again&quot;</span>);
+
+        <span class="hljs-keyword">try</span>
+        {
+            Sample.MethodDemandingFileIOPermission();
+        }
+        <span class="hljs-keyword">catch</span> (Exception e)
+        {
+            Console.WriteLine(<span class="hljs-string">&quot; Unable to access MethodDemandingFileIOPermission Assert reverted in AssertAndCall&quot;</span>);
+        }
+        Console.WriteLine(<span class="hljs-string">&quot;Assert FileIOPermission one more time from another method&quot;</span>);
+        fileIOPerm.Assert();
+        Sample.MethodDemandingFileIOPermission();
+    }
+
+    [<span class="hljs-meta">FileIOPermissionAttribute(SecurityAction.Assert, Unrestricted = true)</span>]
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">AssertDeclarativelyAndCall</span>()</span>
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;Assert FileIOPermission Declaratively&quot;</span>);
+        Sample.MethodDemandingFileIOPermission();
+    }
+    [<span class="hljs-meta">FileIOPermissionAttribute(SecurityAction.Demand, Unrestricted = true)</span>]
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">MethodDemandingFileIOPermission</span>()</span>
+    {
+        Console.WriteLine(<span class="hljs-string">&quot; Calling method MethodDemandingFileIOPermission succeeded&quot;</span>);
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><strong>Anonymous</strong><br>January 24, 2008<br>PingBack from <a href="http://msdnrss.thecoderblogs.com/2008/01/25/code-access-security-understanding-demand-and-declarative-security/">http://msdnrss.thecoderblogs.com/2008/01/25/code-access-security-understanding-demand-and-declarative-security/</a></li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

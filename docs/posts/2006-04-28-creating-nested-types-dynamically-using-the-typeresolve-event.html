@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Creating nested types dynamically using the TypeResolve event</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Creating nested types dynamically using the TypeResolve event</h1>
+<p class="meta">
+  <time>2006-04-28</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/creating-nested-types-dynamically-using-the-typeresolve-event">original post</a>
+  
+</p>
+<p>Creating a Type dynamically using the TypeResolve event. I came across this issue recently when I was working on something and thought that I will share this with everyone.</p>
+<p>The TypeResolve event is generated when the run time is unable to determine the assembly that can create the requested Type. In the example below we have nested types, where the creation of one triggers the creation of the nested type.</p>
+<p>If you step through the code below you will note that the creation of Enclosing triggers the creation of Nested1. Creation of Nested1 triggers the creation of Nested2. Creation of Nested2 goes through fine as it has all the types required by it. Now strangely, creation of Nested1 triggers creation of Enclosing. I was not able to figure out why this was happening. The speculation from the initial thought were that it was because of some visibility checks from Nested1.</p>
+<p>Strangely, the types get created but an exception is thrown in the first call to CreateType. I caught the exception and ignored it and looked into the assembly that is generated and the type and the constructor was indeed created. This is not the best work around, but still gets you over this hurdle if you get into it.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">using</span> System.Reflection.Emit;
+<span class="hljs-comment">/*
+ * class Enclosing
+ * {
+ *     public void Enclosing()
+ *     {
+ *         Console.WriteLine(&quot;Hello&quot;);
+ *     }
+ *     class Nested1
+ *     {
+ *         int a;
+ *         int b;
+ *         Nested2 c;
+ *     }
+ *     class Nested2
+ *     {
+ *         int a;
+ *         int b;
+ *     }
+ *     Nested1 a;
+ *     Nested2 b;
+ * }
+ */</span>
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title">IHelloWorld</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">HelloWorld</span>()</span>;
+}
+<span class="hljs-keyword">class</span> <span class="hljs-title">Class1</span>
+{
+    <span class="hljs-keyword">static</span> TypeBuilder enc, nested1, nested2;
+    <span class="hljs-keyword">static</span> AssemblyBuilder ab;
+    <span class="hljs-keyword">static</span> ModuleBuilder mb;
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>(<span class="hljs-params"><span class="hljs-built_in">string</span>[] <span class="hljs-keyword">args</span></span>)</span>
+    {
+        AppDomain.CurrentDomain.TypeResolve += <span class="hljs-keyword">new</span> ResolveEventHandler(CurrentDomain_TypeResolve);
+        AssemblyName name = <span class="hljs-keyword">new</span> AssemblyName();
+        name.Name = <span class="hljs-string">&quot;test&quot;</span>;
+        ab = AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave);
+        mb = ab.DefineDynamicModule(<span class="hljs-string">&quot;test&quot;</span>, <span class="hljs-string">&quot;test.dll&quot;</span>);
+        enc = mb.DefineType(<span class="hljs-string">&quot;Enclosing&quot;</span>, TypeAttributes.Public | TypeAttributes.Class, <span class="hljs-literal">null</span>, <span class="hljs-keyword">new</span> Type[] { <span class="hljs-keyword">typeof</span>(IHelloWorld) });
+        nested1 = enc.DefineNestedType(<span class="hljs-string">&quot;Nested1&quot;</span>, TypeAttributes.Sealed | TypeAttributes.NestedPublic, <span class="hljs-keyword">typeof</span>(System.ValueType));
+        nested2 = enc.DefineNestedType(<span class="hljs-string">&quot;Nested2&quot;</span>, TypeAttributes.Sealed | TypeAttributes.NestedPublic, <span class="hljs-keyword">typeof</span>(System.ValueType));
+        nested1.DefineField(<span class="hljs-string">&quot;a&quot;</span>, <span class="hljs-keyword">typeof</span>(<span class="hljs-built_in">int</span>), FieldAttributes.Public);
+        nested1.DefineField(<span class="hljs-string">&quot;b&quot;</span>, <span class="hljs-keyword">typeof</span>(<span class="hljs-built_in">int</span>), FieldAttributes.Public);
+        nested1.DefineField(<span class="hljs-string">&quot;c&quot;</span>, nested2, FieldAttributes.Public);
+        nested2.DefineField(<span class="hljs-string">&quot;a&quot;</span>, <span class="hljs-keyword">typeof</span>(<span class="hljs-built_in">int</span>), FieldAttributes.Public);
+        nested2.DefineField(<span class="hljs-string">&quot;b&quot;</span>, <span class="hljs-keyword">typeof</span>(<span class="hljs-built_in">int</span>), FieldAttributes.Public);
+        enc.DefineField(<span class="hljs-string">&quot;a&quot;</span>, nested1, FieldAttributes.Public);
+        enc.DefineField(<span class="hljs-string">&quot;b&quot;</span>, nested2, FieldAttributes.Public);
+        ConstructorBuilder myConstructorBuilder = enc.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, Type.EmptyTypes);
+        ILGenerator myConstructorIL = myConstructorBuilder.GetILGenerator();
+        myConstructorIL.Emit(OpCodes.Ldstr, <span class="hljs-string">&quot;Enc Constructor Called&quot;</span>);
+        MethodInfo infoMethod = <span class="hljs-keyword">typeof</span>(Console).GetMethod(<span class="hljs-string">&quot;WriteLine&quot;</span>, <span class="hljs-keyword">new</span> Type[] { <span class="hljs-keyword">typeof</span>(<span class="hljs-built_in">string</span>) });
+        myConstructorIL.Emit(OpCodes.Call, infoMethod);
+        myConstructorIL.Emit(OpCodes.Ret);
+        MethodBuilder meth = enc.DefineMethod(<span class="hljs-string">&quot;HelloWorld&quot;</span>, MethodAttributes.Public | MethodAttributes.Virtual, <span class="hljs-keyword">typeof</span>(<span class="hljs-keyword">void</span>), Type.EmptyTypes);
+        ILGenerator il = meth.GetILGenerator();
+        il.Emit(OpCodes.Ldstr, <span class="hljs-string">&quot;Enc::HelloWorld() method called!&quot;</span>);
+        MethodInfo writeMethod = <span class="hljs-keyword">typeof</span>(Console).GetMethod(<span class="hljs-string">&quot;WriteLine&quot;</span>, <span class="hljs-keyword">new</span> Type[] { <span class="hljs-keyword">typeof</span>(<span class="hljs-built_in">string</span>) });
+        il.Emit(OpCodes.Call, writeMethod);
+        il.Emit(OpCodes.Ret);
+        Type t =<span class="hljs-literal">null</span>;
+        <span class="hljs-keyword">try</span>
+        {
+            t = enc.CreateType();
+        }
+        <span class="hljs-keyword">catch</span> (Exception e) { Console.WriteLine(e.ToString()); }
+        Console.WriteLine(<span class="hljs-string">&quot;Creating Type: {0}&quot;</span>, t.ToString());
+        IHelloWorld ins = (IHelloWorld)Activator.CreateInstance(t);
+        ins.HelloWorld();
+    }
+    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> Assembly <span class="hljs-title">CurrentDomain_TypeResolve</span>(<span class="hljs-params"><span class="hljs-built_in">object</span> sender, ResolveEventArgs <span class="hljs-keyword">args</span></span>)</span>
+    {
+        Type newtype = <span class="hljs-literal">null</span>;
+        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">args</span>.Name == <span class="hljs-string">&quot;Nested2&quot;</span>)
+        {
+            newtype = nested2.CreateType();
+            <span class="hljs-keyword">return</span> mb.Assembly;
+        }
+        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">args</span>.Name == <span class="hljs-string">&quot;Nested1&quot;</span>)
+        {
+            <span class="hljs-keyword">try</span>
+            {
+                newtype = nested1.CreateType();
+            }
+            <span class="hljs-keyword">catch</span> (Exception e) { }
+            <span class="hljs-keyword">return</span> mb.Assembly;
+        }
+        <span class="hljs-keyword">if</span> (<span class="hljs-keyword">args</span>.Name == <span class="hljs-string">&quot;Enclosing&quot;</span>)
+        {
+            <span class="hljs-keyword">try</span>
+            {
+                newtype = enc.CreateType();
+            }
+            <span class="hljs-keyword">catch</span> (Exception e) { }
+            <span class="hljs-keyword">return</span> mb.Assembly;
+        }
+        <span class="hljs-keyword">return</span> Assembly.GetExecutingAssembly();
+    }
+}</code></pre>
+</figure>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

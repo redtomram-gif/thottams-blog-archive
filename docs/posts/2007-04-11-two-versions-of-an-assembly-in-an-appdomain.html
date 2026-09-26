@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two versions of an assembly in an AppDomain</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Two versions of an assembly in an AppDomain</h1>
+<p class="meta">
+  <time>2007-04-11</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/two-versions-of-an-assembly-in-an-appdomain">original post</a>
+  
+</p>
+<p>The CLR binder today allows you to either accidentally or intentionally load two versions of a given assembly in an AppDomain. The pain point of this design is that it fails at run time when specific operations are performed with respect to types that are references in both the assemblies which will be majority of the cases.</p>
+<p>Let us make a small sample to illustrate the problem that you will encounter if you had two versions of an assembly in an AppDomain:</p>
+<p>Let us call this DomSample.cs</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">class</span> <span class="hljs-title">DomSample</span> {
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span> {
+        <span class="hljs-keyword">try</span> {
+            Assembly a1 = Assembly.Load(<span class="hljs-string">&quot;Foo, Version=2.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94&quot;</span>);
+            Assembly a2 = Assembly.Load(<span class="hljs-string">&quot;Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94&quot;</span>);
+            Type ty1 = Type.GetType(<span class="hljs-string">&quot;Foo, Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94&quot;</span>);
+            Type ty2 = Type.GetType(<span class="hljs-string">&quot;Foo, Foo, Version=2.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94&quot;</span>);
+            Console.WriteLine(<span class="hljs-string">&quot;V1 Type = {0}&quot;</span>, ty1.Assembly.FullName.ToString());
+            Console.WriteLine(<span class="hljs-string">&quot;V2 Type = {0}&quot;</span>, ty2.Assembly.FullName.ToString());
+            <span class="hljs-keyword">if</span> (!Type.Equals(ty1, ty2)){
+                Console.WriteLine(<span class="hljs-string">&quot;The types are different&quot;</span>);
+            }
+            Foo t1 = (Foo)Activator.CreateInstance(ty1);
+            Foo t2 = (Foo)Activator.CreateInstance(ty2);
+        }
+        <span class="hljs-keyword">catch</span> (Exception e)
+        {
+            Console.WriteLine(e.ToString());
+        }
+    }
+}</code></pre>
+</figure>
+<p>Let us call this v1/Helper.cs</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+[<span class="hljs-meta">assembly: System.Reflection.AssemblyVersion(<span class="hljs-string">&quot;1.0.0.0&quot;</span>)</span>]
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Helper</span> {
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">HelperMethod</span>()</span> {
+        Console.WriteLine(<span class="hljs-string">&quot;Version = {0}&quot;</span>, (Assembly.GetExecutingAssembly()).ToString());
+    }
+}</code></pre>
+</figure>
+<p>Let us call this v2/Helper.cs</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+[<span class="hljs-meta">assembly: System.Reflection.AssemblyVersion(<span class="hljs-string">&quot;2.0.0.0&quot;</span>)</span>]
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Helper</span> {
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">HelperMethod</span>()</span> {
+        Console.WriteLine(<span class="hljs-string">&quot;Version = {0}&quot;</span>, (Assembly.GetExecutingAssembly()).ToString());
+    }
+}</code></pre>
+</figure>
+<p>Let us compile the two versions of the helper methods and place them in the GAC using gacutil /I Helper.dll accordingly. Let us compile the DomSample.cs using one of the versions of the helper assembly and execute it.</p>
+<p>C:\temp\AppDomain&gt;DomMain.exe</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">V1 Type = Helper, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94
+V2 Type = Helper, Version=2.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94</code></pre>
+</figure>
+<p>The types are different</p>
+<p>System.InvalidCastException: Unable to cast object of type &#39;Helper&#39; to type &#39;Helper&#39;.</p>
+<p><code>at DomSample.Main() in c:\temp\AppDomain\DomMain.cs:line 30</code></p>
+<p>The two types that you created are different and when you try to cast these types you get an InvalidCastException.</p>
+<p>Have any of you encountered this? What is your thought about this problem? I would be interested to hear more about this.</p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>April 11, 2007<br>I have encountered similar things with Assembly.LoadFrom. Some thoughts about this are here: <a href="http://geekswithblogs.net/akraus1/archive/2006/04/04/74323.aspx">http://geekswithblogs.net/akraus1/archive/2006/04/04/74323.aspx</a> Yours,   Alois Kraus</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 11, 2007<br>Thanks Alois for your input. I read your write and agree that it indeed is a painful experience. The load contexts cause the problem of the same assembly being loaded multiple times. I have another entry which I am working on which talks about a similar problem.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 11, 2007<br>I think this is a great feature. I would like to go even further though, there should also be an API to manipulate/explore load contexts. This would make it much easier to run things side-by-side in the same AppDomain (and do things like building a managed compiler).</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 11, 2007<br>Thanks Jeroen for your feedback. Aren&#39;t the run time type cast exceptions a pain to deal with though?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 16, 2007<br>They can be. I&#39;ve actually added a debugging mode to my compiler to make debugging these problems easier. When enabled, it replaces all casts with a method call that does the type check and throws a more verbose error that includes the full assembly name. It would be nice if the CLR&#39;s InvalidCastException would include ExpectedType and ActualType properties.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 17, 2007<br>Can you eloborate on a scenario where you absolutely require this?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 11, 2007<br>I have the same problem and I was wondering about this solution: What if I defined the interface in a C++/ATL project (.idl file) and built a COM type library. Then in my .Net class, I can mark the interface definition with [ComImport]. In that case, will the CLR (or whatever) still try to add a version number to the interface and thereby have a problem with casting it? I have several implementations of my IFoo. Some are .Net implementations defined in the local assembly (which is also in the GAC and may be side-by-side with other versions) and some are COM/ATL implementations. The cast to IFoo never seems to be a problem for the COM impelementations; only for the .Net implementations... Any thoughts? Bob</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 11, 2007<br>You need to create Interface IFoo and then derive class from that and in typecast Use that IFoo interface</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 28, 2009<br>Research the ILMerge utility.  I think it can  determine that a single class referenced in multiple assemblies is one-and-the-same class, and then pull all the distinct class definitions into a single assembly.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 28, 2009<br>I forgot to mention, in ILMerge, the specific option of interest is &quot;UnionMerge&quot;, which actually merges members of all classes with the same name into a single class of that name.</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

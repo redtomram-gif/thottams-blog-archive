@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DBNull and Nullable types</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>DBNull and Nullable types</h1>
+<p class="meta">
+  <time>2008-06-30</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/dbnull-and-nullable-types">original post</a>
+  
+</p>
+<p>When we have C# code interacting with the data base you run into this problem. Let me try and explain it. The database has nullable columns and C# has nullable types. For example, let us take a table Employee which has Id (int), name (string) and age (int). Let us assume that age will be null if no values are provided.</p>
+<p>When you query the database for employee, the dataset or datareader will have DBNull for age. Now, this DBNull is not the same as C# null. This is the beginning of the problem. In order to make sure your code works properly, it has to expect that the reader can return a DBNull. You have to do the following in your code:</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-built_in">int</span>? age = <span class="hljs-literal">null</span>;
+<span class="hljs-keyword">if</span> (!DBNull.Value.Equals(reader[<span class="hljs-string">&quot;Age&quot;</span>]))
+{
+    age = (<span class="hljs-built_in">int</span>)reader[<span class="hljs-string">&quot;Age&quot;</span>];
+}</code></pre>
+</figure>
+<p>This code converts the DBNull to a C# null. The lack of common null types between the two makes code have two sets of defaults for data, one in the DB and the other in C#. Which can get confusing.</p>
+<p>If you don&#39;t use nullable types due to performance, you have to invent your own null value:</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-built_in">int</span> age = <span class="hljs-number">-1</span>;
+<span class="hljs-keyword">if</span> (!DBNull.Value.Equals(reader[<span class="hljs-string">&quot;Age&quot;</span>]))
+{
+    age = (<span class="hljs-built_in">int</span>)reader[<span class="hljs-string">&quot;Age&quot;</span>];
+}</code></pre>
+</figure>
+<p>This conversion seems ugly and it is all over the code. Is there any other elegant solution to this?</p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>June 30, 2008<br>You could solve this with an extension method. The extension method would look something like this: public static TValue GetNullableValue<TValue>(this DbDataReader reader, string name) {   object value = reader[name];   if (DBNull.Value.Equals(value))   {       return default(TValue);   }   return (TValue)value; } And your data access code will be: int? age = customerReader.GetNullableValue&lt;int?&gt;(&quot;Age&quot;);</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 30, 2008<br>I&#39;ve encountered the same ugly convention as well, and was thinking along the lines of an extension method similiar to the previous poster. Although he missed the part about not being a nullable type (easy enough to tweak his method to be similiar to SQLs IsNull function.) When it is a nullable type, I&#39;ve done this in the past: int? age = dr[&quot;Age&quot;] as int?;</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 30, 2008<br>This problem (dbnull) has been around since well before .net and Microsoft has never done anything to make it any better, nullable types don&#39;t really bring us any closer to a way to map between a database null and a data type. Maybe the entity framework will finally fix this issue.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 30, 2008<br>I also noticed this issue when I was using VB2005 to retrieve the data from SQL2005. I created a class named DBNullable(Of T) to deal with it. But I think M$ need to do something to fix this problem because it&#39;s confusing and fussy when developing a data-based system.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 30, 2008<br>I love Trygve&#39;s idea, but it doesn&#39;t apply to DataSets (yes, some of us still need to use DataSets). ...and farrio, re: &#39;M$&#39;, are you like 4 years old or something?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 01, 2008<br>There&#39;s no reason why this shouldn&#39;t work for DataSets. You just need another extension method. You can even take the table name as a parameter in this method to resolve which table of the dataset you want to get data from.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 01, 2008<br>I like the extension method idea as it will work for both nullable and non-nullable types. int? age = dr[&quot;Age&quot;] as int?; also works. It works because .NET is unable to cast it and assigns a NULL instead, which ends up being what we desire in this case.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 01, 2008<br>I think this depends on whether you need to keep -1 as the default value or what you want to keep the null value. One possibility is to use the as operator for a safe type cast: int age = reader[&quot;Age&quot;] as int? ?? -1; int? age = reader[&quot;Age&quot;] as int?; Unfortunately, this has negative consequences that can be difficult to catch. If you mistakenly cast a smallint to byte, for example, the as operator will silently swallow InvalidCastException. I think a more reasonable solution with some measure of safety is to use a nullable cast either with or without the null coalescing operator: int age = (int?) reader[&quot;Age&quot;] ?? -1; int? age = (int?) reader[&quot;Age&quot;]; The code is easy to read and it has the advantage that InvaidCastException is thrown early in case you mistakenly cast to the wrong type, which I&#39;ve found is easy to do with large tables.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 24, 2008<br>Thanks - the as operator with ?? <defaultvalue> works perfectly when using nullable types for the database tier.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 24, 2008<br>I&#39;ve been working like mad to get my 3-tier construction to work. As I&#39;m not all that great in C# yet,</p>
+</li>
+<li><p><strong>Anonymous</strong><br>September 17, 2008<br>Check out the SafeDataReader class from CSLA.NET. I had customized and used to solve the repeated dbnull check.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 01, 2008<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 14, 2011<br>The comment has been removed</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

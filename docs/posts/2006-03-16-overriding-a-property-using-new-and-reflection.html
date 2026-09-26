@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overriding a property using new and reflection</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Overriding a property using new and reflection</h1>
+<p class="meta">
+  <time>2006-03-16</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/overriding-a-property-using-new-and-reflection">original post</a>
+  
+</p>
+<p>When you override a property using new with a new type there is discrepancy in behavior from C# and reflection. C# is not aware of the property in the base class and it has been overridden by the new property. But reflection is well aware of both the properties depending on what you are asking for. If you want the derived class property only you need to specify the BindingFlags.DeclaredOnly flag or else it will walk the entire hierarchy.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">class</span> <span class="hljs-title">Base</span> {
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">string</span> MyName {
+        <span class="hljs-keyword">set</span> {}
+        <span class="hljs-keyword">get</span>{ <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;Hello&quot;</span>;}
+    }
+}
+<span class="hljs-keyword">class</span> <span class="hljs-title">Derived</span> : <span class="hljs-title">Base</span> {
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">int</span> MyName {
+        <span class="hljs-keyword">set</span> {}
+    }
+}
+<span class="hljs-keyword">class</span> <span class="hljs-title">Test</span> {
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span> {
+        Base b = <span class="hljs-keyword">new</span> Base();
+        Derived d = <span class="hljs-keyword">new</span> Derived();
+        <span class="hljs-comment">// Trying to get all properties works</span>
+        <span class="hljs-comment">//</span>
+        PropertyInfo[] p = (PropertyInfo [])<span class="hljs-keyword">typeof</span>(Derived).GetProperties();
+        <span class="hljs-keyword">foreach</span>(PropertyInfo p1 <span class="hljs-keyword">in</span> p) {
+            Console.WriteLine(p1.ToString());
+        }
+        <span class="hljs-comment">// Trying to get the property from the derived class alone works</span>
+        <span class="hljs-comment">//</span>
+        PropertyInfo p2 = <span class="hljs-keyword">typeof</span>(Derived).GetProperty(<span class="hljs-string">&quot;MyName&quot;</span>, BindingFlags.DeclaredOnly|BindingFlags.Instance | BindingFlags.Public);
+        <span class="hljs-keyword">if</span>(p2 != <span class="hljs-literal">null</span>) {
+            Console.WriteLine(p2.ToString());
+        }
+        <span class="hljs-comment">// This call is ambiguous and throws an exception (System.Reflection.AmbiguousMatchException)</span>
+        <span class="hljs-comment">//</span>
+        <span class="hljs-keyword">typeof</span>(Derived).GetProperty(<span class="hljs-string">&quot;MyName&quot;</span>,BindingFlags.Instance | BindingFlags.Public);
+        <span class="hljs-comment">// This will not compile as the get property is not defined in the derived class</span>
+        <span class="hljs-comment">//</span>
+        <span class="hljs-comment">// Console.WriteLine(&quot;Value of MyName in derived class: &quot;, d.MyName);</span>
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>April 27, 2006<br>I mentioned a while back that I change from being a PM for System.Reflection and System.Reflection.Emit..e.t.c...</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 11, 2006<br>Thank so much for posting this ... it really helped me overcome this exact problem.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 11, 2006<br>Thanks for the note. It feels good to find that my posting helped someone and encourages me to post more like this.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 23, 2007<br>Is there a way to get the inherited properties as well while using BindingFlags.DeclaredOnly? Suppose that the base class had the property A, which the derived class wishes to get (e.g. typeof(Derived).GetProperty(&quot;A&quot;, ...)). i.e. is there a way to return all inherited properties, while at the same time, if there is are multiple properties with the same name, return only those declared at the calling-type&#39;s level? Thanks a lot</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 25, 2007<br>Thottam blogged about how C# and Reflection differ in how they bind to hidden properties: <a href="http://blogs.msdn.com/thottams/archive/2006/03/17/553376.aspx">http://blogs.msdn.com/thottams/archive/2006/03/17/553376.aspx</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 25, 2007<br>I discussed binding to hidden properties using Reflection here: <a href="http://blogs.msdn.com/weitao/archive/2007/04/26/binding-to-hidden-properties-using-reflection.aspx">http://blogs.msdn.com/weitao/archive/2007/04/26/binding-to-hidden-properties-using-reflection.aspx</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>January 21, 2009<br>PingBack from <a href="http://www.keyongtech.com/432604-how-to-override-a-property">http://www.keyongtech.com/432604-how-to-override-a-property</a></p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

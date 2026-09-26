@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generic dynamic method using DefineMethod</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Generic dynamic method using DefineMethod</h1>
+<p class="meta">
+  <time>2006-04-25</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/generic-dynamic-method-using-definemethod">original post</a>
+  
+</p>
+<p>This example illustrates how you can define a generic dynamic method and call it. In the sample below we define a method void HelloWorld<T>(T val) in type Hello and call it.</p>
+<p>The body of the HelloWorld Method accesses the parameter passed to the method and prints it by calling WriteLine. I have created a module so that you can see the IL that is generated from this code.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Collections.Generic;
+<span class="hljs-keyword">using</span> System.Text;
+<span class="hljs-keyword">using</span> System.Reflection.Emit;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title">IHelloWorld</span> {
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">HelloWorld</span>&lt;<span class="hljs-title">T</span>&gt;(<span class="hljs-params">T val</span>)</span>;
+}
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">HelloClass</span> {
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>(<span class="hljs-params"><span class="hljs-built_in">string</span>[] <span class="hljs-keyword">args</span></span>)</span> {
+        AppDomain cd = System.Threading.Thread.GetDomain();
+        AssemblyName an = <span class="hljs-keyword">new</span> AssemblyName();
+        an.Name = <span class="hljs-string">&quot;HelloClass&quot;</span>;
+        AssemblyBuilder ab = cd.DefineDynamicAssembly(an, AssemblyBuilderAccess.RunAndSave);
+        ModuleBuilder mb = ab.DefineDynamicModule(<span class="hljs-string">&quot;HelloModule&quot;</span>, <span class="hljs-string">&quot;HelloModule.dll&quot;</span>, <span class="hljs-literal">true</span>);
+        TypeBuilder tb = mb.DefineType(<span class="hljs-string">&quot;Hello&quot;</span>, TypeAttributes.Class | TypeAttributes.Public);
+        TypeBuilder ntb = tb.DefineNestedType(<span class="hljs-string">&quot;NestedHello&quot;</span>,TypeAttributes.NestedPublic, <span class="hljs-keyword">typeof</span>(HelloClass), <span class="hljs-keyword">new</span> Type[] {<span class="hljs-keyword">typeof</span>(IHelloWorld)});
+        ntb.AddInterfaceImplementation(<span class="hljs-keyword">typeof</span>(IHelloWorld));
+        MethodBuilder meth = ntb.DefineMethod(<span class="hljs-string">&quot;HelloWorld&quot;</span>, MethodAttributes.Public | MethodAttributes.Virtual, <span class="hljs-keyword">typeof</span>(<span class="hljs-keyword">void</span>), Type.EmptyTypes);
+        <span class="hljs-built_in">string</span>[] typeParamNames = {<span class="hljs-string">&quot;T&quot;</span>};
+        GenericTypeParameterBuilder[] typeParameters = meth.DefineGenericParameters(typeParamNames);
+        Type[] parms = { typeParameters[<span class="hljs-number">0</span>] };
+        meth.SetParameters(parms);
+        ILGenerator il = meth.GetILGenerator();
+        MethodInfo infoMethod = <span class="hljs-keyword">typeof</span>(Console).GetMethod(<span class="hljs-string">&quot;WriteLine&quot;</span>, <span class="hljs-keyword">new</span> Type[] { <span class="hljs-keyword">typeof</span>(<span class="hljs-built_in">string</span>) });
+        <span class="hljs-keyword">if</span> (infoMethod != <span class="hljs-literal">null</span>)
+        {
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Box, typeParameters[<span class="hljs-number">0</span>]);
+            il.Emit(OpCodes.Call, infoMethod);
+        }
+        il.Emit(OpCodes.Ret);
+        MethodInfo myHelloMethodInfo = <span class="hljs-keyword">typeof</span>(IHelloWorld).GetMethod(<span class="hljs-string">&quot;HelloWorld&quot;</span>);
+        ntb.DefineMethodOverride(meth, myHelloMethodInfo);
+        Type myType = tb.CreateType();
+        Type myNestedClassType = ntb.CreateType();
+        IHelloWorld ihw = (IHelloWorld)Activator.CreateInstance(myNestedClassType);
+        ihw.HelloWorld(<span class="hljs-string">&quot;Calling generic dynamic method&quot;</span>);
+        ab.Save(<span class="hljs-string">&quot;Hello.dll&quot;</span>);
+        <span class="hljs-keyword">return</span>;
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

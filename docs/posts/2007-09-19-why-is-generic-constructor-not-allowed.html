@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why is generic constructor not allowed?</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Why is generic constructor not allowed?</h1>
+<p class="meta">
+  <time>2007-09-19</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/why-is-generic-constructor-not-allowed">original post</a>
+  
+</p>
+<p>Generic argument is not allowed in the constructor. When I compile the code below I get a compilation error saying:</p>
+<p>error CS1519: Invalid token &#39;(&#39; in class, struct, or interface</p>
+<p>member declaration</p>
+<p>The reason is simple. You can have a class Foo<T> and a class Foo as described in my previous post. Now when you says</p>
+<p><code>fooInstance = new Foo&lt;T&gt;();</code></p>
+<p>there is no way for the compiler to find out the right class constructor to call.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">namespace</span> <span class="hljs-title">Sample</span>
+{
+    <span class="hljs-keyword">using</span> System;
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span> &lt;T&gt;</span>
+    {
+    }
+    <span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+    {
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Foo</span>&lt;<span class="hljs-title">T</span>&gt;()</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;This is generic Foo class {0}&quot;</span>,<span class="hljs-keyword">typeof</span>(T));
+        }
+    }
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Bar</span>
+    {
+        <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+        {
+            Foo fooGenericInstance;
+            fooGenericInstance = <span class="hljs-keyword">new</span> Foo&lt;Int32&gt;();
+        }
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><strong>Anonymous</strong><br>September 19, 2007<br>PingBack from <a href="http://msdnrss.thecoderblogs.com/2007/09/19/why-is-generic-constructor-not-allowed/">http://msdnrss.thecoderblogs.com/2007/09/19/why-is-generic-constructor-not-allowed/</a></li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

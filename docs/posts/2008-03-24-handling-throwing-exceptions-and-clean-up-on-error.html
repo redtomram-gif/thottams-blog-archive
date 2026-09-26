@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Handling, throwing - exceptions and Clean up on error</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Handling, throwing - exceptions and Clean up on error</h1>
+<p class="meta">
+  <time>2008-03-24</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/handling-throwing-exceptions-and-clean-up-on-error">original post</a>
+  
+</p>
+<p>There are four ways to throw an exception in my opinion. They are:</p>
+<ol>
+<li>Throw a new exception</li>
+</ol>
+<p><code>a. throw new ArgumentException( … );</code></p>
+<ol start="2">
+<li>Throw the exception you caught</li>
+</ol>
+<p><code>a. throw e;</code></p>
+<ol start="3">
+<li>Throw the same exception preserving the stack</li>
+</ol>
+<p><code>a. throw;</code></p>
+<ol start="4">
+<li>Throw with the original exception as an internal exception</li>
+</ol>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs">a. <span class="hljs-keyword">throw</span> ArgumentException(innerException);
+<span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">class</span> <span class="hljs-title">Sample</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Method1</span>()</span>
+    {
+        <span class="hljs-comment">// possible throw options</span>
+        <span class="hljs-comment">// throw new ArgumentException(); - Origin of the exception</span>
+    }
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Method2</span>()</span>
+    {
+        <span class="hljs-keyword">try</span>
+        {
+            Method1();
+        }
+        <span class="hljs-keyword">catch</span>(ArgumentException ae)
+        {
+            <span class="hljs-comment">// possible throw options</span>
+            <span class="hljs-comment">// throw;</span>
+            <span class="hljs-comment">// - Preserves the original stack</span>
+            <span class="hljs-comment">// throw ae;</span>
+            <span class="hljs-comment">// - Breaks the stack an and throws the same exception from now on</span>
+            <span class="hljs-comment">// throw new ArgumentException(ae);</span>
+            <span class="hljs-comment">// - throws a new exception with an inner exception</span>
+            <span class="hljs-comment">// throw new ArgumentException();</span>
+            <span class="hljs-comment">// - Throws a new exception</span>
+        }
+        <span class="hljs-keyword">catch</span>(Exception e)
+        {
+            Console.WriteLine(e.ToString());
+        }
+    }
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Method3</span>()</span>
+    {
+        <span class="hljs-built_in">bool</span> cleanup = <span class="hljs-literal">true</span>;
+        <span class="hljs-keyword">try</span>
+        {
+            Method2();
+            Method1();
+            cleanup = <span class="hljs-literal">false</span>;
+        }
+        <span class="hljs-keyword">catch</span> (Exception)
+        {
+            <span class="hljs-comment">// perform Cleanup on error</span>
+        }
+        <span class="hljs-keyword">finally</span>
+        {
+            <span class="hljs-keyword">if</span> (cleanup)
+            {
+                <span class="hljs-comment">// perform cleanup on error</span>
+            }
+        }
+    }
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        Sample s = <span class="hljs-keyword">new</span> Sample();
+        <span class="hljs-keyword">try</span> {
+            s.Method2();
+        }
+        <span class="hljs-keyword">catch</span>(ArgumentException ae)
+        {
+            Console.WriteLine(ae.ToString());
+        }
+    }
+}</code></pre>
+</figure>
+<p>I personally would like to classify them as into two categories,</p>
+<ol>
+<li>Origin of the exception, the place where the exception starts</li>
+</ol>
+<p>a. Throw new ArgumentException(..)</p>
+<ol start="2">
+<li>The place where the exception is handled and either gets mapped or rethrown</li>
+</ol>
+<p>a. Throw new ArgumentException()</p>
+<p>b. Throw new ArgumentException(innerException)</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs">c. Throw e;
+d. Throw;</code></pre>
+</figure>
+<p>There are not many options during the origin of the exception and so that is very clear. The confusion comes only when an exception passes through your code and you attempt to handle it.</p>
+<p>In this case again, all four options are available, but only a few make sense. For example</p>
+<ol>
+<li><p>Throw new ArgumentException()</p>
+</li>
+<li><p>Throw ae</p>
+</li>
+</ol>
+<p>both don’t make much sense. Both of these have brighter counterparts in throw new ArgumentException(ae) and throw; which either captures the inner exception or preserves the stack. That leaves us with only two options in the way you handle and throw an exception:</p>
+<ol>
+<li>If you want to map your exceptions</li>
+</ol>
+<p>a. Throw new ArgumentException(innerException); (or)</p>
+<ol start="2">
+<li>If you want to log contextual information and pass on the same exception</li>
+</ol>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs">a. Throw;
+If you use the <span class="hljs-keyword">finally</span> pattern <span class="hljs-keyword">as</span> below, then you don’t need the <span class="hljs-keyword">throw</span>;</code></pre>
+</figure>
+<p>If you use the Exception pattern as shown below then you need the throw to preserve the stack.</p>
+<p>Incidentally, I noticed that performing cleanup on error in .NET is complicated. You have to either catch all exceptions and cleanup or use a variable that can tell you if a cleanup is required in the finally block. Both of them seem to violate the .NET patterns of catching only exceptions that you can handle and not using return values to understand errors.</p>
+<p>If you had the cleanup in the catch block and you want to make sure it runs on any error, you have to catch Exception e which is not advised. This is another pattern that can be used to avoid that, but seems to me to rely on return value type paradigm which is also not advised either.</p>
+<p>So what you choose seems to be up to you to choose!</p>
+<p><a href="https://blogs.msdn.com/kcwalina/default.aspx">Krzysztof Cwalina</a> has a very interesting article on exception at <a href="https://blogs.msdn.com/kcwalina/archive/2007/01/30/ExceptionHierarchies.aspx">https://blogs.msdn.com/kcwalina/archive/2007/01/30/ExceptionHierarchies.aspx</a></p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>March 24, 2008<br>PingBack from <a href="http://msdnrss.thecoderblogs.com/2008/03/24/handling-throwing-exceptions-and-clean-up-on-error-2/">http://msdnrss.thecoderblogs.com/2008/03/24/handling-throwing-exceptions-and-clean-up-on-error-2/</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 25, 2008<br>You can differentiate in a finally block if you are in an exception unwind scenario or normal cleanup. Simple define this helper function and you are ready to go: static bool InException() {  return (Marshal.GetExceptionPointers() == IntPtr.Zero) ? false : true } This way you can choose what to do void func() {  try  {    Otherfunc()  }  finally  {    if( IsInException() )    {       // Do other things          }    else    {       // Normal cleanup logic    }  } } Yours,  Alois Kraus</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 31, 2008<br>I did not know that I could do this. Thanks for the great info. This probably eliminates the need for throw; wouldn&#39;t it?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 08, 2008<br>Hi Thotham, I did investigate the solution a bit further here: <a href="http://geekswithblogs.net/akraus1/archive/2008/04/08/121121.aspx">http://geekswithblogs.net/akraus1/archive/2008/04/08/121121.aspx</a> In your comment did you mean get rid of the catch handler? Yes that would be the case. The only drawback is that you cannot get your hands on the exception object in a finally clause. The most common use case for an unhandled exception is to trace it. But for this I would not want to write a catch handler. But so far I was not able to find the exception object in the finally block. Yours,  Alois Kraus</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 16, 2008<br>Yes. I was looking into the use of &#39;throw;&#39; is it can be done this way. That is a good point that you cannot get a hand on the exception object. I am also not sure if there is any performance impact in doing this as this will be done pretty much throughout the code if adopted as a pattern for tracing or logging.</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

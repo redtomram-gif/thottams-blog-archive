@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NTSD and SOS basics</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>NTSD and SOS basics</h1>
+<p class="meta">
+  <time>2007-02-12</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/ntsd-and-sos-basics">original post</a>
+  
+</p>
+<p>I wanted to take a very simple console application and use ntsd with SOS to debug it. The example demonstrated very simple operations as setting a break point, viewing the managed stack, stack variables, object instance etc.</p>
+<p>We can go deeper into some of the in depth concepts in the next post.</p>
+<p>Let us take a simple console application as below:</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">sample</span>
+{
+    <span class="hljs-built_in">string</span> str;
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">MyMethod</span>(<span class="hljs-params"><span class="hljs-built_in">string</span> arg</span>)</span>
+    {
+        str = <span class="hljs-string">&quot;Member Variable&quot;</span>;
+        Console.WriteLine(<span class="hljs-string">&quot;Argument: {0} - {1]&quot;</span>, arg, str);
+    }
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        sample s = <span class="hljs-keyword">new</span> sample();
+        s.MyMethod(<span class="hljs-string">&quot;Hello&quot;</span>);
+    }
+}</code></pre>
+</figure>
+<p>We would like to do the following as part of our debugging.</p>
+<ol>
+<li>Set a break point on MyMethod</li>
+<li>Watch the variables passed to the method</li>
+<li>Watch the instance of sample and its variables</li>
+</ol>
+<p>Let us compile the application with debug enabled. Type</p>
+<p>csc /Debug App.cs</p>
+<p>This would generate App.exe and App.pdb. Now, let us start debugging this application:</p>
+<p>C:\Blog&gt;ntsd App.exe</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">0:000&gt; .symfix
+0:000&gt; .sympath+ .
+0:000&gt; .reload
+0:000&gt; sxe –c “ “ clrn
+0:000&gt; g
+0:000&gt; .loadby sos mscorwks
+0:000&gt; !bpmd App.exe sample.MyMethod
+0:000&gt; g
+0:000&gt; !clrstack –a
+OS Thread Id: 0x154c (0)
+ESP EIP
+001bf268 009700f0 sample.MyMethod(System.String)
+    PARAMETERS:
+        this = 0x01501964
+        arg = 0x01501948
+001bf26c 009700a9 sample.Main()
+    LOCALS:
+        &lt;CLR reg&gt; = 0x01501964
+001bf490 79e8273b [GCFrame: 001bf490]</code></pre>
+</figure>
+<p><code>0:000&gt; !DumpObj 0x01501948</code></p>
+<p>Name: System.String</p>
+<p>MethodTable: 790fc6cc</p>
+<p>EEClass: 790fc62c</p>
+<p>Size: 28(0x1c) bytes</p>
+<p>(C:\Windows\assembly\GAC_32\mscorlib\2.0.0.0__b77a5c561934e089\mscorlib.dll)</p>
+<p>String: Hello</p>
+<p>Fields:</p>
+<p>MT Field Offset Type VT Attr Value Name</p>
+<p>790ff7f0 4000096 4 System.Int32 0 instance 6 m_arrayLength</p>
+<p>790ff7f0 4000097 8 System.Int32 0 instance 5 m_stringLength</p>
+<p>790fe2dc 4000098 c System.Char 0 instance 48 m_firstChar</p>
+<p>790fc6cc 4000099 10 System.String 0 shared static Empty &gt;&gt; Domain:Value 003507e8:790d7eb4 &lt;&lt;</p>
+<p>7913cb00 400009a 14 System.Char[] 0 shared static WhitespaceChars &gt;&gt; Domain:Value 003507e8:01501548 &lt;&lt;</p>
+<p><code>0:000&gt; !DumpObj 0x01501964</code></p>
+<p>Name: sample</p>
+<p>MethodTable: 002a301c</p>
+<p>EEClass: 002a1200</p>
+<p>Size: 12(0xc) bytes</p>
+<p>(C:\blog\app.exe)</p>
+<p>Fields:</p>
+<p>MT Field Offset Type VT Attr Value Name</p>
+<p>790fc6cc 4000001 4 System.String 0 instance 00000000 str</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">// Type in a couple of “p” until you get to the place where the local variable is assgned the value “Member Variable”
+0:000&gt; !DumpObj 0x01501964</code></pre>
+</figure>
+<p>Name: sample</p>
+<p>MethodTable: 000c301c</p>
+<p>EEClass: 000c1200</p>
+<p>Size: 12(0xc) bytes</p>
+<p>(C:\blog\app.exe)</p>
+<p>Fields:</p>
+<p>MT Field Offset Type VT Attr Value Name</p>
+<p>790fc6cc 4000001 4 System.String 0 instance 01411970 str</p>
+<p><code>0:000&gt;  !DumpObj 01411970</code></p>
+<p>Name: System.String</p>
+<p>MethodTable: 790fc6cc</p>
+<p>EEClass: 790fc62c</p>
+<p>Size: 48(0x30) bytes</p>
+<p>(C:\Windows\assembly\GAC_32\mscorlib\2.0.0.0__b77a5c561934e089\mscorlib.dll)</p>
+<p>String: Member Variable</p>
+<p>Fields:</p>
+<p>MT Field Offset Type VT Attr Value Name</p>
+<p>790ff7f0 4000096 4 System.Int32 0 instance 16 m_arrayLength</p>
+<p>790ff7f0 4000097 8 System.Int32 0 instance 15 m_stringLength</p>
+<p>790fe2dc 4000098 c System.Char 0 instance 4d m_firstChar</p>
+<p>790fc6cc 4000099 10 System.String 0 shared static Empty &gt;&gt; Domain:Value 001007c8:790d7eb4 &lt;&lt;</p>
+<p>7913cb00 400009a 14 System.Char[] 0 shared static WhitespaceChars &gt;&gt; Domain:Value 001007c8:01411548 &lt;&lt;</p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>February 13, 2007<br>Unfortunately, much of this does not currently work for the public. For example, the version of SOS that ships with the 2.0 CLR is old and does not include the !bpmd command. (There are, of course, more manual ways to set a managed breakpoint.) There is no 2.0 version of SOS currently included in the debugging tools distribution.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>February 13, 2007<br>Dan, I loaded the 2.0.50727.42 version of SOS.dll and confirmed that it includes !bpmd.  That&#39;s the version of SOS that ships with the 2.0 redist. I think that version of SOS also ships with the 2.0  SDK.  If you find a package that includes the wrong SOS, please tell us exactly where it came from so we can investigate. Some early 2.0 beta builds might have included a version of SOS that didn&#39;t have !bpmd.  And  WinDbg ships with an old build of SOS that only works with 1.1 and 1.0.  But if you&#39;re debugging 2.0 then your SOS should have version # 2.0.50727.42. HTH, Bridgette</p>
+</li>
+<li><p><strong>Anonymous</strong><br>February 13, 2007<br>I just checked and !bpmd is there. HOWEVER, it&#39;s not listed in the output of !help, so I always assumed it wasn&#39;t. Thanks.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>February 15, 2007<br>I tried !help and see BPMD there as well.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 01, 2007<br>Nice and simple. 2 minute kick-start to managed debugging and gives pointers in the right direction. Looking forward to future aricles on debugging of multi-threaded applications.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 28, 2007<br>Where is the good old EAX register (the clr equivalent) after a .call?  I&#39;m sure I&#39;m looking right at it, but it doesn&#39;t appear to be on the stack.  Thanks</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

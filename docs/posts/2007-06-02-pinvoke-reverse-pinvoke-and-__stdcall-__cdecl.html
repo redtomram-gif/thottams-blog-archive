@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PInvoke-Reverse PInvoke and __stdcall - __cdecl</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>PInvoke-Reverse PInvoke and __stdcall - __cdecl</h1>
+<p class="meta">
+  <time>2007-06-02</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/pinvoke-reverse-pinvoke-and-__stdcall-__cdecl">original post</a>
+  
+</p>
+<p>I came across this issue yesterday and thought that I will blog about the same. The example below demonstrates a simple PInvoke and Reverse PInvoke through delegates. The initial call was defined to use the __cdecl convention. As you can notice when executing the code the stack gets corrupted and the for loop ends prematurely.</p>
+<p>Copy code to: nat.cpp</p>
+<p>Compile: cl /LD nat.cpp</p>
+<figure class="code">
+<figcaption>C++</figcaption>
+<pre><code class="hljs"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span>
+<span class="hljs-function"><span class="hljs-keyword">typedef</span> <span class="hljs-title">void</span> <span class="hljs-params">( *callback)</span><span class="hljs-params">(<span class="hljs-type">wchar_t</span> * str)</span></span>;
+<span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span> __declspec(dllexport) <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">caller</span><span class="hljs-params">(<span class="hljs-type">wchar_t</span> * input, <span class="hljs-type">int</span> count, callback call)</span>
+</span>{
+    <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; count; i++)
+    {
+        <span class="hljs-built_in">call</span>(input);
+    }
+}</code></pre>
+</figure>
+<p>Copy code to: man.cs</p>
+<p>Compile: csc man.cs</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System.Runtime.InteropServices;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">foo</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-built_in">delegate</span> <span class="hljs-keyword">void</span> <span class="hljs-title">callback</span>(<span class="hljs-params"><span class="hljs-built_in">string</span> str</span>)</span>;
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">callee</span>(<span class="hljs-params"><span class="hljs-built_in">string</span> str</span>)</span>
+    {
+        System.Console.WriteLine(<span class="hljs-string">&quot;Managed: &quot;</span> +str);
+    }
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-built_in">int</span> <span class="hljs-title">Main</span>()</span>
+    {
+        caller(<span class="hljs-string">&quot;Hello World!&quot;</span>, <span class="hljs-number">10</span>, <span class="hljs-keyword">new</span> callback(foo.callee));
+        <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+    }
+    [<span class="hljs-meta">DllImport(<span class="hljs-string">&quot;nat.dll&quot;</span>,CallingConvention=CallingConvention.StdCall)</span>]
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">extern</span> <span class="hljs-keyword">void</span> <span class="hljs-title">caller</span>(<span class="hljs-params"><span class="hljs-built_in">string</span> str, <span class="hljs-built_in">int</span> count, callback call</span>)</span>;
+}</code></pre>
+</figure>
+<p>The above code prints the “Managed: Hello World!” twice and exits. To fix this let us change the calling convention to __stdcall.</p>
+<p>Copy code to: nat.cpp</p>
+<p>Compile: cl /LD nat.cpp</p>
+<figure class="code">
+<figcaption>C++</figcaption>
+<pre><code class="hljs"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;string.h&gt;</span></span>
+<span class="hljs-function"><span class="hljs-keyword">typedef</span> <span class="hljs-title">void</span> <span class="hljs-params">(__stdcall *callback)</span><span class="hljs-params">(<span class="hljs-type">wchar_t</span> * str)</span></span>;
+<span class="hljs-keyword">extern</span> <span class="hljs-string">&quot;C&quot;</span> __declspec(dllexport) <span class="hljs-function"><span class="hljs-type">void</span> __stdcall <span class="hljs-title">caller</span><span class="hljs-params">(<span class="hljs-type">wchar_t</span> * input, <span class="hljs-type">int</span> count, callback call)</span>
+</span>{
+    <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; count; i++)
+    {
+        <span class="hljs-built_in">call</span>(input);
+    }
+}</code></pre>
+</figure>
+<p>Now if you run the code it will print the message “Managed: Hello World!” 10 times. Marshalling and getting the signatures can be extremely subtle.</p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>June 12, 2007<br>Is there an MDA that allows you to detect this calling convention mismatch? Also you might want to read this - <a href="http://blogs.msdn.com/mithuns/archive/2006/12/11/pay-attention-to-the-calling-convention.aspx">http://blogs.msdn.com/mithuns/archive/2006/12/11/pay-attention-to-the-calling-convention.aspx</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 01, 2009<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 10, 2013<br>6 years later, this still works. :) Thanks.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 10, 2014<br>The comment has been removed</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

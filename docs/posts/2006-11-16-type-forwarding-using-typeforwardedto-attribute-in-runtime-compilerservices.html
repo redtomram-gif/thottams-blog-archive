@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Type forwarding using TypeForwardedTo attribute in Runtime.CompilerServices</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Type forwarding using TypeForwardedTo attribute in Runtime.CompilerServices</h1>
+<p class="meta">
+  <time>2006-11-16</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/type-forwarding-using-typeforwardedto-attribute-in-runtime-compilerservices">original post</a>
+  
+</p>
+<p>We used this feature to solve a problem internally and I was tempted to blog about this cool feature. Type forwarding allows you to move a type from one assembly to another without having to recompile the application that uses the original assembly.</p>
+<p>Here is how this works:</p>
+<p>Writing the original library (original.cs)</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">ClassToBeForwardedLater</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">SomeMethod</span>()</span>
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;Inside ClassToBeForwardedLater in Original.dll&quot;</span>);
+    }
+}</code></pre>
+</figure>
+<p>Let us compile this to original.dll as below</p>
+<p>csc /t:library original.cs</p>
+<p>Building the application using the original assembly (application.exe)</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">class</span> <span class="hljs-title">Application</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        ClassToBeForwardedLater ctbf = <span class="hljs-keyword">new</span> ClassToBeForwardedLater();
+        ctbf.SomeMethod();
+    }
+}</code></pre>
+</figure>
+<p>Let us compile the executable as below</p>
+<p>csc /r:original.dll application.cs</p>
+<p>Let us run application.exe. You will get the following output</p>
+<p>Inside ClassToBeForwardedLater in Original.dll</p>
+<p>Re-implementing the original assembly in a new assembly (newlibrary.cs)</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">ClassToBeForwardedLater</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">SomeMethod</span>()</span>
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;Inside ClassToBeForwarded in newlibrary&quot;</span>);
+    }
+}</code></pre>
+</figure>
+<p>Let us compile the newlibrary.dll as below</p>
+<p>csc /t:library newlibrary.cs</p>
+<p>Re-publish the original assembly, but this time with a type forwarded</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Runtime.CompilerServices;
+[<span class="hljs-meta">assembly:TypeForwardedTo(typeof(ClassToBeForwardedLater))</span>]</code></pre>
+</figure>
+<p>Let us compile the original library as below</p>
+<p>csc /t:library /r:newlibrary.dll original.cs</p>
+<p>Let us run application.exe again and see what we get.</p>
+<p>Inside ClassToBeForwardedLater in newlibrary</p>
+<p>The method in the newlibrary is invoked though the application was built with a reference to original.dll. If you do ildasm on application.exe and view the metadata section you will see a reference to original.dll.</p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>November 29, 2006<br>Good simple example. Nice work. Muthu</p>
+</li>
+<li><p><strong>Anonymous</strong><br>December 01, 2006<br>Thanks Muthu for the feedback. Makes me feel good when I read comments like this.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>December 07, 2006<br>I read the COM Interop article on MSDN mag and thought I&#39;d look up your blog.  I learnt new things from your blog.  I&#39;ll keep checking frequently.  </p>
+</li>
+<li><p><strong>Anonymous</strong><br>December 13, 2006<br>Thanks Krishnan. Did you find the article useful? I am planning on writing another article on COM interop, do you have any thoughts for this?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 26, 2007<br>May be it&#39;s just me, but i don&#39;t see any practical use of this attribute. I mean if you can modify original dll then you might as well change somemethod() instead of forwarding to to other class. You mentioned that you used it to solve some problem internally, may be you can tell us what was that problem.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 25, 2007<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>November 01, 2007<br>Very clear example, Thanks, but I have a doubt! We specify [assembly:TypeForwardedTo(typeof(ClassToBeForwardedLater))] in the original assembly but where does this assembly point to the new one for that method. In other words, how does the main application know that func1 method, which was in the original &#39;aaa&#39; assembly is now in new &#39;bbb&#39; and not in a new &#39;ccc&#39; assembly. Reagards,</p>
+</li>
+<li><p><strong>Anonymous</strong><br>December 10, 2007<br>Thanks for a nice example. It is very informative, but for making it also good for the beginers, include the type of project that they have to deal with. I was just going through some questions of MCTS and this was one of the questions. Good going !!!</p>
+</li>
+<li><p><strong>Anonymous</strong><br>January 01, 2008<br>hey jay according to my understanding the runtime knows in which assembly the Type has been forwarded to   because we have included the reference in the compile statement csc /t:library /r:newlibrary.dll original.cs Another thing you can do is add the using newlibrary.cs in the  orignal.cs file If you have more then one assembly having the same Type eg. ClassToBeForwardedLater. What you can do is give the complete name of the type like this using AssemblyB.cs [assembly:TyprFrowardedTo(typeof(AssemblyB.ClassToBeForwardedLater))] so that the compiler knows which assembly we are talking about . this is my first time writing a blog , I request all you out there to please comment and let me know if i am right or wrong my email add is <a href="mailto:alimalik03a@yahoo.com">alimalik03a@yahoo.com</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>January 08, 2008<br>Ali is right. It gets the reference from the reference during compilation. Gopinath, I didn&#39;t understand your question. What do you mean by the type of project? Are you referring to the project in Visual Studio?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>February 02, 2008<br>Thanks for such a nice explanation Mr. Sriram. And also thanks for all the contributors to the comments specially Ali and Rob to explain further details regarding the subject. Regards, Ali.Net</p>
+</li>
+<li><p><strong>Anonymous</strong><br>February 02, 2008<br>The comment has been removed</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

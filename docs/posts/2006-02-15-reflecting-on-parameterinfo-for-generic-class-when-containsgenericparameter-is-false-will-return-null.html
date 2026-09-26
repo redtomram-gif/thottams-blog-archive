@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reflecting on ParameterInfo for Generic class when ContainsGenericParameter is FALSE will return null</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Reflecting on ParameterInfo for Generic class when ContainsGenericParameter is FALSE will return null</h1>
+<p class="meta">
+  <time>2006-02-15</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/reflecting-on-parameterinfo-for-generic-class-when-containsgenericparameter-is-false-will-return-null">original post</a>
+  
+</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">MyClass</span>&lt;<span class="hljs-title">T</span>&gt;
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-built_in">delegate</span> T <span class="hljs-title">MyDelegate</span>()</span>;
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">MyClass</span>(<span class="hljs-params">MyDelegate del</span>)</span>{}
+}
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Program</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        Type type = <span class="hljs-keyword">typeof</span>(MyClass&lt;&gt;);
+        <span class="hljs-keyword">if</span>(type == <span class="hljs-literal">null</span>)
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Type is: NULL&quot;</span>);
+        }
+        <span class="hljs-keyword">else</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Type is: &quot;</span> + type.ToString());
+        }
+        ConstructorInfo constructor = type.GetConstructors()[<span class="hljs-number">0</span>];
+        <span class="hljs-keyword">if</span>(constructor == <span class="hljs-literal">null</span>)
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;ConstructorInfo is: Null&quot;</span>);
+        }
+        <span class="hljs-keyword">else</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;ConstrutorInfo is: &quot;</span>+constructor.ToString());
+        }
+        ParameterInfo parameter = constructor.GetParameters()[<span class="hljs-number">0</span>];
+        <span class="hljs-keyword">if</span>(parameter == <span class="hljs-literal">null</span>)
+        Console.WriteLine(<span class="hljs-string">&quot;ParameterInfo is: Null&quot;</span>);
+        <span class="hljs-keyword">else</span>
+        Console.WriteLine(<span class="hljs-string">&quot;Parameterinfo is: &quot;</span>+parameter.ToString());
+        <span class="hljs-keyword">if</span>(parameter.ParameterType.ContainsGenericParameters == <span class="hljs-literal">false</span>)
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;FullName of Parameter type will be null:&quot;</span>+parameter.ParameterType.FullName);
+        }
+        <span class="hljs-keyword">else</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;FullName of Parameter type:&quot;</span>+parameter.ParameterType.FullName);
+        }
+    }
+}</code></pre>
+</figure>
+<p>The above code demonstrates that Reflecting on a Generic parameter when its ContainsGenericParameter value is false will return a null value in FullName. When the type of the paramter is well defined the FullName will return the appropriate value.</p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>February 19, 2006<br>Welcome to the world of blogging :-)  </p>
+</li>
+<li><p><strong>Anonymous</strong><br>September 18, 2006<br>How does one create a Type with a FullName which is null?  </p>
+<p>From your definition, I would assume that the FullName would be null for the following:  </p>
+<p>Type t = typeof(List&lt;&gt;);<br>but in reality<br>t.FullName == System.Collections.Generic.List`1  </p>
+<p>I need to represent a type with FullName==null so that I can call Type.GetMethod() passing a Type[] and be able to return a method such as<br>ExampleMethod(List&lt;&gt; l)</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 18, 2006<br>I understand what you are saying. I don&#39;t think there is a way to change the full name of a type. I am not sure why the parameter type when the generics part is ill defined returns a numm for the full name while the direct reference to the type does indeed return a fullname. Let me follow this up and get back.</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

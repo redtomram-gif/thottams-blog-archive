@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Using SetRaiseMethod and GetRaiseMethod and invoking the method dynamically</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Using SetRaiseMethod and GetRaiseMethod and invoking the method dynamically</h1>
+<p class="meta">
+  <time>2006-03-17</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/using-setraisemethod-and-getraisemethod-and-invoking-the-method-dynamically">original post</a>
+  
+</p>
+<p>The GetRaiseMethod returns null for all events declared with the event keyword as explained in the MSDN help. The documentation apparently is not as verbose as it should have been and we will work on that. The documentation around this is extremely confusing and I will personally take it as a work item to make it better. If you have any feedback on this please let me know and I will be more than glad to help you with this.</p>
+<p>The GetRaiseMethod will return the method that was set through SetRaiseMethod if you generate a method dynamically. I have a sample below that actually demonstrates this. I have invoked the method just to demonstrate that the MethodInfo that we got was indeed right.</p>
+<p>MSDN remarks for GetRaiseMethod:<br>This method returns a null reference (Nothing in Visual Basic) for events declared with the C# event keyword or the Visual Basic Event keyword. This is because the C# and Visual Basic compilers do not generate such a method.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Threading;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">using</span> System.Reflection.Emit;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">MyApplication</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-built_in">delegate</span> <span class="hljs-keyword">void</span> <span class="hljs-title">MyEvent</span>(<span class="hljs-params">Object temp</span>)</span>;
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        <span class="hljs-comment">// create the type</span>
+        <span class="hljs-comment">//</span>
+        Type helloWorldClassType = CreateCallee();
+        <span class="hljs-comment">// GetRaiseMethod</span>
+        <span class="hljs-comment">//</span>
+        EventInfo ei = helloWorldClassType.GetEvent(<span class="hljs-string">&quot;Click&quot;</span>, BindingFlags.Public | BindingFlags.Instance);
+        MethodInfo rm = ei.GetRaiseMethod();
+        Console.WriteLine(<span class="hljs-string">&quot;Raise Method for event {0} is {1}&quot;</span>, ei.Name, rm.Name);
+        Console.WriteLine(helloWorldClassType.GetType().ToString());
+        <span class="hljs-comment">// Invoke the dynamic method</span>
+        <span class="hljs-comment">//</span>
+        MethodInfo dm = helloWorldClassType.GetMethod(<span class="hljs-string">&quot;OnClick&quot;</span>);
+        Object o = Activator.CreateInstance(helloWorldClassType);
+        <span class="hljs-comment">// Both of them call the emitted method</span>
+        <span class="hljs-comment">//</span>
+        dm.Invoke(o, <span class="hljs-keyword">new</span> Object[<span class="hljs-number">1</span>]);
+        rm.Invoke(o, <span class="hljs-keyword">new</span> Object[<span class="hljs-number">1</span>]);
+    }
+    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> Type <span class="hljs-title">CreateCallee</span>()</span>
+    {
+        AppDomain myDomain = Thread.GetDomain();
+        AssemblyName assemblyName = <span class="hljs-keyword">new</span> AssemblyName();
+        assemblyName.Name = <span class="hljs-string">&quot;EmittedAssembly&quot;</span>;
+        AssemblyBuilder myAssembly = myDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+        ModuleBuilder myModule = myAssembly.DefineDynamicModule(<span class="hljs-string">&quot;EmittedModule&quot;</span>);
+        TypeBuilder helloWorldClass = myModule.DefineType(<span class="hljs-string">&quot;HelloWorld&quot;</span>, TypeAttributes.Public);
+        MethodBuilder myMethod1 = helloWorldClass.DefineMethod(<span class="hljs-string">&quot;OnClick&quot;</span>, MethodAttributes.Public, <span class="hljs-keyword">typeof</span>(<span class="hljs-keyword">void</span>), <span class="hljs-keyword">new</span> Type[<span class="hljs-number">1</span>] { <span class="hljs-keyword">typeof</span>(Object) });
+        ILGenerator methodIL1 = myMethod1.GetILGenerator();
+        methodIL1.EmitWriteLine(<span class="hljs-string">&quot;This is the emitted method&quot;</span>);
+        methodIL1.Emit(OpCodes.Ret);
+        EventBuilder myEvent1 = helloWorldClass.DefineEvent(<span class="hljs-string">&quot;Click&quot;</span>, EventAttributes.None, <span class="hljs-keyword">typeof</span>(MyEvent));
+        myEvent1.SetRaiseMethod(myMethod1);
+        Type helloWorldClassType = helloWorldClass.CreateType();
+        <span class="hljs-keyword">return</span> helloWorldClassType;
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>March 24, 2006  </p>
+<p>What are the possible work-arounds for this?  I am trying to build a generic EventQueue class and don&#39;t want to create specialized versions that handle different delegate signatures.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 31, 2006<br>Unfortunately there is no good work around for this. The only other way is to create delegates and invoke them which I agree is costly and painful.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 22, 2006<br>I&#39;ve searched the internet for this problem, but this blog seemed like the best result. That&#39;s why I&#39;m asking this question here.<br>I&#39;m trying to make an event (using DefineEvent) similar to the events C# generates.<br>It seems like DefineEvent creates the add_EventName and remove_EventName methods automatically, but when I create the type (TypeBuilder.CreateType()) there is an exception thrown saying:<br>Method &#39;add_EventName&#39; ... does not have an implementation.<br>There are no methods like GetAddMethod in the EventBuilder class. Is there any way to implement these methods?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 07, 2006<br>Can you give the code sample of what you are doing so that I can take a look? I tried in my sample above by just defining the event without declaring a body for it and did not get any compilation errors.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 08, 2006<br>Sorry I have bothered you with my question. I used an interface to call my dynamically created event, so I didn&#39;t have to use reflection. I didn&#39;t realize I also needed to use DefineMethodOverride to hook the add_EventName to the add_EventName of the interface.<br>Again, sorry to bother you.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>January 17, 2008<br>The comment has been removed</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

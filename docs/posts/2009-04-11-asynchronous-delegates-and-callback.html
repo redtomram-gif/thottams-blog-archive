@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asynchronous delegates and callback</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Asynchronous delegates and callback</h1>
+<p class="meta">
+  <time>2009-04-11</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/asynchronous-delegates-and-callback">original post</a>
+  <a class="repo" href="https://github.com/redtomram-gif/blog-async-delegate-callback">code sample &rarr;</a>
+</p>
+<p>I was debugging some issue related to asynchronous delegates and wanted to share that information with everyone.</p>
+<p>When you do a BeginInvoke the delegate is invoked on a thread from the thread pool and on completion the callback is also called on the same thread pool thread. Now, any exceptions that is thrown on this thread cannot be caught by the main thread and so will crash the process. If you want to handle the exception, then you have to catch the expected exception in the callback and store it to some state and rethrow the exception from the main thread so that the callers above you can handle it gracefully.</p>
+<p>In the sample below if you remove the try catch block in the callback or replace the exception.Add(e) with a throw, then the exception will crash the process. If you swallow the exception then you will be hiding failures and continuing which could result in other failures.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Threading;
+<span class="hljs-keyword">using</span> System.Runtime.Remoting.Messaging;
+<span class="hljs-keyword">using</span> System.Collections.Generic;
+<span class="hljs-keyword">namespace</span> <span class="hljs-title">Delegate</span>
+{
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">SampleClass</span>
+    {
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-built_in">bool</span> <span class="hljs-title">SampleMethod</span>()</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Inside sample method ...&quot;</span>);
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> ArgumentException();
+        }
+    }
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-built_in">delegate</span> <span class="hljs-built_in">bool</span> <span class="hljs-title">SampleMethodCaller</span>()</span>;
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">DelegateSample</span>
+    {
+        List&lt;Exception&gt; exceptions;
+        ManualResetEvent waiter;
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">DelegateSample</span>()</span>
+        {
+            exceptions = <span class="hljs-keyword">new</span> List&lt;Exception&gt;();
+        }
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CallBackMethodForDelegate</span>(<span class="hljs-params">IAsyncResult result</span>)</span>
+        {
+            SampleMethodCaller smd = (SampleMethodCaller)((AsyncResult)result).AsyncDelegate;
+            <span class="hljs-keyword">try</span>
+            {
+                <span class="hljs-built_in">bool</span> returnValue = smd.EndInvoke(result);
+            }
+            <span class="hljs-keyword">catch</span> (ArgumentException e)
+            {
+                exceptions.Add(e);
+            }
+            <span class="hljs-keyword">finally</span>
+            {
+                waiter.Set();
+            }
+        }
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CallDelegateUsingCallBack</span>()</span>
+        {
+            <span class="hljs-keyword">try</span>
+            {
+                waiter = <span class="hljs-keyword">new</span> ManualResetEvent(<span class="hljs-literal">false</span>);
+                SampleMethodCaller smd = <span class="hljs-keyword">new</span> SampleMethodCaller(SampleClass.SampleMethod);
+                IAsyncResult result = smd.BeginInvoke(CallBackMethodForDelegate, <span class="hljs-literal">null</span>);
+                waiter.WaitOne();
+                <span class="hljs-keyword">if</span> (exceptions.Count != <span class="hljs-number">0</span>)
+                {
+                    <span class="hljs-keyword">throw</span> exceptions[<span class="hljs-number">0</span>];
+                }
+            }
+            <span class="hljs-keyword">catch</span> (ArgumentException)
+            {
+                Console.WriteLine(<span class="hljs-string">&quot;Catch exceptions here ...&quot;</span>);
+            }
+        }
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+        {
+            DelegateSample ds = <span class="hljs-keyword">new</span> DelegateSample();
+            ds.CallDelegateUsingCallBack();
+            Console.WriteLine(<span class="hljs-string">&quot; -----------------&quot;</span>);
+        }
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>April 11, 2009<br>PingBack from <a href="http://www.anith.com/?p=28308">http://www.anith.com/?p=28308</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 13, 2009<br>Hey buddy thanks for sharing :-)</p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 06, 2011<br>What is the point of a BeginInvoke if you wait for that thread to end after that? It would be great if it was a way to do the same with out having to wait for that event, but I don&#39;t think there is, except if you have a timer in the main thread checking from time to time if the are any errors in the Exceptions array.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 10, 2011<br>Any comments on Keeper&#39;s comments ?</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

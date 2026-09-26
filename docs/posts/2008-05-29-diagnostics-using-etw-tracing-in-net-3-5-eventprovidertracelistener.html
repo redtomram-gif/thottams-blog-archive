@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnostics: Using ETW tracing in .NET 3.5 (EventProviderTraceListener)</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Diagnostics: Using ETW tracing in .NET 3.5 (EventProviderTraceListener)</h1>
+<p class="meta">
+  <time>2008-05-29</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/diagnostics-using-etw-tracing-in-net-3-5-eventprovidertracelistener">original post</a>
+  
+</p>
+<p>.NET exposes an elegant diagnostics model that can be used by applications. It is a bit confusing to start with. There are a few listeners that exist in the Diagnostics namespace. Some of them are</p>
+<ol>
+<li><p>TextWriterTraceListener</p>
+</li>
+<li><p>DefaultTraceListener</p>
+</li>
+<li><p>EventLogTraceListener</p>
+</li>
+<li><p>EventProviderTraceListener</p>
+</li>
+<li><p>EventSchemaTraceListener</p>
+</li>
+<li><p>XMLWriterTraceListener</p>
+</li>
+<li><p>ConsoleTraceListener</p>
+</li>
+</ol>
+<p>The EventSchemaTraceListener, EventLogTraceListener and EventProviderTraceListener were too confusing as they all read the same at a glance. Here is a sample I wrote using this listener to get some clarity around it.</p>
+<p>ETW.cs:</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Diagnostics;
+
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&lt;summary&gt;</span></span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> EventProviderTraeListener:</span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span>   https://msdn.microsoft.com/en-us/library/system.diagnostics.eventing.eventprovidertracelistener.aspx</span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> Trace Switch:</span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span>   https://msdn.microsoft.com/en-us/library/aa983740.aspx</span>
+<span class="hljs-comment"><span class="hljs-doctag">///</span> <span class="hljs-doctag">&lt;/summary&gt;</span></span>
+<span class="hljs-keyword">class</span> <span class="hljs-title">ETWSample</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>(<span class="hljs-params"><span class="hljs-built_in">string</span>[] <span class="hljs-keyword">args</span></span>)</span>
+    {
+        TraceSource myTraceSource = <span class="hljs-keyword">new</span> TraceSource(<span class="hljs-string">&quot;TraceSourceApp&quot;</span>);
+        myTraceSource.TraceEvent(TraceEventType.Error, <span class="hljs-number">1</span>, <span class="hljs-string">&quot;Tracing Error Message.&quot;</span>);
+        myTraceSource.TraceEvent(TraceEventType.Warning, <span class="hljs-number">2</span>, <span class="hljs-string">&quot;Tracing Warning Message.&quot;</span>);
+        myTraceSource.TraceEvent(TraceEventType.Information, <span class="hljs-number">3</span>, <span class="hljs-string">&quot;Tracing Information.&quot;</span>);
+        myTraceSource.TraceEvent(TraceEventType.Verbose, <span class="hljs-number">4</span>, <span class="hljs-string">&quot;Tracing Verbose Message.&quot;</span>);
+        myTraceSource.TraceEvent(TraceEventType.Critical, <span class="hljs-number">5</span>, <span class="hljs-string">&quot;Tracing Critical Message.&quot;</span>);
+        myTraceSource.Close();
+        <span class="hljs-keyword">return</span>;
+    }
+}</code></pre>
+</figure>
+<p>I also wrote the following configuration file such that the appropriate listeners are added to the source.</p>
+<p>ETW.exe.config</p>
+<figure class="code">
+<figcaption>XML</figcaption>
+<pre><code class="hljs"><span class="hljs-tag">&lt;<span class="hljs-name">configuration</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">system.diagnostics</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">sources</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">source</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;TraceSourceApp&quot;</span> <span class="hljs-attr">switchName</span>=<span class="hljs-string">&quot;SourceSwitch&quot;</span> <span class="hljs-attr">switchType</span>=<span class="hljs-string">&quot;System.Diagnostics.SourceSwitch&quot;</span>&gt;</span>
+        <span class="hljs-tag">&lt;<span class="hljs-name">listeners</span>&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">add</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;ConsoleListener&quot;</span>/&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">add</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;ETWListener&quot;</span>/&gt;</span>
+          <span class="hljs-tag">&lt;<span class="hljs-name">remove</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;Default&quot;</span>/&gt;</span>
+        <span class="hljs-tag">&lt;/<span class="hljs-name">listeners</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">source</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">sources</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">switches</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">add</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;SourceSwitch&quot;</span> <span class="hljs-attr">value</span>=<span class="hljs-string">&quot;Verbose&quot;</span> /&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">switches</span>&gt;</span>
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">sharedListeners</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">add</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;ConsoleListener&quot;</span> <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;System.Diagnostics.ConsoleTraceListener&quot;</span>/&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">add</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;ETWListener&quot;</span> <span class="hljs-attr">type</span>=<span class="hljs-string">&quot;System.Diagnostics.Eventing.EventProviderTraceListener, System.Core, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089&quot;</span>
+               <span class="hljs-attr">initializeData</span>=<span class="hljs-string">&quot;{BA2DC22C-CCCE-4D17-AFC9-9811DD739970}&quot;</span> /&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">sharedListeners</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">system.diagnostics</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">configuration</span>&gt;</span></code></pre>
+</figure>
+<p>I compiled the cs file as csc ETW.cs /d:TRACE and got etw.exe. On running etw.exe I see the trace messages in the screen. This is because of the fact that consolelistener is added as a listener.</p>
+<p>Now in order to enable ETW tracing I ran logman to start a logging session.</p>
+<p>logman start mysession -p {BA2DC22C-CCCE-4D17-AFC9-9811DD739970} -o etwtrace.etl –ets</p>
+<p>This creates an .etl file which is filled with data when I stop the session. It looks like it has parameters that you can use to tweak the behavior, but help around here is very poor and hence unfortunately requires lots of trial and error. Run perfmon and look into Data Collector Sets\Event Trace Sessions. The properties for mysession has a few options that you can experiment with.</p>
+<p>To stop the session use</p>
+<p>logman stop mysession –ets</p>
+<p>If you notice, the provider guid given in the logman session and the listener configuration are the same.</p>
+<p>To get information on what has been traced in the etl file run the following command</p>
+<p>tracerpt etwtrace.etl</p>
+<p>This will give you two files summary.txt and dumpfile.xml, which have readable information.</p>
+<p>I was wondering if the etl files were viewable through event viewer. I tried to load the etl file from eventvwr using open saved log and it failed to load it. But it has another option to save events as an evtx file in the eventvwr actions menu. Kamesh Jayaram and <a href="https://blogs.msdn.com/krishkp">Krishna Kumar</a> enlightened me with this.</p>
+<p>I saved the etl file events as an evtx file and tried opening the evtx file in event viewer. I was able to see the trace messages in event viewer.</p>
+<p>I added the EventSchemaTraceListener and generated a XML log file. I tried loading that file in eventvwr and it failed to load. I am yet to figure that out! If someone knows anything about it I will be interested to know.</p>
+<p>I also learn that if you set the schema of the etl upfront with eventvwr you can avoid the step of extracting events from the etl file and load the etl directly. Lack of quality help makes that hard to do as well!</p>
+<p>Another important thing to note is that the changes to the configuration files are not dynamic and hence requires the process to be restarted.</p>
+<p>Summary:</p>
+<p>Logging should be simple such it in itself doesn&#39;t become a problem. This is a good step in the right direction, but needs more polishing. I feel that the multiple hoops involved in getting this right makes it complex. Lack of proper help worsens it. Similar reading names for the filters is exasperating. I would like to hear your views and perspectives on this if you have used the ETW tracing libraries.</p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>May 28, 2008<br>PingBack from <a href="http://www.travel-hilarity.com/airline_travel/?p=4830">http://www.travel-hilarity.com/airline_travel/?p=4830</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 29, 2008<br>Thanks Thottam for sharing this. I&#39;ve been experimenting with the new ETW classes as well some time back and was very disappointed with the documentation. But ETW seems to be very powerful and I&#39;m happy that there is a first step to make it available to the .NET world. Please keep us updated with the experiences you make! Cheers, Volker</p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 29, 2008<br>You saved a lot my time on this topic. Your comment on the state of help on the topic is apt.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 29, 2008<br>ETW is indeed very powerful. I saw some performance numbers for ETW and they were very impressive. This is a good first step in the right direction, but needs some simplicity to be sprinkled on it.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>February 16, 2009<br>Thanks for the pointers... BTW, your links to MSDN in the post are actually pointing to some OWA site.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 13, 2009<br>Have you tried xperf? xperf has a viewer that analyze ETL files.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 05, 2010<br>Can we use ETW tracing to capture events from the application running on some other machine in network.</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

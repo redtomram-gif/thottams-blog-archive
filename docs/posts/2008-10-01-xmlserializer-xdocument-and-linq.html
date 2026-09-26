@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XMLSerializer, XDocument and LINQ</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>XMLSerializer, XDocument and LINQ</h1>
+<p class="meta">
+  <time>2008-10-01</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/xmlserializer-xdocument-and-linq">original post</a>
+  
+</p>
+<p>I took the sample from my previous post and wanted to use LINQ to query the XML. You can pretty much use the power of SQL on the document object to richly query for things you are looking for.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Linq;
+<span class="hljs-keyword">using</span> System.Xml.Linq;
+<span class="hljs-keyword">using</span> System.Collections.Generic;
+<span class="hljs-keyword">using</span> System.Xml;
+<span class="hljs-keyword">using</span> System.Xml.Serialization;
+<span class="hljs-keyword">using</span> System.IO;
+<span class="hljs-keyword">namespace</span> <span class="hljs-title">Sample</span>
+{
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Company</span>
+    {
+        List&lt;Book&gt; books;
+        [<span class="hljs-meta">XmlElement(ElementName = <span class="hljs-string">&quot;Book&quot;</span>)</span>]
+        <span class="hljs-keyword">public</span> List&lt;Book&gt; Books
+        {
+            <span class="hljs-keyword">get</span>
+            {
+                <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.books == <span class="hljs-literal">null</span>)
+                {
+                    <span class="hljs-keyword">this</span>.books = <span class="hljs-keyword">new</span> List&lt;Book&gt;();
+                }
+                <span class="hljs-keyword">return</span> books;
+            }
+            <span class="hljs-keyword">set</span> { }
+        }
+    }
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Book</span>
+    {
+        [<span class="hljs-meta">XmlAttribute(AttributeName = <span class="hljs-string">&quot;Title&quot;</span>)</span>]
+        <span class="hljs-keyword">public</span> <span class="hljs-built_in">string</span> Name { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+        [<span class="hljs-meta">XmlAttribute(AttributeName = <span class="hljs-string">&quot;Author&quot;</span>)</span>]
+        <span class="hljs-keyword">public</span> <span class="hljs-built_in">string</span> Author { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+        [<span class="hljs-meta">XmlAttribute(AttributeName = <span class="hljs-string">&quot;Year&quot;</span>)</span>]
+        <span class="hljs-keyword">public</span> <span class="hljs-built_in">string</span> Year { <span class="hljs-keyword">get</span>; <span class="hljs-keyword">set</span>; }
+    }
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Demo</span>
+    {
+        <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>(<span class="hljs-params"><span class="hljs-built_in">string</span>[] <span class="hljs-keyword">args</span></span>)</span>
+        {
+            Company c = <span class="hljs-keyword">new</span> Company
+            {
+                Books =
+                {
+                    <span class="hljs-keyword">new</span> Book
+                    {
+                        Name = <span class="hljs-string">&quot;First Book&quot;</span>,
+                        Author = <span class="hljs-string">&quot;First Author&quot;</span>,
+                        Year = <span class="hljs-string">&quot;First Year&quot;</span>,
+                    },
+                    <span class="hljs-keyword">new</span> Book
+                    {
+                        Name = <span class="hljs-string">&quot;Second Book&quot;</span>,
+                        Author = <span class="hljs-string">&quot;Second Author&quot;</span>,
+                        Year = <span class="hljs-string">&quot;Second Year&quot;</span>,
+                    },
+                    <span class="hljs-keyword">new</span> Book
+                    {
+                        Name = <span class="hljs-string">&quot;Third Book&quot;</span>,
+                        Author = <span class="hljs-string">&quot;Third Author&quot;</span>,
+                        Year = <span class="hljs-string">&quot;Third Year&quot;</span>,
+                    },
+                    <span class="hljs-keyword">new</span> Book
+                    {
+                        Name = <span class="hljs-string">&quot;Fourth Book&quot;</span>,
+                        Author = <span class="hljs-string">&quot;Fourth Author&quot;</span>,
+                        Year = <span class="hljs-string">&quot;Fourth Year&quot;</span>,
+                    },
+                    <span class="hljs-keyword">new</span> Book
+                    {
+                        Name = <span class="hljs-string">&quot;Fifth Book&quot;</span>,
+                        Author = <span class="hljs-string">&quot;Fifth Author&quot;</span>,
+                        Year = <span class="hljs-string">&quot;Fifth Year&quot;</span>,
+                    }
+                }
+            };
+            XmlSerializer xmlSerializer = <span class="hljs-keyword">new</span> XmlSerializer(<span class="hljs-keyword">typeof</span>(Company));
+            FileStream fs = <span class="hljs-keyword">new</span> FileStream(<span class="hljs-string">&quot;test.xml&quot;</span>, FileMode.Create);
+            xmlSerializer.Serialize(fs, c);
+            fs.Close();
+            XDocument doc = XDocument.Load(<span class="hljs-string">&quot;test.xml&quot;</span>);
+
+            <span class="hljs-keyword">var</span> bks = <span class="hljs-keyword">from</span> books <span class="hljs-keyword">in</span> doc.Elements(<span class="hljs-string">&quot;Company&quot;</span>).Elements(<span class="hljs-string">&quot;Book&quot;</span>) <span class="hljs-keyword">where</span> (books.Attribute(<span class="hljs-string">&quot;Title&quot;</span>).Value.Equals(<span class="hljs-string">&quot;Fourth Book&quot;</span>)) <span class="hljs-keyword">select</span> books;
+            <span class="hljs-keyword">foreach</span> (<span class="hljs-keyword">var</span> book <span class="hljs-keyword">in</span> bks)
+            {
+                Console.WriteLine(book);
+            }
+        }
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>September 30, 2008<br>PingBack from <a href="http://www.easycoded.com/xmlserializer-xdocument-and-linq/">http://www.easycoded.com/xmlserializer-xdocument-and-linq/</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>September 30, 2008<br>Better yet, serialize straight into XDocument: var doc = new XDocument(); var (var writer = doc.CreateNavigator().AppendChild()) {  xmlSerializer.Serialize(writer, c); }</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 07, 2008<br>It is cool to query all objects with unified well known SQL language, but I feel a bit concerned about this dynamic SQL style rather than stored procedure.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 08, 2008<br>From the investigation I have done there could be type bloating if not used carefully. Also, the object model is generated from the data model and changes when the data model changes if not crafted carefully. Having a normalized object model could lead to confusion in the application layer and could tie the implementation to LINQ only subsystems. Sure, careful design is required when modelling these systems.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 21, 2008<br>Another real world sample illustrating the power of LINQ: <a href="http://blogs.msdn.com/bali_msft/archive/2008/10/22/building-objects-from-xml-of-ebay-api-with-linq.aspx">http://blogs.msdn.com/bali_msft/archive/2008/10/22/building-objects-from-xml-of-ebay-api-with-linq.aspx</a></p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

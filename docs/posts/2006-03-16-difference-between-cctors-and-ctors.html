@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Difference between .cctors and ctors</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Difference between .cctors and ctors</h1>
+<p class="meta">
+  <time>2006-03-16</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/difference-between-cctors-and-ctors">original post</a>
+  
+</p>
+<p>A static constructor is called when a direct access to any static member of the class is made. The static constructor cannot be used to create an instance of the class. The following example demonstrates this clearly. When you reflect for constructors on a class and use the static BindingFlags then you will get the static constructor as well. An invocation on this will fail with System.MemberAccessException as this method cannot be invoked. If you do not want to get the .cctor as part of your result then remove the static from the BindingFlags.</p>
+<p>A simple print with Name will tell you if this is a ctor or a cctor.</p>
+<p>The example below demonstrates this scenario clearly.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">class</span> <span class="hljs-title">Test</span>
+{
+    <span class="hljs-comment">// This is the cctor for the class</span>
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-title">Test</span>()</span> { }
+    <span class="hljs-comment">// These two are the constructors for the class</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Test</span>(<span class="hljs-params"><span class="hljs-built_in">int</span> i</span>)</span> { }
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Test</span>(<span class="hljs-params"><span class="hljs-built_in">string</span> s</span>)</span> { }
+}
+<span class="hljs-keyword">class</span> <span class="hljs-title">Demo</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        <span class="hljs-comment">// This will give a compilation error as there is no</span>
+        <span class="hljs-comment">// constructor for Test that does not take any parameters</span>
+        <span class="hljs-comment">//</span>
+        <span class="hljs-comment">//Test t = new Test();</span>
+        Type[] paramtypes = <span class="hljs-keyword">new</span> Type[<span class="hljs-number">0</span>];
+        <span class="hljs-comment">// Call to get a constructor that does not take any parameters using the BindingFlags.Static will return the .cctor which</span>
+        <span class="hljs-comment">// is the static constructor, but this cannot be invoked</span>
+        <span class="hljs-comment">//</span>
+        ConstructorInfo ctor = <span class="hljs-keyword">typeof</span>(Test).GetConstructor(
+            BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, <span class="hljs-literal">null</span>,
+            CallingConventions.Standard, paramtypes, <span class="hljs-literal">null</span>);
+        <span class="hljs-comment">// The below snippet of code will return 3 constructors</span>
+        <span class="hljs-comment">//</span>
+        ConstructorInfo[] c = <span class="hljs-keyword">typeof</span>(Test).GetConstructors(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        <span class="hljs-comment">// Reflection returns the static constructor for the type as well which cannot be invoked explicitly</span>
+        <span class="hljs-comment">// In the example below you will see a list of constructors including the cctor which is the only one that does not take any parameters</span>
+        <span class="hljs-comment">// This cannot be invoked.</span>
+        <span class="hljs-keyword">foreach</span> (ConstructorInfo c1 <span class="hljs-keyword">in</span> c)
+        {
+            Console.WriteLine(c1.ToString());
+        }
+        <span class="hljs-comment">// The below snippet of code will return 2 constructors</span>
+        <span class="hljs-comment">//</span>
+        ctor = <span class="hljs-keyword">typeof</span>(Test).GetConstructor(
+            BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, <span class="hljs-literal">null</span>,
+            CallingConventions.Standard, paramtypes, <span class="hljs-literal">null</span>);
+        c = <span class="hljs-keyword">typeof</span>(Test).GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        <span class="hljs-comment">// Reflection returns the static constructor for the type as well which cannot be invoked explicitly</span>
+        <span class="hljs-comment">// In the example below you will see a list of constructors including the cctor which is the only one that does not take any parameters</span>
+        <span class="hljs-comment">// This cannot be invoked.</span>
+        <span class="hljs-keyword">foreach</span> (ConstructorInfo c1 <span class="hljs-keyword">in</span> c)
+        {
+            Console.WriteLine(c1.ToString());
+        }
+        <span class="hljs-comment">// This constructor cannot be invoked as this is .cctor for the type. You will get a System.MemberAccessException</span>
+        <span class="hljs-comment">//</span>
+        ctor.Invoke(Type.EmptyTypes);
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>March 16, 2006<br>I guess when you mention about .cctor you could also talk about beforefieldinit. Just a suggestion.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 24, 2006<br>That is a very good suggestion. I was thinking of that more as an internal concept and left it out. Would you be able to add some information from your perspective here on this? If not, I will add this information when I get to this soon.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 24, 2006<br>Here is apot from Brada on .beforefieldinit  </p>
+<p><a href="http://blogs.msdn.com/brada/archive/2004/04/17/115300.aspx">http://blogs.msdn.com/brada/archive/2004/04/17/115300.aspx</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 27, 2006<br>I mentioned a while back that I change from being a PM for System.Reflection and System.Reflection.Emit..e.t.c...</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

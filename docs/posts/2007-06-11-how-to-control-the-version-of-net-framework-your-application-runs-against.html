@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to control the version of .NET Framework your application runs against?</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>How to control the version of .NET Framework your application runs against?</h1>
+<p class="meta">
+  <time>2007-06-11</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/how-to-control-the-version-of-net-framework-your-application-runs-against">original post</a>
+  
+</p>
+<p>Let us look at a small sample that illustrated how this configuration entry works.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">class</span> <span class="hljs-title">Sample</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;This is a sample&quot;</span>);
+    }
+}</code></pre>
+</figure>
+<p>Let us copy this code to RequireRuntime.cs and compile it. Let us now add a configuration file RequiredRuntime.exe.config which has the following entry in it. If you run it on a machine that has V2.0.50727 installed in it the application runs and prints the appropriate string.</p>
+<figure class="code">
+<figcaption>XML</figcaption>
+<pre><code class="hljs"><span class="hljs-tag">&lt;<span class="hljs-name">configuration</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-name">startup</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">requiredRuntime</span> <span class="hljs-attr">version</span>=<span class="hljs-string">&quot;v2.0.50727&quot;</span>/&gt;</span>
+   <span class="hljs-tag">&lt;/<span class="hljs-name">startup</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">configuration</span>&gt;</span></code></pre>
+</figure>
+<p>Let us modify the configuration file to require a different version that does not exist. Copy the following to the same configuration file. When you execute the application you will get an error stating the following:</p>
+<figure class="code">
+<figcaption>XML</figcaption>
+<pre><code class="hljs"><span class="hljs-tag">&lt;<span class="hljs-name">configuration</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-name">startup</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">requiredRuntime</span> <span class="hljs-attr">version</span>=<span class="hljs-string">&quot;v5.0.50727&quot;</span>/&gt;</span>
+   <span class="hljs-tag">&lt;/<span class="hljs-name">startup</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">configuration</span>&gt;</span></code></pre>
+</figure>
+<p>“To run this application, you first must install one of the following version of the .NET Framework:</p>
+<p>V5.0.50727</p>
+<p>Contact your application publisher for instructions about obtaining the appropriate version of the .NET Framework”</p>
+<p>This is a real cool way to ensure that your application runs only againt the version of the .NET Framework you have tested it against. There is also another configuration entry called SupportedRuntime which comes in real handy. I will write about that in my next blog.</p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>April 13, 2008<br>PingBack from <a href="http://www.travel-hilarity.com/airline_travel/?p=2865">http://www.travel-hilarity.com/airline_travel/?p=2865</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 13, 2008<br>PingBack from <a href="http://www.travel-hilarity.com/airline_travel/?p=2865">http://www.travel-hilarity.com/airline_travel/?p=2865</a></p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

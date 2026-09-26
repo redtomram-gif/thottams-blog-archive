@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Introduction to Versioning and BindingRedirect</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Introduction to Versioning and BindingRedirect</h1>
+<p class="meta">
+  <time>2007-01-30</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/introduction-to-versioning-and-bindingredirect">original post</a>
+  
+</p>
+<p>I want to share with you this sample that demonstrates how to version an assembly. An</p>
+<p>AssemblyIdentity consists of five parts:</p>
+<ol>
+<li>AssemblyName</li>
+<li>Public key</li>
+<li>Version</li>
+<li>Culture</li>
+<li>Processor Architecture</li>
+</ol>
+<p>How do you specify all of these in an assembly? It is real simple. Let us walk over step by step to understand this with a simple example.</p>
+<p><strong>Let us create an assembly and version it as 1.0.0.0.</strong></p>
+<p>Let us create a directory C:\versionsample\bin\v1\helper.cs as below</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+[<span class="hljs-meta">assembly: System.Reflection.AssemblyVersion(<span class="hljs-string">&quot;1.0.0.0&quot;</span>)</span>]
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Bar</span>()</span>
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;Inside HelperMethod: Version = {0}&quot;</span>, (Assembly.GetExecutingAssembly()).ToString());
+    }
+}</code></pre>
+</figure>
+<p>Now let us sign it with a key pair. In order to do that run sn –k sgkey.snk and generate key pair.</p>
+<p>You can compile the assembly as below</p>
+<p>csc /target:library /out:helper.dll /keyfile:sgkey.snk helper.cs</p>
+<p>If you ildasm helper.dll you will see the version number to be 1.0.0.0 and the public key as specified in the snk file.</p>
+<p><strong>Let us create a 2.0.0.0 version of the assembly we has before:</strong></p>
+<p>Let us create a directory C:\versionsample\bin\v2\helper.cs as below</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+[<span class="hljs-meta">assembly: System.Reflection.AssemblyVersion(<span class="hljs-string">&quot;2.0.0.0&quot;</span>)</span>]
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Helper</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">HelperMethod</span>()</span>
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;Inside HelperMethod: Version = {0}&quot;</span>, (Assembly.GetExecutingAssembly()).ToString());
+    }
+}</code></pre>
+</figure>
+<p>You can compile this with the same key file to a library</p>
+<p>csc /target:library /out:helper.dll /keyfile.sgkey.snk helper.cs</p>
+<p>Let us write the application as below and compile it with helper.dll from the v1 directory as below:</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">sample</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>(<span class="hljs-params"><span class="hljs-built_in">string</span>[] <span class="hljs-keyword">args</span></span>)</span>
+    {
+        Foo f = <span class="hljs-keyword">new</span> Foo();
+        f.Bar();
+    }
+}</code></pre>
+</figure>
+<p>csc /reference:bin\v1\helper.dll Application.cs</p>
+<p>Let us create a config file for the application as below:</p>
+<p>Application.exe.config:</p>
+<figure class="code">
+<figcaption>XML</figcaption>
+<pre><code class="hljs"><span class="hljs-tag">&lt;<span class="hljs-name">configuration</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-name">runtime</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">assemblyBinding</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">&quot;urn:schemas-microsoft-com:asm.v1&quot;</span>&gt;</span>
+         <span class="hljs-tag">&lt;<span class="hljs-name">dependentAssembly</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">assemblyIdentity</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;Helper&quot;</span>
+                              <span class="hljs-attr">publicKeyToken</span>=<span class="hljs-string">&quot;bcabfaff346163aa&quot;</span>
+                         <span class="hljs-attr">culture</span>=<span class="hljs-string">&quot;neutral&quot;</span> /&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">codeBase</span> <span class="hljs-attr">version</span>=<span class="hljs-string">&quot;1.0.0.0&quot;</span>
+                      <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;c:\versionsample\bin\v1\helper.dll&quot;</span>/&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">codeBase</span> <span class="hljs-attr">version</span>=<span class="hljs-string">&quot;2.0.0.0&quot;</span>
+                      <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;c:\versionsample\bin\v2\helper.dll&quot;</span>/&gt;</span>
+         <span class="hljs-tag">&lt;/<span class="hljs-name">dependentAssembly</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">assemblyBinding</span>&gt;</span>
+   <span class="hljs-tag">&lt;/<span class="hljs-name">runtime</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">configuration</span>&gt;</span></code></pre>
+</figure>
+<p>If you run the application, you will get the following output:</p>
+<p>Inside HelperMethod: Version = helper, Version=1.0.0.0, Culture=neutral, PublicK</p>
+<p><code>eyToken=bcabfaff346163aa</code></p>
+<p>In order to bind the application to version 2.0.0.0 of the helper assembly, let us add a bindingRedirect which moves version 1.0.0.0 to 2.0.0.0.</p>
+<figure class="code">
+<figcaption>XML</figcaption>
+<pre><code class="hljs"><span class="hljs-tag">&lt;<span class="hljs-name">configuration</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-name">runtime</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">assemblyBinding</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">&quot;urn:schemas-microsoft-com:asm.v1&quot;</span>&gt;</span>
+         <span class="hljs-tag">&lt;<span class="hljs-name">dependentAssembly</span>&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">assemblyIdentity</span> <span class="hljs-attr">name</span>=<span class="hljs-string">&quot;Helper&quot;</span>
+                              <span class="hljs-attr">publicKeyToken</span>=<span class="hljs-string">&quot;bcabfaff346163aa&quot;</span>
+                         <span class="hljs-attr">culture</span>=<span class="hljs-string">&quot;neutral&quot;</span> /&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">bindingRedirect</span> <span class="hljs-attr">oldVersion</span>=<span class="hljs-string">&quot;1.0.0.0&quot;</span> <span class="hljs-attr">newVersion</span>=<span class="hljs-string">&quot;2.0.0.0&quot;</span>/&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">codeBase</span> <span class="hljs-attr">version</span>=<span class="hljs-string">&quot;1.0.0.0&quot;</span>
+                      <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;c:\versionsample\bin\v1\helper.dll&quot;</span>/&gt;</span>
+            <span class="hljs-tag">&lt;<span class="hljs-name">codeBase</span> <span class="hljs-attr">version</span>=<span class="hljs-string">&quot;2.0.0.0&quot;</span>
+                    <span class="hljs-attr">href</span>=<span class="hljs-string">&quot;c:\versionsample\bin\v2\helper.dll&quot;</span>/&gt;</span>
+         <span class="hljs-tag">&lt;/<span class="hljs-name">dependentAssembly</span>&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">assemblyBinding</span>&gt;</span>
+   <span class="hljs-tag">&lt;/<span class="hljs-name">runtime</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">configuration</span>&gt;</span></code></pre>
+</figure>
+<p>Now if you run the application you will see the following output:</p>
+<p>Inside HelperMethod: Version = helper, Version=2.0.0.0, Culture=neutral, PublicK</p>
+<p><code>eyToken=bcabfaff346163aa</code></p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>February 06, 2007<br>we are successfully created strong name for the dll and we placed inside of GAC. After that we are not able to access the dll in other projects.could u help me.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>February 07, 2007<br>Can you provide me with some more information? Do you see this issue during development or deployment? What error are you seeing? If you can provide some more details I can try and help.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 19, 2008<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 13, 2008<br>Hi, I am actually trying for assembly redirection for moss workflows.I copied the new dll into the GAC and redirected as suggested in the web.config file but i am not able to debug the new dll so its not redirecting to the new dll. Can you help me in whats that i am doin wrong Thanks in advance</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 13, 2008<br>Hi this is how i established the assembly redirection for upgrading moss workflows but i am not able to see that the new dll is being used. <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1"> <dependentAssembly> <assemblyIdentity name="SDS.Workflow.LandAcquisition" publicKeyToken="15aceea04566a2c2" culture="neutral" /> <bindingRedirect oldVersion="1.0.0.1" newVersion="2.0.0.1"/> <codeBase version="1.0.0.1" href="C:SDS.Workflow.LandAcquisition.dll"/> <codeBase version="2.0.0.1" href="D:SDS.Workflow.LandAcquisition.dll"/> </dependentAssembly> </assemblyBinding> Help me as its urgent Thanks in advance</p>
+</li>
+<li><p><strong>Anonymous</strong><br>September 25, 2008<br>in this example both Dll &#39;s are stored in different location. What if it is stored in GAC</p>
+</li>
+<li><p><strong>Anonymous</strong><br>January 03, 2011<br>Actually i have an assembly with a strong name, i installed it in the GAC and was uneble to redirect it as it did above. please any idea ?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>January 24, 2011<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>September 08, 2011<br>It&#39;s not working man give different solution ....</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 13, 2015<br>As far as I understand, if DLL is stored in GAC, you just need to provide bindingredirect and not codebase. <bindingRedirect oldVersion="1.0.0.1" newVersion="2.0.0.1"/></p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

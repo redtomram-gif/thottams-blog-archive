@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NTSD and SOS – Adding a break point on a method with reference to a specific thread</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>NTSD and SOS – Adding a break point on a method with reference to a specific thread</h1>
+<p class="meta">
+  <time>2007-03-02</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/ntsd-and-sos-adding-a-break-point-on-a-method-with-reference-to-a-specific-thread">original post</a>
+  <a class="repo" href="https://github.com/redtomram-gif/blog-threads-ntsd-breakpoint-sample">code sample &rarr;</a>
+</p>
+<p>I wanted to set a conditional break point from managed code and it was hard to do that using SOS. In the sample below, let us assume that I want to break in to the method ThreadMethod when a specific thread tries to access it. I want to thank <a href="https://blogs.gotdotnet.com/varunsekhri/" title="Varun Sekhri">Varun Sekhri</a>, Rajesh Gunnalan and Michael Rayhelson who helped me figure out a few things that I did not know about.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Threading;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">sample</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ThreadMethod</span>()</span>
+    {
+        <span class="hljs-keyword">while</span>(<span class="hljs-literal">true</span>)
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;{0}&quot;</span>, Thread.CurrentThread.Name);
+            Thread.Sleep(<span class="hljs-number">600</span>);
+        }
+    }
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        sample s = <span class="hljs-keyword">new</span> sample();
+        Thread t1 = <span class="hljs-keyword">new</span> Thread(s.ThreadMethod);
+        Thread t2 = <span class="hljs-keyword">new</span> Thread(s.ThreadMethod);
+        t1.Name = <span class="hljs-string">&quot;First Thread&quot;</span>;
+        t2.Name = <span class="hljs-string">&quot;Second Thread&quot;</span>;
+        t1.Start();
+        t2.Start();
+        Console.WriteLine(<span class="hljs-string">&quot;Enter any string to stop execution:&quot;</span>);
+        String line = Console.ReadLine();
+        t1.Abort();
+        t2.Abort();
+    }
+}</code></pre>
+</figure>
+<p><strong>Here is how you would do it:</strong></p>
+<p>Compile the sample using csc /debug thread.cs</p>
+<p>windbg thread.exe</p>
+<p>CommandLine: thread.exe</p>
+<p>Symbol search path is: symsrv<em>symsrv.dll</em>c:\symbols*<a href="https://msdl.microsoft.com/download/symbols">https://msdl.microsoft.com/download/symbols</a></p>
+<p>7c901230 cc int 3</p>
+<p><code>0:000&gt; .reload</code></p>
+<p>Reloading current modules</p>
+<p>....</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">0:000&gt; sxe ld mscorwks
+0:000&gt; g
+0:000&gt; .loadby sos mscorwks</code></pre>
+</figure>
+<p>Let us set a break point on Main to begin with</p>
+<p><code>0:000&gt; !bpmd thread.exe sample.Main</code></p>
+<p>Adding pending breakpoints...</p>
+<p>If you notice the debug spew, Main method just got JITed when we hit the break point</p>
+<p><code>0:000&gt; g</code></p>
+<p>JITTED thread!sample.Main()</p>
+<p>Setting breakpoint: bp 00DD0070 [sample.Main()]</p>
+<p>Breakpoint 0 hit</p>
+<p>thread!sample.Main():</p>
+<p>00dd0070 57 push edi</p>
+<p><code>0:000&gt; !Name2EE thread.exe sample.ThreadMethod</code></p>
+<p>Module: 00a22c14 (thread.exe)</p>
+<p>Token: 0x06000001</p>
+<p>MethodDesc: 00a22fd8</p>
+<p>Name: sample.ThreadMethod()</p>
+<p>Not JITTED yet. Use !bpmd -md 00a22fd8 to break on run.</p>
+<p><strong>The ThreadMethod has not been JITed as yet. You cannot set an unmanaged break point on it as yet. For now, let us set a managed break point on this method.</strong></p>
+<p><code>0:000&gt; !bpmd thread.exe sample.ThreadMethod</code></p>
+<p>Found 1 methods...</p>
+<p><code>MethodDesc = 00a22fd8</code></p>
+<p>Adding pending breakpoints...</p>
+<p><code>0:000&gt; g</code></p>
+<p>When you hit the break point, if you look below thread ID 3 is trying to access the method. The method is not JITed and its unmanaged address is 00dd01c0. If you unassemble the code in this address you will see the disassembly of the method. Let us add a break point at WriteLine when thread 3 tries to access this method.</p>
+<p><code>0:000&gt; bl</code></p>
+<p>0 e [c:\test\thread.cs @ 16] 0001 (0001) 0:**** thread!sample.Main()</p>
+<p>1 e [c:\test\thread.cs @ 7] 0001 (0001) 0:**** thread!sample.ThreadMethod()</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">0:000&gt; bc 0
+0:000&gt; bc 1
+0:000&gt; !Threads</code></pre>
+</figure>
+<p>ThreadCount: 4</p>
+<p>UnstartedThread: 1</p>
+<p>BackgroundThread: 1</p>
+<p>PendingThread: 1</p>
+<p>DeadThread: 0</p>
+<p>Hosted Runtime: no</p>
+<p>PreEmptive GC Alloc Lock</p>
+<p>ID OSID ThreadOBJ State GC Context Domain Count APT Exception</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">   0 1 f34 00180f70 a020 Enabled 01381cac:01381fe8 0014c100 1 MTA
+   2 2 e68 00152318 b220 Enabled 00000000:00000000 0014c100 0 MTA (Finalizer)
+   3 3 988 00199f28 b020 Disabled 0138202c:01383fe8 0014c100 0 MTA</code></pre>
+</figure>
+<p>XXXX 4 6fc 0019a700 9420 Enabled 00000000:00000000 0014c100 0 Ukn</p>
+<p><code>0:000&gt; !Name2EE thread.exe sample.ThreadMethod</code></p>
+<p>Module: 00a22c14 (thread.exe)</p>
+<p>Token: 0x06000001</p>
+<p>MethodDesc: 00a22fd8</p>
+<p>Name: sample.ThreadMethod()</p>
+<p>JITTED Code Address: 00dd01c0</p>
+<p><code>0:000&gt; u 00dd01c0</code></p>
+<p>thread!sample.ThreadMethod() [c:\test\thread.cs @ 7]:</p>
+<p>00dd01c0 57 push edi</p>
+<p>00dd01c1 56 push esi</p>
+<p>00dd01c2 53 push ebx</p>
+<p>00dd01c3 50 push eax</p>
+<p>00dd01c4 890c24 mov dword ptr [esp],ecx</p>
+<p>00dd01c7 833dc82da20000 cmp dword ptr ds:[0A22DC8h],0</p>
+<p>00dd01ce 7405 je thread!sample.ThreadMethod()+0x15 (00dd01d5)</p>
+<p>00dd01d0 e829212c79 call mscorwks!JIT_DbgIsJustMyCode (7a0922fe)</p>
+<p><code>0:000&gt; u</code></p>
+<p>thread!sample.ThreadMethod()+0x15 [c:\test\thread.cs @ 7]:</p>
+<p>00dd01d5 33db xor ebx,ebx</p>
+<p>00dd01d7 90 nop</p>
+<p>00dd01d8 90 nop</p>
+<p>00dd01d9 eb2f jmp thread!sample.ThreadMethod()+0x4a (00dd020a)</p>
+<p>00dd01db 90 nop</p>
+<p>00dd01dc 8b3548303802 mov esi,dword ptr ds:[2383048h]</p>
+<p>00dd01e2 e8997f6078 call mscorlib_ni!System.Threading.Thread.get_CurrentThread() (793d8180)</p>
+<p>00dd01e7 8bf8 mov edi,eax</p>
+<p><code>0:000&gt; u</code></p>
+<p>thread!sample.ThreadMethod()+0x29 [c:\test\thread.cs @ 10]:</p>
+<p>00dd01e9 8bcf mov ecx,edi</p>
+<p>00dd01eb 3909 cmp dword ptr [ecx],ecx</p>
+<p>00dd01ed e83e846078 call mscorlib_ni!System.Threading.Thread.get_Name() (793d8630)</p>
+<p>00dd01f2 8bf8 mov edi,eax</p>
+<p>00dd01f4 8bd7 mov edx,edi</p>
+<p>00dd01f6 8bce mov ecx,esi</p>
+<p>00dd01f8 e8278f5e78 call mscorlib_ni!System.Console.WriteLine(System.String, System.Object) (793b9124)</p>
+<p>00dd01fd 90 nop</p>
+<p><strong>From the unassembly above, we identify that the address of WriteLine is</strong> 00dd01f8. Now you can set an unmanaged break point when thread 3 access this line as below.</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">0:000&gt; ~3 bp 00dd01f8
+0:000&gt; g
+Breakpoint 0 hit
+eax=01381a00 ebx=00000001 ecx=01382014 edx=01381a00 esi=01382014 edi=01381a00
+eip=00dd01f8 esp=00edf8a0 ebp=01381afc iopl=0 nv up ei pl nz na po nc
+cs=001b ss=0023 ds=0023 es=0023 fs=003b gs=0000 efl=00000202</code></pre>
+</figure>
+<p>thread!sample.ThreadMethod()+0x38:</p>
+<p>00dd01f8 e8278f5e78 call mscorlib_ni!System.Console.WriteLine(System.String, System.Object) (793b9124)</p>
+<p><strong>If you look at the current thread it is thread 3 that is trying to access the method</strong></p>
+<p><code>0:000&gt; ~.</code></p>
+<p>. 3 Id: 528.988 Suspend: 1 Teb: 7ffdc000 Unfrozen</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">      Start: mscorwks!Thread::intermediateThreadProc (79ecafc5)
+      Priority: 0 Priority class: 32 Affinity: 3
+0:000&gt; g
+Breakpoint 0 hit
+eax=01381a00 ebx=00000001 ecx=01382014 edx=01381a00 esi=01382014 edi=01381a00
+eip=00dd01f8 esp=00edf8a0 ebp=01381afc iopl=0 nv up ei pl nz na po nc
+cs=001b ss=0023 ds=0023 es=0023 fs=003b gs=0000 efl=00000202</code></pre>
+</figure>
+<p>thread!sample.ThreadMethod()+0x38:</p>
+<p>00dd01f8 e8278f5e78 call mscorlib_ni!System.Console.WriteLine(System.String, System.Object) (793b9124)</p>
+<p><code>0:000&gt; ~.</code></p>
+<p>. 3 Id: 528.988 Suspend: 1 Teb: 7ffdc000 Unfrozen</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">      Start: mscorwks!Thread::intermediateThreadProc (79ecafc5)
+      Priority: 0 Priority class: 32 Affinity: 3</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>September 17, 2007<br>PingBack from <a href="http://mindtorrent.com/blog/archives/7">http://mindtorrent.com/blog/archives/7</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 03, 2008<br>0:000&gt; sxe ld mscorwks 0:000&gt; g &quot;Breaks when loading mscorwks&quot; 0:000&gt; .loadby sos mscorwks 0:000&gt; !bpmd thread.exe sample.Main 0:000&gt; g Although I follow the procedures above, I never managed break at the sample.Main . Do I miss something ??</p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 29, 2008<br>Strange. I tried and it works for me. Can you provide more information? Do you see the break point with bl and so on?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 14, 2008<br>Hi, Same happens with me also. following is the outpupt I have got. Microsoft (R) Windows Debugger Version 6.8.0004.0 X86 Copyright (c) Microsoft Corporation. All rights reserved. CommandLine: C:thread.exe Symbol search path is: SRV_d:symbolspublic_<a href="http://msdl.microsoft.com/download/symbols">http://msdl.microsoft.com/download/symbols</a> Executable search path is: c:WINNTsystem32 ModLoad: 00400000 00408000   thread.exe (1f0.888): Break instruction exception - code 80000003 (first chance) eax=00000000 ebx=00131f04 ecx=00000009 edx=00000000 esi=7ffdf000 edi=00131f70 eip=77f9193c esp=0012f984 ebp=0012fc98 iopl=0         nv up ei pl nz na po nc cs=001b  ss=0023  ds=0023  es=0023  fs=003b  gs=0000             efl=00000202 ntdll!DbgBreakPoint: 77f9193c cc              int     3 0:000&gt; .reload Reloading current modules .... 0:000&gt; sxe ld mscorwks 0:000&gt; g ModLoad: 79e70000 7a3d6000   C:WINNTMicrosoft.NETFrameworkv2.0.50727mscorwks.dll eax=00000000 ebx=00000000 ecx=00860000 edx=00000000 esi=00000000 edi=7ffde000 eip=77f88647 esp=0012f49c ebp=0012f52c iopl=0         nv up ei pl zr na pe nc cs=001b  ss=0023  ds=0023  es=0023  fs=0038  gs=0000             efl=00000246 ntdll!NtMapViewOfSection+0xb: 77f88647 c22800          ret     28h 0:000&gt; .loadby sos mscorwks 0:000&gt; !bpmd thread.exe sample.Main Adding pending breakpoints... 0:000&gt; bl 0:000&gt; g After hitting g, debugger is showing debuggee is running. What could be the reason. Thank You, Anish Devasia</p>
+</li>
+<li><p><strong>Anonymous</strong><br>January 16, 2009<br>I tried this again. bl does not show the break point after the !bpmd in my case too. But the &#39;g&#39; breaks at the break point and if I do a bl it shows the break point then. Are you saying that it did not break at all for you?</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

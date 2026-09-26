@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Debugging load problems using fusion log</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Debugging load problems using fusion log</h1>
+<p class="meta">
+  <time>2007-06-02</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/debugging-load-problems-using-fusion-log">original post</a>
+  
+</p>
+<p>Fusion log comes in very handy when you want to understand or debug binding behaviors. Let us take the sample code below. Copy the code to DomSample.cs and compile it. Let us assume for now that the code tries to load some arbitrary assembly “Foo” which does not exist. If you run this code you will see the following exception.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">class</span> <span class="hljs-title">DomSample</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        <span class="hljs-keyword">try</span>
+        {
+            Assembly.Load(<span class="hljs-string">&quot;Foo&quot;</span>);
+        }
+        <span class="hljs-keyword">catch</span>(Exception e)
+        {
+            Console.WriteLine(e.ToString());
+        }
+    }
+}</code></pre>
+</figure>
+<p>System.IO.FileNotFoundException: Could not load file or assembly &#39;Foo&#39; or one of its dependencies. The system cannot find the file specified.</p>
+<p>File name: &#39;Foo&#39;</p>
+<p>Let us set the registry key to enable fusion logging. HKLM/Software/Microsoft/Fusion/EnableLog DWORD 1. The <a href="https://msdn2.microsoft.com/en-us/library/e74a18c4(vs.71).aspx">MSDN page</a> describes how to enable fusion log.</p>
+<p>Now if you run the same executable you will see a more descriptive failure. The failure will be as follows:</p>
+<p>--- A detailed error log follows.</p>
+<p>=== Pre-bind state information ===</p>
+<p>LOG: User = NTDEV\thottams</p>
+<p>LOG: DisplayName = Foo</p>
+<p>(Partial)</p>
+<p>LOG: Appbase = file:///C:/blog/june/</p>
+<p>LOG: Initial PrivatePath = NULL</p>
+<p>Calling assembly : DomSample, Version=0.0.0.0, Culture=neutral, PublicKeyToken=n</p>
+<p>ull.</p>
+<p>===</p>
+<p>LOG: This bind starts in default load context.</p>
+<p>LOG: No application configuration file found.</p>
+<p>LOG: Using machine configuration file from C:\Windows\Microsoft.NET\Framework\v2</p>
+<p>.0.50727\config\machine.config.</p>
+<p>LOG: Policy not being applied to reference at this time (private, custom, partia</p>
+<p>l, or location-based assembly bind).</p>
+<p>LOG: Attempting download of new URL file:///C:/blog/june/Foo.DLL.</p>
+<p>LOG: Attempting download of new URL file:///C:/blog/june/Foo/Foo.DLL.</p>
+<p>LOG: Attempting download of new URL file:///C:/blog/june/Foo.EXE.</p>
+<p>LOG: Attempting download of new URL file:///C:/blog/june/Foo/Foo.EXE.</p>
+<p>If you notice it clearly tells you the various paths the binder searched to find the file. Let us add some oribing paths to this executables configuration and see what happens. Let us create the file DomSample.exe.config and add the following to it:</p>
+<figure class="code">
+<figcaption>XML</figcaption>
+<pre><code class="hljs"><span class="hljs-tag">&lt;<span class="hljs-name">configuration</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-name">runtime</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">assemblyBinding</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">&quot;urn:schemas-microsoft-com:asm.v1&quot;</span>&gt;</span>
+         <span class="hljs-tag">&lt;<span class="hljs-name">probing</span> <span class="hljs-attr">privatePath</span>=<span class="hljs-string">&quot;BAR&quot;</span> /&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">assemblyBinding</span>&gt;</span>
+   <span class="hljs-tag">&lt;/<span class="hljs-name">runtime</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">configuration</span>&gt;</span></code></pre>
+</figure>
+<p>If you run the executable now you will find that the binder searches in a few more locations to find the assembly Foo this time. The results from the log look as below:</p>
+<p>=== Pre-bind state information ===</p>
+<p>LOG: User = NTDEV\thottams</p>
+<p>LOG: DisplayName = Foo</p>
+<p>(Partial)</p>
+<p>LOG: Appbase = file:///C:/blog/june/</p>
+<p>LOG: Initial PrivatePath = NULL</p>
+<p>Calling assembly : DomSample, Version=0.0.0.0, Culture=neutral, PublicKeyToken=n</p>
+<p>ull.</p>
+<p>===</p>
+<p>LOG: This bind starts in default load context.</p>
+<p>LOG: Private path hint found in configuration file: BAR.</p>
+<p>LOG: Using application configuration file: C:\blog\june\DomSample.exe.config</p>
+<p>LOG: Using machine configuration file from C:\Windows\Microsoft.NET\Framework\v2</p>
+<p>.0.50727\config\machine.config.</p>
+<p>LOG: Policy not being applied to reference at this time (private, custom, partia</p>
+<p>l, or location-based assembly bind).</p>
+<p>LOG: Attempting download of new URL file:///C:/blog/june/Foo.DLL.</p>
+<p>LOG: Attempting download of new URL file:///C:/blog/june/Foo/Foo.DLL.</p>
+<p>LOG: Attempting download of new URL file:///C:/blog/june/BAR/Foo.DLL.</p>
+<p>LOG: Attempting download of new URL file:///C:/blog/june/BAR/Foo/Foo.DLL.</p>
+<p>LOG: Attempting download of new URL file:///C:/blog/june/Foo.EXE.</p>
+<p>LOG: Attempting download of new URL file:///C:/blog/june/Foo/Foo.EXE.</p>
+<p>LOG: Attempting download of new URL file:///C:/blog/june/BAR/Foo.EXE.</p>
+<p>LOG: Attempting download of new URL file:///C:/blog/june/BAR/Foo/Foo.EXE.</p>
+<p>This information can be extremely useful when you are investigating binder issues.</p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>June 02, 2007<br>Ce post de Thottam R. Sriram me fait penser que je devais me faire depuis longtemps un petit post pense-bête</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 24, 2007<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 18, 2008<br>Reference HowtheRuntimeLocatesAssemblies <a href="http://msdn2.microsoft.com/en-us/library/yx7xezcf.a">http://msdn2.microsoft.com/en-us/library/yx7xezcf.a</a>...</p>
+</li>
+<li><p><strong>Anonymous</strong><br>December 26, 2009<br>When an assembly fails to load the exception&#39;s message says &quot;blah blah, go to HKLMSoftwareMicrosoftFusion!EnableLog&quot; while in fact the exclamation mark is a typo, it shuold have been a backslash - HKLMSoftwareMicrosoftFusionEnableLog.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 30, 2010<br>2bagel: ! means that the EnableLog is a DWORD value instead of a key.</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CString and GetLength</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>CString and GetLength</h1>
+<p class="meta">
+  <time>2009-02-06</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/cstring-and-getlength">original post</a>
+  <a class="repo" href="https://github.com/redtomram-gif/blog-mfc-cstring-getlength">code sample &rarr;</a>
+</p>
+<p>I ran into this problem recently when debugging some native code and thought that it will be good to share this with everyone.</p>
+<figure class="code">
+<figcaption>C++</figcaption>
+<pre><code class="hljs">CString sampleString = <span class="hljs-built_in">CString</span>(_T(<span class="hljs-string">&quot;Sample\0String&quot;</span>), <span class="hljs-number">14</span>);
+<span class="hljs-type">int</span> len = sampleString.<span class="hljs-built_in">GetLength</span>(); <span class="hljs-comment">// len is 14</span>
+CString trimmedString = sampleString.<span class="hljs-built_in">Trim</span>(); <span class="hljs-comment">// trimmedString = &quot;Sample&quot;</span>
+CString newstring = <span class="hljs-built_in">CString</span>(sampleString); <span class="hljs-comment">// newString = &quot;Sample&quot;</span>
+len = newstring.<span class="hljs-built_in">GetLength</span>(); <span class="hljs-comment">// len = 14</span></code></pre>
+</figure>
+<p>CString GetLength returns the length that you passed to it in the constructor and not the length of the string. This can be confusing if you copy the string and loop through the length. It can also be the cause of bugs is you get the length and use CString.GetBuffer() and loop through the buffer for the length.</p>
+<p>It looks like CString.GetLength() is the size of the internal buffer and nothing more.</p>
+<p>MSDN documentation for CString - <a href="https://msdn.microsoft.com/en-us/library/aa300471(VS.60).aspx">https://msdn.microsoft.com/en-us/library/aa300471(VS.60).aspx</a></p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>February 06, 2009<br>PingBack from <a href="http://www.clickandsolve.com/?p=4610">http://www.clickandsolve.com/?p=4610</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>February 06, 2009<br>Nice post. Where is CString.Trim() in MSDN? Is it typo of CString.TrimRight()?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>February 07, 2009<br>Interesting, I could&#39;t find it either. But it compiles and works. It is supposed to remove leading and trailing white spaces I would think.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>February 26, 2009<br>Good one !!! Bro, do you remember me ?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 05, 2009<br>Am I correct to assume that this is a heavy bug? Just tried this code in Visual Studio 2005 and it really behaved as described. I was sure that CString::GetLength() would always return the number of charactes up to the first null terminator (without including it in the count). All my code relies on that assumption...</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 06, 2009<br>I would agree. I did not realize this until I ran into this issue recently. The assumption that CString makes may be is that the data in the buffer is not binary and does not contain null terminators in it. But that assumption is not evident from the documentation.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 11, 2009<br>Do you have any plans to officially report this bug to Microsoft? If not, do you know what would be the place to do so on my own? And also in this case, would I be allowed to copy/paste your code from above into this bug report? Thanks, Patrik</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 13, 2009<br>Let me try to contact the right owners and see what they have to say. In the mean time feel free to use the code above.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>September 27, 2009<br>use strlen() I&#39;m pretty sure GetLength can only bu used with assert, like an if statment.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 28, 2010<br>Use ReleaseBuffer for memory modifications that are external to the CString Class.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 18, 2010<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 18, 2010<br>Here we are, <a href="http://msdn.microsoft.com/en-us/library/ms174288.aspx">msdn.microsoft.com/.../ms174288.aspx</a> &quot;A CString object keeps character data in a CStringData object. CString accepts null-terminated C-style strings, but does not retain the null character in the stored character data. Instead, CString tracks string length. CString does provide a null terminator when it exports a C-style string. You can insert a null character amidst stored character data, but it may produce unexpected results.&quot;</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

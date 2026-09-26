@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Managed C++ and C#</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Managed C++ and C#</h1>
+<p class="meta">
+  <time>2007-07-16</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/managed-c-and-c">original post</a>
+  
+</p>
+<p>I tried writing a sample to use managed C++ to interact with managed code and here is my learning. I created the following managed C++ code to wrap existing FLAT API’s in a class that can be called form C#.</p>
+<p>Managed C++ code:</p>
+<p>#using &lt;mscorlib.dll&gt;</p>
+<figure class="code">
+<figcaption>C++</figcaption>
+<pre><code class="hljs"><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;vcclr.h&gt;</span></span>
+<span class="hljs-keyword">using</span> <span class="hljs-keyword">namespace</span> System;
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;wchar.h&gt;</span></span>
+__declspec(dllexport) <span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">NativeFlatMethod</span><span class="hljs-params">(<span class="hljs-type">const</span> <span class="hljs-type">wchar_t</span> *szParam)</span>
+</span>{
+    <span class="hljs-built_in">wprintf</span>(<span class="hljs-string">L&quot;%s \n&quot;</span>, szParam);
+}</code></pre>
+</figure>
+<p>__gc public class FlatAPIWrapper</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs">{
+    <span class="hljs-keyword">public</span>:
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">NativeFlatMethodWrapper</span>(<span class="hljs-params">System::String *szParam</span>)</span>
+    {
+        <span class="hljs-keyword">const</span> wchar_t __pin *pChar = PtrToStringChars(szParam);
+        NativeFlatMethod(pChar);
+    }
+};</code></pre>
+</figure>
+<p>Copy the above code to native.cpp and compile it as below</p>
+<p>Cl /LD /CLR:oldsyntax native.cpp</p>
+<p>You can ildasm the resultant assembly and see its contents. Now we want to write a C# executable that can consume the native-managed assembly that we compiled here.</p>
+<p>Managed code:</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Runtime.InteropServices;
+<span class="hljs-keyword">class</span> <span class="hljs-title">Program</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        FlatAPIWrapper.NativeFlatMethodWrapper(<span class="hljs-string">&quot;FLAT API called through Managed C++ wrapper&quot;</span>);
+    }
+}</code></pre>
+</figure>
+<p>Copy the above code to managed.cs and compile it as below</p>
+<p>csc /r:native.dll managed.cs</p>
+<p>This will produce managed.exe. Copy the native.dll.manifest to managed.exe.manifest and execute the executable.</p>
+<p>There are multiple ways managed code can interact with native code. This is one such way. The others are through interop and writing unsafe code in C# itself. Interacting with C++ libraries using PInvoke is extremely difficult. The only good way to achieve this will be to write managed C++ or FLAT API wrappers that can be consumed in C# using PInvoke. I will write about these soon.</p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>April 13, 2008<br>PingBack from <a href="http://www.travel-hilarity.com/airline_travel/?p=2864">http://www.travel-hilarity.com/airline_travel/?p=2864</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 21, 2008<br>I&#39;ve tried the code example and it fails on my system (vista 64 bit, visual studio 2005); C:tempcsharpstuff&gt;managed.exe Unhandled Exception: System.BadImageFormatException: Could not load file or assembly &#39;native, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null&#39; or one of its dependencies. An attempt was made to load a program with an incorrect format. File name: &#39;native, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null&#39;   at Program.Main() WRN: Assembly binding logging is turned OFF. To enable assembly bind failure logging, set the registry value [HKLMSoftwareMicrosoftFusion!EnableLog] (DWORD) to 1. Note: There is some performance penalty associated with assembly bind failure logging. To turn this feature off, remove the registry value [HKLMSoftwareMicrosoftFusion!EnableLog].</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 10, 2008<br>regarding &quot;managed C++ code&quot;... using Visual Studio 2005, what wizard options are necessary to create a managed C++ project ? All I&#39;ve ever done is: new -&gt; project -&gt; Visual C++ -&gt; win32 -&gt; win32 project -&gt; OK -&gt; Next -&gt; select &quot;Dll&quot; and enable &quot;Export Symbols&quot; -&gt; finish</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 10, 2008<br>additionally, I have a .lib that I&#39;d need to use in the managed C++ project. Is that possible ? I imagine that the .lib contains unmanaged binaries and the project would be &quot;managed&quot;.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>November 27, 2008<br>hi alex, im also facing the same problem when using the .lib. anyway have u solve it and how did u solve it..hope u able to help me out.. thanks and regards <a href="mailto:norazanita@yahoo.com">norazanita@yahoo.com</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>November 15, 2009<br>Hi, I am developing a WebService(Asp.Net using c#). I need to run or invoke unmanaged C++ code from webservice. how can i do this one. pls guide me regarding this issue.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>November 15, 2009<br>Hi, I am developing a WebService(Asp.Net using c#). I need to run or invoke unmanaged C++ code from webservice. how can i do this one. pls guide me regarding this issue. my mail id is <a href="mailto:asifbasha.honey@gmail.com">asifbasha.honey@gmail.com</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>December 14, 2010<br>hi zaza still facing the same problem or solved alrdy?</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

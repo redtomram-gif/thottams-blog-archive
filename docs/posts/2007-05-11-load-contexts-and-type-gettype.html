@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Load contexts and Type.GetType</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Load contexts and Type.GetType</h1>
+<p class="meta">
+  <time>2007-05-11</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/load-contexts-and-type-gettype">original post</a>
+  
+</p>
+<p>Type.GetType(AN,T) actually translates to Assembly.Load(AN).GetType(T). This actually can be the cause of many confusions. Often programmers end up in a situation where they have explicitly loaded the assembly, but Type.GetType is not able to find the type from the assembly they just loaded.</p>
+<p>Let us look into the sample below. Let us do a Type.GetType for Foo and provide the path to the location of Foo in the config file as mentioned below.</p>
+<p>Copy the source below to TypeSample.cs and the config to TypeSample.exe.config</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">class</span> <span class="hljs-title">DomSample</span> {
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>{
+        <span class="hljs-keyword">try</span> {
+            Type ty1 = Type.GetType(<span class="hljs-string">&quot;Foo, Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94&quot;</span>);
+            <span class="hljs-keyword">if</span> (ty1 != <span class="hljs-literal">null</span>) {
+                Console.WriteLine(<span class="hljs-string">&quot;V1 Type = {0}&quot;</span>, ty1.Assembly.FullName.ToString());
+            }
+            <span class="hljs-keyword">else</span> {
+                Console.WriteLine(<span class="hljs-string">&quot;Unable to find type ...&quot;</span>);
+            }
+        }
+        <span class="hljs-keyword">catch</span> (Exception e) {
+            Console.WriteLine(e.ToString());
+        }
+    }
+}</code></pre>
+</figure>
+<figure class="code">
+<figcaption>XML</figcaption>
+<pre><code class="hljs"><span class="hljs-tag">&lt;<span class="hljs-name">configuration</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-name">runtime</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">assemblyBinding</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">&quot;urn:schemas-microsoft-com:asm.v1&quot;</span>&gt;</span>
+         <span class="hljs-tag">&lt;<span class="hljs-name">probing</span> <span class="hljs-attr">privatePath</span>=<span class="hljs-string">&quot;v1&quot;</span> /&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">assemblyBinding</span>&gt;</span>
+   <span class="hljs-tag">&lt;/<span class="hljs-name">runtime</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">configuration</span>&gt;</span></code></pre>
+</figure>
+<p>Make sure that you create a path v1 under APPBASE and create a Foo.cs which is compiled and signed to Foo.dll. Copy the following source to Foo.cs and comple it to Foo.dll and sign it with the key (see my article on signinig)</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+[<span class="hljs-meta">assembly: System.Reflection.AssemblyVersion(<span class="hljs-string">&quot;1.0.0.0&quot;</span>)</span>]
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Foo</span> {
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Bar</span>()</span> {
+        Console.WriteLine(<span class="hljs-string">&quot;Version = {0}&quot;</span>, (Assembly.GetExecutingAssembly()).ToString());
+    }
+}</code></pre>
+</figure>
+<p>If you run TypeSample.exe you will get the following output</p>
+<p><code>V1 Type = Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94</code></p>
+<p>If you run the sample under ntsd you will notice that Foo.dll is loaded from directory v1 in the default AppDomain</p>
+<p>Opened log file &#39;ntsd.log&#39;</p>
+<p><code>0:000&gt; !dumpdomain</code></p>
+<hr>
+<p>System Domain: 7a390b60</p>
+<p>LowFrequencyHeap: 7a390b84</p>
+<p>HighFrequencyHeap: 7a390be0</p>
+<p>StubHeap: 7a390c3c</p>
+<p>Stage: OPEN</p>
+<p>Name: None</p>
+<hr>
+<p><code>Shared Domain: 7a391138</code></p>
+<p>LowFrequencyHeap: 7a39115c</p>
+<p>HighFrequencyHeap: 7a3911b8</p>
+<p>StubHeap: 7a391214</p>
+<p>Stage: OPEN</p>
+<p>Name: None</p>
+<p>Assembly: 001e8828</p>
+<hr>
+<p>Domain 1: 001b0890</p>
+<p>LowFrequencyHeap: 001b08b4</p>
+<p>HighFrequencyHeap: 001b0910</p>
+<p>StubHeap: 001b096c</p>
+<p>Stage: OPEN</p>
+<p>SecurityDescriptor: 001b1a98</p>
+<p>Name: DomSample.exe</p>
+<p>Assembly: 001e8828 [C:\Windows\assembly\GAC_32\mscorlib\2.0.0.0__b77a5c561934e089\mscorlib.dll]</p>
+<p>ClassLoader: 001e88c0</p>
+<p>SecurityDescriptor: 001e8738</p>
+<p><code>Module Name</code></p>
+<p>790c2000 C:\Windows\assembly\GAC_32\mscorlib\2.0.0.0__b77a5c561934e089\mscorlib.dll</p>
+<p>Assembly: 001f95e0 [c:\blog\May2007\DomSample.exe]</p>
+<p>ClassLoader: 001f9678</p>
+<p>SecurityDescriptor: 001f94e0</p>
+<p><code>Module Name</code></p>
+<p>00712c24 c:\blog\May2007\DomSample.exe</p>
+<p>Assembly: 00208128 [c:\blog\May2007\v1\Foo.dll]</p>
+<p>ClassLoader: 00208398</p>
+<p>SecurityDescriptor: 00208298</p>
+<p><code>Module Name</code></p>
+<p>007130d8 c:\blog\May2007\v1\Foo.dll</p>
+<p>Now let us modify the code above to use LoadFrom and then try the Type.GetType.</p>
+<p>Copy the code below to TypeSampleLoadFrom.cs and compile it to TypeSampleLoadFrom.exe. Let us not provide a config file this time such Type.GetType cannot find the assembly Foo when it tries to load it.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">class</span> <span class="hljs-title">DomSample</span> {
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span> {
+        <span class="hljs-keyword">try</span> {
+            Assembly.LoadFrom(<span class="hljs-string">&quot;c:\\Blog\\May2007\\v2\\Foo.dll&quot;</span>);
+            Type ty1 = Type.GetType(<span class="hljs-string">&quot;Foo, Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94&quot;</span>);
+            <span class="hljs-keyword">if</span>(ty1 != <span class="hljs-literal">null</span>) {
+                Console.WriteLine(<span class="hljs-string">&quot;V1 Type = {0}&quot;</span>,ty1.Assembly.FullName.ToString());
+            }
+            <span class="hljs-keyword">else</span> {
+                Console.WriteLine(<span class="hljs-string">&quot;Unable to find type ...&quot;</span>);
+            }
+        }
+        <span class="hljs-keyword">catch</span>(Exception e) {
+            Console.WriteLine(e.ToString());
+        }
+    }
+}</code></pre>
+</figure>
+<p>The above program yields the result &quot;Unable to find type ...&quot;. If you watch the program under ntsd you will notice that Foo.dll is loaded from the LoadFrom, but the Type.GetType was not able to use the already loaded Foo.dll or find Foo.dll to load it to retreive the type information</p>
+<p><code>0:001&gt; !dumpdomain</code></p>
+<hr>
+<p>System Domain: 7a390b60</p>
+<p>LowFrequencyHeap: 7a390b84</p>
+<p>HighFrequencyHeap: 7a390be0</p>
+<p>StubHeap: 7a390c3c</p>
+<p>Stage: OPEN</p>
+<p>Name: None</p>
+<hr>
+<p><code>Shared Domain: 7a391138</code></p>
+<p>LowFrequencyHeap: 7a39115c</p>
+<p>HighFrequencyHeap: 7a3911b8</p>
+<p>StubHeap: 7a391214</p>
+<p>Stage: OPEN</p>
+<p>Name: None</p>
+<p>Assembly: 002e86e8</p>
+<hr>
+<p>Domain 1: 002b08c8</p>
+<p>LowFrequencyHeap: 002b08ec</p>
+<p>HighFrequencyHeap: 002b0948</p>
+<p>StubHeap: 002b09a4</p>
+<p>Stage: OPEN</p>
+<p>Name: DomSample1.exe</p>
+<p>Assembly: 002e86e8 [C:\Windows\assembly\GAC_32\mscorlib\2.0.0.0__b77a5c561934e089\mscorlib.dll]</p>
+<p>ClassLoader: 002e8780</p>
+<p>SecurityDescriptor: 002f4ef8</p>
+<p><code>Module Name</code></p>
+<p>790c2000 C:\Windows\assembly\GAC_32\mscorlib\2.0.0.0__b77a5c561934e089\mscorlib.dll</p>
+<p>Assembly: 002fa790 [c:\blog\May2007\DomSample1.exe]</p>
+<p>ClassLoader: 002fa828</p>
+<p>SecurityDescriptor: 002fa690</p>
+<p><code>Module Name</code></p>
+<p>00102c24 c:\blog\May2007\DomSample1.exe</p>
+<p>Assembly: 00302bc0 [c:\Blog\May2007\v2\Foo.dll]</p>
+<p>ClassLoader: 003072b0</p>
+<p>SecurityDescriptor: 00306b88</p>
+<p><code>Module Name</code></p>
+<p>00103120 c:\Blog\May2007\v2\Foo.dll</p>
+<p>Let us modify the above sample and add a config TypeSampleLoadFrom.exe.config as follows</p>
+<figure class="code">
+<figcaption>XML</figcaption>
+<pre><code class="hljs"><span class="hljs-tag">&lt;<span class="hljs-name">configuration</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-name">runtime</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">assemblyBinding</span> <span class="hljs-attr">xmlns</span>=<span class="hljs-string">&quot;urn:schemas-microsoft-com:asm.v1&quot;</span>&gt;</span>
+         <span class="hljs-tag">&lt;<span class="hljs-name">probing</span> <span class="hljs-attr">privatePath</span>=<span class="hljs-string">&quot;v1&quot;</span> /&gt;</span>
+      <span class="hljs-tag">&lt;/<span class="hljs-name">assemblyBinding</span>&gt;</span>
+   <span class="hljs-tag">&lt;/<span class="hljs-name">runtime</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">configuration</span>&gt;</span></code></pre>
+</figure>
+<p>You will get the output V1 Type = Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94.</p>
+<p>If you run the program under the debugger you will find that there are two Foo.dll loaded in the default AppDomain one loaded from the LoadFrom context and the other load by Type.GetType in the other context. I had specifically placed the same Foo.dll in different locations to make this happen. The Foo.dll loaded by Type.GetType was loaded from v1 directory and the Foo.dll loaded from the LoadFrom context was loaded from v2 directory. If you had both point to the same location, you will however see only one copy of the dll.</p>
+<p><code>0:000&gt; !dumpdomain</code></p>
+<hr>
+<p>System Domain: 7a390b60</p>
+<p>LowFrequencyHeap: 7a390b84</p>
+<p>HighFrequencyHeap: 7a390be0</p>
+<p>StubHeap: 7a390c3c</p>
+<p>Stage: OPEN</p>
+<p>Name: None</p>
+<hr>
+<p><code>Shared Domain: 7a391138</code></p>
+<p>LowFrequencyHeap: 7a39115c</p>
+<p>HighFrequencyHeap: 7a3911b8</p>
+<p>StubHeap: 7a391214</p>
+<p>Stage: OPEN</p>
+<p>Name: None</p>
+<p>Assembly: 003386f8</p>
+<hr>
+<p>Domain 1: 003008a0</p>
+<p>LowFrequencyHeap: 003008c4</p>
+<p>HighFrequencyHeap: 00300920</p>
+<p>StubHeap: 0030097c</p>
+<p>Stage: OPEN</p>
+<p>SecurityDescriptor: 00301aa8</p>
+<p>Name: DomSample1.exe</p>
+<p>Assembly: 003386f8 [C:\Windows\assembly\GAC_32\mscorlib\2.0.0.0__b77a5c561934e089\mscorlib.dll]</p>
+<p>ClassLoader: 00338790</p>
+<p>SecurityDescriptor: 00344ed0</p>
+<p><code>Module Name</code></p>
+<p>790c2000 C:\Windows\assembly\GAC_32\mscorlib\2.0.0.0__b77a5c561934e089\mscorlib.dll</p>
+<p>Assembly: 0034a7c8 [c:\blog\May2007\DomSample1.exe]</p>
+<p>ClassLoader: 0034a860</p>
+<p>SecurityDescriptor: 0034a6c8</p>
+<p><code>Module Name</code></p>
+<p>002d2c24 c:\blog\May2007\DomSample1.exe</p>
+<p>Assembly: 00365b00 [c:\Blog\May2007\v2\Foo.dll]</p>
+<p>ClassLoader: 00365998</p>
+<p>SecurityDescriptor: 00358038</p>
+<p><code>Module Name</code></p>
+<p>002d3120 c:\Blog\May2007\v2\Foo.dll</p>
+<p>Assembly: 00366bd0 [c:\blog\May2007\v1\Foo.dll]</p>
+<p>ClassLoader: 00366a58</p>
+<p>SecurityDescriptor: 00365c48</p>
+<p><code>Module Name</code></p>
+<p>002d3548 c:\blog\May2007\v1\Foo.dll</p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>April 13, 2008<br>PingBack from <a href="http://www.travel-hilarity.com/airline_travel/?p=2868">http://www.travel-hilarity.com/airline_travel/?p=2868</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 13, 2008<br>PingBack from <a href="http://www.travel-hilarity.com/airline_travel/?p=2868">http://www.travel-hilarity.com/airline_travel/?p=2868</a></p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calling delegates using BeginInvoke, Invoke, DynamicInvoke and delegate</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Calling delegates using BeginInvoke, Invoke, DynamicInvoke and delegate</h1>
+<p class="meta">
+  <time>2007-11-01</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/calling-delegates-using-begininvoke-invoke-dynamicinvoke-and-delegate">original post</a>
+  
+</p>
+<p>I wanted to write about delegates this month. There are different ways in which you can invoke delegates to get either a synchronous or an asynchronous behavior. But from what I noticed, the delegate model provides you very less control when you invoke it asynchronously. The caller cannot easily abort or terminate the operation.</p>
+<p>If you want to execute a delegate asynchronously and still want to have good control from the caller then invoke it explicitly from a thread. The sample below demonstrates multiple ways you can invoke a delegate and each has its own features with it. Till I wrote this, I didn’t realize that there are 6 ways to invoke a delegate and I am sure there are a few more that I am missing here. It was also interesting that when you execute a delegate on a thread then it cannot return a value as the caller of the thread is gone when the thread returns. If you want to pass parameters to the delegate in the thread you can use the ParameterizedThread option which is very useful.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Threading;
+<span class="hljs-keyword">using</span> System.Runtime.Remoting.Messaging;
+<span class="hljs-keyword">namespace</span> <span class="hljs-title">Delegate</span>
+{
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">SampleClass</span>
+    {
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-built_in">bool</span> <span class="hljs-title">SampleMethod</span>()</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Inside sample method ...&quot;</span>);
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+        }
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">SampleThreadMethod</span>()</span>
+        {
+            <span class="hljs-keyword">while</span> (<span class="hljs-literal">true</span>)
+            {
+                Console.WriteLine(<span class="hljs-string">&quot;Inside sample thread method ...&quot;</span>);
+                Thread.Sleep(<span class="hljs-number">500</span>);
+            }
+        }
+    }
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-built_in">delegate</span> <span class="hljs-built_in">bool</span> <span class="hljs-title">SampleMethodCaller</span>()</span>;
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">DelegateSample</span>
+    {
+        ManualResetEvent waiter;
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CallBackMethodForDelegate</span>(<span class="hljs-params">IAsyncResult result</span>)</span>
+        {
+            SampleMethodCaller smd = (SampleMethodCaller)((AsyncResult)result).AsyncDelegate;
+            <span class="hljs-built_in">bool</span> returnValue = smd.EndInvoke(result);
+            Console.WriteLine(<span class="hljs-string">&quot;Callback Result:- {0}&quot;</span>, returnValue);
+            waiter.Set();
+        }
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CallDelegateAndWait</span>()</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Sample 1: Calling delegate using BeginInvoke and waiting for it to complete&quot;</span>);
+            SampleMethodCaller smd = <span class="hljs-keyword">new</span> SampleMethodCaller(SampleClass.SampleMethod);
+            IAsyncResult result = smd.BeginInvoke(<span class="hljs-literal">null</span>, <span class="hljs-literal">null</span>);
+            Console.WriteLine(<span class="hljs-string">&quot;After invoking delegate no callback...&quot;</span>);
+            <span class="hljs-built_in">bool</span> returnValue = <span class="hljs-literal">false</span>;
+            returnValue = smd.EndInvoke(result);
+            Console.WriteLine(<span class="hljs-string">&quot;Wait Result:- {0}&quot;</span>, returnValue);
+        }
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CallDelegateUsingCallBack</span>()</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Sample 2: Calling delegate using BeginInvoke and waiting on call back&quot;</span>);
+            waiter = <span class="hljs-keyword">new</span> ManualResetEvent(<span class="hljs-literal">false</span>);
+            SampleMethodCaller smd = <span class="hljs-keyword">new</span> SampleMethodCaller(SampleClass.SampleMethod);
+            IAsyncResult result = smd.BeginInvoke(CallBackMethodForDelegate, <span class="hljs-literal">null</span>);
+            Console.WriteLine(<span class="hljs-string">&quot;After invoking delegate in callback...&quot;</span>);
+            waiter.WaitOne();
+        }
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CallDelegateUsingInvoke</span>()</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Sample 3: Calling delegate using Invoke&quot;</span>);
+            SampleMethodCaller smd = <span class="hljs-keyword">new</span> SampleMethodCaller(SampleClass.SampleMethod);
+            <span class="hljs-built_in">bool</span> result = smd.Invoke();
+            Console.WriteLine(<span class="hljs-string">&quot;Invoke call Result:- {0}&quot;</span>, result);
+        }
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CallDelegate</span>()</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Sample 4: Calling delegate straight forward&quot;</span>);
+            SampleMethodCaller smd = <span class="hljs-keyword">new</span> SampleMethodCaller(SampleClass.SampleMethod);
+            <span class="hljs-built_in">bool</span> result = smd();
+            Console.WriteLine(<span class="hljs-string">&quot;Simple call Result:- {0}&quot;</span>, result);
+        }
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CallDelegateDynamicInvoke</span>()</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Sample 5: Calling delegate using DynamicInvoke&quot;</span>);
+            SampleMethodCaller smd = <span class="hljs-keyword">new</span> SampleMethodCaller(SampleClass.SampleMethod);
+            <span class="hljs-built_in">bool</span> result = (<span class="hljs-built_in">bool</span>)smd.DynamicInvoke();
+            Console.WriteLine(<span class="hljs-string">&quot;Dynamic Invoke call Result:- {0}&quot;</span>, result);
+        }
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CallingDelegateOnAThread</span>()</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Sample 6: Calling delegate on a thread&quot;</span>);
+            Thread nt = <span class="hljs-keyword">new</span> Thread(SampleClass.SampleThreadMethod);
+            nt.Start();
+            Thread.Sleep(<span class="hljs-number">2000</span>);
+            Console.ReadLine();
+            nt.Abort();
+        }
+        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+        {
+            DelegateSample ds = <span class="hljs-keyword">new</span> DelegateSample();
+            ds.CallDelegateAndWait();
+            Console.WriteLine(<span class="hljs-string">&quot; -----------------&quot;</span>);
+            ds.CallDelegateUsingCallBack();
+            Console.WriteLine(<span class="hljs-string">&quot; -----------------&quot;</span>);
+            ds.CallDelegateUsingInvoke();
+            Console.WriteLine(<span class="hljs-string">&quot; -----------------&quot;</span>);
+            ds.CallDelegate();
+            Console.WriteLine(<span class="hljs-string">&quot; -----------------&quot;</span>);
+            ds.CallDelegateDynamicInvoke();
+            Console.WriteLine(<span class="hljs-string">&quot; -----------------&quot;</span>);
+            ds.CallingDelegateOnAThread();
+        }
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>November 07, 2007<br>You&#39;ve been kicked (a good thing) - Trackback from DotNetKicks.com</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 04, 2009<br>Very good artical with good examples. Thanksss</p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 28, 2010<br>good article, but pls give some explaination.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 02, 2010<br>The comment has been removed</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

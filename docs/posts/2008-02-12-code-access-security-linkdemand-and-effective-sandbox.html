@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code Access Security, LinkDemand and Effective Sandbox</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Code Access Security, LinkDemand and Effective Sandbox</h1>
+<p class="meta">
+  <time>2008-02-12</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/code-access-security-linkdemand-and-effective-sandbox">original post</a>
+  
+</p>
+<p>I wrote about Deny and Assert in my previous blog post. In my repeated attempts to get the previous sample working for LinkDemand, I discovered that Deny and PermitOnly are not effective against LinkDemand. The code worked all the time and I was wondering why.</p>
+<p>After some good research and lots of learning (from <a href="../shawnfa/the-simple-sandboxing-api">Shawn</a>) I learnt that Deny and PermitOnly CANNOT create an effective sandbox environment. Shawm Farkas’s article on this is a must read. It clearly states how you can circumvent deny’s with asserts and so on.</p>
+<p>Now with Deny and PermitOnly being a not so good mechanism for providing a secure sand box environment, we are on to finding the good sandbox environment. In my pursuit towards that I figured the following out.</p>
+<p>An effective sandbox comes from grants associated with an AppDomain and the assemblies within the domain. The big issue with PermitOnly and Deny is that they don’t modify either grant set.</p>
+<p>The sample below demonstrates how a LinkDemand works. It also demonstrates why a Demand does not work for the same case. Let us now look into the grant sets that are used to compare to either succeed or fail the call.</p>
+<p>I have three assemblies A, B and C where A calls B which in turns calls C. C has two scenarios, one it has a LinkDemand for a permission and second it has a Demand for the permission. A, B and C instances are created in their own AppDomain and passed as MarshallByRef to C’s AppDomain. Shawn explains in this <a href="../shawnfa/the-simple-sandboxing-api">article</a> very cleary the two grant sets that an assembly in an AppDomain gets, a full trust or a grant set depending on if it is in the GAC or one of the strong name assemblies passed to the CreateDomain call.</p>
+<p>In the example below I create an instance of A, B and C in their own AppDomain and pass them to B and C which end up calling methods on them. Domain A does not grant EnvironmentPermission, Domain B grants EnvironmentPermission and C either Demands EnvironmentPermission or LinkDemands EnvironmentPermission.</p>
+<p>Why does the LinkDemand work?</p>
+<p>LinkDemands do not walk the stack and are evaluated at JIT time. You only JIT once, and hence grant sets are assigned when assemblies are loaded into an AppDomain and are not changed after that. In the sample below the linkdemand permission in C’s Method is compared with the grant set of the C’s AppDomain Technically, it’s comparing the LinkDemand on C’s Method with the grant set of C’s calling assembly in C’s AppDomain. For instance, if C’s caller were on the FullTrust list or were from the GAC, the LinkDemand would succeed even though C’s AppDomain has a partial trust grant set. Thus this succeeds.</p>
+<p>Why does the Demand Fail?</p>
+<p>The demand fails because the demand results in a stack walk. It walks the stack and compared the demanded permission set with the permission set of the callers in the call stack. Since A does not have this permission set in A’s AppDomain the demand fails. It is important to notice that it does have the permission set in C’s Domain for instance which is irrelevant in this case.</p>
+<p>LinkDemand is primarily used by framework code to gain elevation to perform its tasks. In general it should not be required in common scenarios.</p>
+<p>I want to thanks Shawn Farkas for helping me with this blog post. He has tons of valuable information on CAS in this blog which are excellent reads – <a href="../shawnfa/checking-for-a-valid-strong-name-signature">Shawn’s blog</a></p>
+<p><strong>Main.cs:</strong></p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Security;
+<span class="hljs-keyword">using</span> System.Security.Permissions;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">using</span> System.Runtime.Remoting;
+
+<span class="hljs-keyword">class</span> <span class="hljs-title">Sample</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        AppDomainSetup ads = <span class="hljs-keyword">new</span> AppDomainSetup();
+        ads.ApplicationBase = System.Environment.CurrentDirectory;
+
+        PermissionSet psMain = <span class="hljs-keyword">new</span> PermissionSet(PermissionState.None);
+        SecurityPermission sec = <span class="hljs-keyword">new</span> SecurityPermission(PermissionState.Unrestricted);
+        psMain.AddPermission(sec);
+        AppDomain md = AppDomain.CreateDomain(<span class="hljs-string">&quot;A&quot;</span>, <span class="hljs-literal">null</span>, ads, psMain, <span class="hljs-literal">null</span>);
+        ObjectHandle obj = md.CreateInstance(<span class="hljs-string">@&quot;A&quot;</span>, <span class="hljs-string">&quot;A&quot;</span>);
+        A a = (A)obj.Unwrap();
+
+        PermissionSet psFirst = <span class="hljs-keyword">new</span> PermissionSet(PermissionState.None);
+        EnvironmentPermission env1 = <span class="hljs-keyword">new</span> EnvironmentPermission(PermissionState.Unrestricted);
+        psFirst.AddPermission(sec);
+        psFirst.AddPermission(env1);
+        AppDomain fd = AppDomain.CreateDomain(<span class="hljs-string">&quot;B&quot;</span>, <span class="hljs-literal">null</span>, ads, psFirst, <span class="hljs-literal">null</span>);
+        ObjectHandle obj1 = fd.CreateInstance(<span class="hljs-string">@&quot;B&quot;</span>, <span class="hljs-string">&quot;B&quot;</span>);
+        B b = (B)obj1.Unwrap();
+
+        PermissionSet psSecond = <span class="hljs-keyword">new</span> PermissionSet(PermissionState.None);
+        psSecond.AddPermission(sec);
+        AppDomain sd = AppDomain.CreateDomain(<span class="hljs-string">&quot;C&quot;</span>, <span class="hljs-literal">null</span>, ads, psSecond, <span class="hljs-literal">null</span>);
+        ObjectHandle obj2 = sd.CreateInstance(<span class="hljs-string">@&quot;C&quot;</span>, <span class="hljs-string">&quot;C&quot;</span>);
+        C c = (C)obj2.Unwrap();
+        a.MethodMain(b, c);
+    }
+}</code></pre>
+</figure>
+<p><strong>A.cs:</strong></p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Security;
+<span class="hljs-keyword">using</span> System.Security.Permissions;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">using</span> System.Runtime.Remoting;
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">A</span> : <span class="hljs-title">MarshalByRefObject</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Method</span>(<span class="hljs-params">B b, C c</span>)</span>
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;Inside A::Method&quot;</span>);
+        b.Method(c);
+    }
+}</code></pre>
+</figure>
+<p><strong>B.cs:</strong></p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Security;
+<span class="hljs-keyword">using</span> System.Reflection;
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">B</span> : <span class="hljs-title">MarshalByRefObject</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Method</span>(<span class="hljs-params">C c</span>)</span>
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;Inside B::Method&quot;</span>);
+        c.Method();
+    }
+}</code></pre>
+</figure>
+<p><strong>C.cs:</strong></p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Security;
+<span class="hljs-keyword">using</span> System.Security.Permissions;
+
+[<span class="hljs-meta">SerializableAttribute()</span>]
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">C</span>
+{
+    [<span class="hljs-meta">EnvironmentPermissionAttribute(SecurityAction.LinkDemand, Unrestricted = true)</span>]
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Method</span>()</span>
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;Inside C::Method&quot;</span>);
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><strong>Anonymous</strong><br>February 12, 2008<br>PingBack from <a href="http://msdnrss.thecoderblogs.com/2008/02/12/code-access-security-linkdemand-and-effective-sandbox/">http://msdnrss.thecoderblogs.com/2008/02/12/code-access-security-linkdemand-and-effective-sandbox/</a></li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

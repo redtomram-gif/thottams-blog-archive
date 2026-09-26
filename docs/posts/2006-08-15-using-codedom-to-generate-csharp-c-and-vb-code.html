@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Using CodeDOM to generate CSharp (C#) and VB code</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Using CodeDOM to generate CSharp (C#) and VB code</h1>
+<p class="meta">
+  <time>2006-08-15</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/using-codedom-to-generate-csharp-c-and-vb-code">original post</a>
+  
+</p>
+<p>I spent sometime to understand CodeDOM and in the process wrote a sample which will help me understand this technology better. I wanted to share the sample I wrote with everyone so that it can be helpful for people getting introduced to this powerful technology.</p>
+<p>A good starting point for CodeDOM will be to start from <a href="https://msdn.microsoft.com/library/default.asp?url=/library/en-us/cpgenref/html/cpconcodedomquickreference.asp">here</a> (Quick reference on CodeDOM). It has helpful documentation depending on what you want to get accomplished.</p>
+<p>If you limit your syntax to the LCD of all the languages then this powerful technology can provide you with language agnostic way of generating the code tree which can later be used to generate code for the language of choice.</p>
+<p>I have tried to capture the basics of this with a sample below. The sample demonstrates two ways of getting to code. First where you define the code as a string and compile it using a known provider. The scenarios for this are not very common, but yet it is possible.</p>
+<p>The second is the most common scenario. You generate the code using the CodeCompileUnit and use the language provider of choice to generate the code and compile it to get the executable. This is often used in IDE which provide you with startup projects.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.CodeDom;
+<span class="hljs-keyword">using</span> System.CodeDom.Compiler;
+<span class="hljs-keyword">using</span> System.Reflection;
+<span class="hljs-keyword">using</span> Microsoft.CSharp;
+<span class="hljs-keyword">using</span> Microsoft.VisualBasic;
+<span class="hljs-keyword">using</span> System.IO;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">CodeDomSample</span>
+{
+    <span class="hljs-function">CodeCompileUnit <span class="hljs-title">GenerateCSharpCode</span>()</span>
+    {
+        CodeCompileUnit compileUnit = <span class="hljs-keyword">new</span> CodeCompileUnit();
+
+        <span class="hljs-comment">// Create a NameSpace - &quot;namespace CodeDomSampleNS&quot;</span>
+        <span class="hljs-comment">//</span>
+        CodeNamespace codedomsamplenamespace = <span class="hljs-keyword">new</span> CodeNamespace(<span class="hljs-string">&quot;CodeDomSampleNS&quot;</span>);
+        <span class="hljs-comment">// Create using statement - &quot;using System;&quot;</span>
+        <span class="hljs-comment">//</span>
+        CodeNamespaceImport firstimport = <span class="hljs-keyword">new</span> CodeNamespaceImport(<span class="hljs-string">&quot;System&quot;</span>);
+        <span class="hljs-comment">// Add the using statement to the namespace -</span>
+        <span class="hljs-comment">// namespace CodeDomSampleNS {</span>
+        <span class="hljs-comment">// using System;</span>
+        <span class="hljs-comment">//</span>
+        codedomsamplenamespace.Imports.Add(firstimport);
+        <span class="hljs-comment">// Create a type inside the namespace - public class CodeDomSample</span>
+        <span class="hljs-comment">//</span>
+        CodeTypeDeclaration newType = <span class="hljs-keyword">new</span> CodeTypeDeclaration(<span class="hljs-string">&quot;CodeDomSample&quot;</span>);
+        newType.Attributes = MemberAttributes.Public;
+        <span class="hljs-comment">// Create a Main method which will be entry point for the class</span>
+        <span class="hljs-comment">// public static void Main</span>
+        <span class="hljs-comment">//</span>
+        CodeEntryPointMethod mainmethod = <span class="hljs-keyword">new</span> CodeEntryPointMethod();
+        <span class="hljs-comment">// Add an expression inside Main -</span>
+        <span class="hljs-comment">// Console.WriteLine(&quot;Inside Main ...&quot;);</span>
+        CodeMethodInvokeExpression mainexp1 = <span class="hljs-keyword">new</span> CodeMethodInvokeExpression(
+            <span class="hljs-keyword">new</span> CodeTypeReferenceExpression(<span class="hljs-string">&quot;System.Console&quot;</span>),
+            <span class="hljs-string">&quot;WriteLine&quot;</span>, <span class="hljs-keyword">new</span> CodePrimitiveExpression(<span class="hljs-string">&quot;Inside Main ...&quot;</span>));
+        mainmethod.Statements.Add(mainexp1);
+        <span class="hljs-comment">// Add another expression inside Main</span>
+        <span class="hljs-comment">// CodeDomSample cs = new CodeDomSample()</span>
+        <span class="hljs-comment">//</span>
+        CodeStatement cs = <span class="hljs-keyword">new</span> CodeVariableDeclarationStatement(<span class="hljs-keyword">typeof</span>(CodeDomSample), <span class="hljs-string">&quot;cs&quot;</span>, <span class="hljs-keyword">new</span> CodeObjectCreateExpression(<span class="hljs-keyword">new</span> CodeTypeReference(<span class="hljs-keyword">typeof</span>(CodeDomSample))));
+        mainmethod.Statements.Add(cs);
+
+        <span class="hljs-comment">// At the end of the CodeStatements we should have constructed the following</span>
+        <span class="hljs-comment">// public static void Main() {</span>
+        <span class="hljs-comment">// Console.WriteLine(&quot;Inside Main ...&quot;);</span>
+        <span class="hljs-comment">// CodeDomSample cs = new CodeDomSample();</span>
+        <span class="hljs-comment">// }</span>
+        <span class="hljs-comment">// Create a constructor for the CodeDomSample class</span>
+        <span class="hljs-comment">// public CodeDomSample() { }</span>
+        <span class="hljs-comment">//</span>
+        CodeConstructor constructor = <span class="hljs-keyword">new</span> CodeConstructor();
+        constructor.Attributes = MemberAttributes.Public;
+        <span class="hljs-comment">// Add an expression to the constructor</span>
+        <span class="hljs-comment">// public CodeDomSample() { Comsole.WriteLine(&quot;Inside CodeDomSample Constructor ...&quot;);</span>
+        <span class="hljs-comment">//</span>
+        CodeMethodInvokeExpression constructorexp = <span class="hljs-keyword">new</span> CodeMethodInvokeExpression(<span class="hljs-keyword">new</span> CodeTypeReferenceExpression(<span class="hljs-string">&quot;System.Console&quot;</span>), <span class="hljs-string">&quot;WriteLine&quot;</span>, <span class="hljs-keyword">new</span> CodePrimitiveExpression(<span class="hljs-string">&quot;Inside CodeDomSample Constructor ...&quot;</span>));
+        constructor.Statements.Add(constructorexp);
+        <span class="hljs-comment">// Add constructor and mainmethod to type</span>
+        <span class="hljs-comment">//</span>
+        newType.Members.Add(constructor);
+        newType.Members.Add(mainmethod);
+        <span class="hljs-comment">// Add the type to the namespace</span>
+        <span class="hljs-comment">//</span>
+        codedomsamplenamespace.Types.Add(newType);
+        <span class="hljs-comment">// Add the NameSpace to the CodeCompileUnit</span>
+        <span class="hljs-comment">//</span>
+        compileUnit.Namespaces.Add(codedomsamplenamespace);
+        <span class="hljs-comment">// Return the CompileUnit</span>
+        <span class="hljs-comment">//</span>
+        <span class="hljs-keyword">return</span> compileUnit;
+    }
+    <span class="hljs-comment">// Generate code for a particular provider and compile it</span>
+    <span class="hljs-comment">//</span>
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">GenerateCode</span>(<span class="hljs-params">CodeCompileUnit ccu, String codeprovider</span>)</span>
+    {
+        CompilerParameters cp = <span class="hljs-keyword">new</span> CompilerParameters();
+        String sourceFile;
+        CompilerResults cr;
+        <span class="hljs-keyword">switch</span> (codeprovider)
+        {
+            <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;CSHARP&quot;</span>:
+            <span class="hljs-comment">// Generate Code from Compile Unit using CSharp code provider</span>
+            <span class="hljs-comment">//</span>
+            CSharpCodeProvider csharpcodeprovider = <span class="hljs-keyword">new</span> CSharpCodeProvider();
+            <span class="hljs-keyword">if</span> (csharpcodeprovider.FileExtension[<span class="hljs-number">0</span>] == <span class="hljs-string">&#x27;.&#x27;</span>)
+            {
+                sourceFile = <span class="hljs-string">&quot;CSharpSample&quot;</span> + csharpcodeprovider.FileExtension;
+            }
+            <span class="hljs-keyword">else</span>
+            {
+                sourceFile = <span class="hljs-string">&quot;CSharpSample.&quot;</span> + csharpcodeprovider.FileExtension;
+            }
+            IndentedTextWriter tw1 = <span class="hljs-keyword">new</span> IndentedTextWriter(<span class="hljs-keyword">new</span> StreamWriter(sourceFile, <span class="hljs-literal">false</span>), <span class="hljs-string">&quot; &quot;</span>);
+            csharpcodeprovider.GenerateCodeFromCompileUnit(ccu, tw1, <span class="hljs-keyword">new</span> CodeGeneratorOptions());
+            tw1.Close();
+            cp.GenerateExecutable = <span class="hljs-literal">true</span>;
+            cp.OutputAssembly = <span class="hljs-string">&quot;CSharpSample.exe&quot;</span>;
+            cp.GenerateInMemory = <span class="hljs-literal">false</span>;
+            cr = csharpcodeprovider.CompileAssemblyFromDom(cp, ccu);
+            <span class="hljs-keyword">break</span>;
+            <span class="hljs-keyword">case</span> <span class="hljs-string">&quot;VBASIC&quot;</span>:
+            <span class="hljs-comment">// Generate Code from Compile Unit using VB code provider</span>
+            <span class="hljs-comment">//</span>
+            VBCodeProvider vbcodeprovider = <span class="hljs-keyword">new</span> VBCodeProvider();
+            <span class="hljs-keyword">if</span> (vbcodeprovider.FileExtension[<span class="hljs-number">0</span>] == <span class="hljs-string">&#x27;.&#x27;</span>)
+            {
+                sourceFile = <span class="hljs-string">&quot;VBSample&quot;</span> + vbcodeprovider.FileExtension;
+            }
+            <span class="hljs-keyword">else</span>
+            {
+                sourceFile = <span class="hljs-string">&quot;VBSample.&quot;</span> + vbcodeprovider.FileExtension;
+            }
+            IndentedTextWriter tw2 = <span class="hljs-keyword">new</span> IndentedTextWriter(<span class="hljs-keyword">new</span> StreamWriter(sourceFile, <span class="hljs-literal">false</span>), <span class="hljs-string">&quot; &quot;</span>);
+            vbcodeprovider.GenerateCodeFromCompileUnit(ccu, tw2, <span class="hljs-keyword">new</span> CodeGeneratorOptions());
+            tw2.Close();
+            cp.GenerateExecutable = <span class="hljs-literal">true</span>;
+            cp.OutputAssembly = <span class="hljs-string">&quot;VBSample.exe&quot;</span>;
+            cp.GenerateInMemory = <span class="hljs-literal">false</span>;
+            cr = vbcodeprovider.CompileAssemblyFromDom(cp, ccu);
+            <span class="hljs-keyword">break</span>;
+        }
+        <span class="hljs-keyword">return</span>;
+    }
+    <span class="hljs-comment">// Another sample of hardcoding the code in a string and compiling it using the CSharpCodeProvider</span>
+    <span class="hljs-comment">//</span>
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">CSharpCodeExample</span>()</span>
+    {
+        String sourcecode = <span class="hljs-string">&quot;\nusing System;\npublic class Sample \n{\n static void Main()\n {\n Console.WriteLine(\&quot;This is a test\&quot;);\n }\n}&quot;</span>;
+        CSharpCodeProvider provider = <span class="hljs-keyword">new</span> CSharpCodeProvider();
+        CompilerParameters cp = <span class="hljs-keyword">new</span> CompilerParameters();
+        cp.GenerateExecutable = <span class="hljs-literal">true</span>;
+        cp.OutputAssembly = <span class="hljs-string">&quot;Result.exe&quot;</span>;
+        cp.GenerateInMemory = <span class="hljs-literal">false</span>;
+        CompilerResults cr = provider.CompileAssemblyFromSource(cp, sourcecode);
+        <span class="hljs-keyword">if</span> (cr.Errors.Count &gt; <span class="hljs-number">0</span>)
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Errors building {0} into {1}&quot;</span>, sourcecode, cr.PathToAssembly);
+            <span class="hljs-keyword">foreach</span> (CompilerError ce <span class="hljs-keyword">in</span> cr.Errors)
+            {
+                Console.WriteLine(<span class="hljs-string">&quot; {0}&quot;</span>, ce.ToString());
+                Console.WriteLine();
+            }
+        }
+        <span class="hljs-keyword">else</span>
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Source \n \n {0} \n \n \n built into {1} successfully.&quot;</span>, sourcecode, cr.PathToAssembly);
+        }
+        <span class="hljs-keyword">return</span>;
+    }
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        CodeDomSample cds = <span class="hljs-keyword">new</span> CodeDomSample();
+        cds.CSharpCodeExample();
+        CodeCompileUnit ccu = cds.GenerateCSharpCode();
+        cds.GenerateCode(ccu, <span class="hljs-string">&quot;CSHARP&quot;</span>);
+        cds.GenerateCode(ccu, <span class="hljs-string">&quot;VBASIC&quot;</span>);
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>August 15, 2006<br>I&#39;ve been a fan of CodeDom for quite a while and have a set of tutorials on my weblog.<br>When Peter was in charge of it, I sent him a few suggestions, which were probably too late, since he said that the code base was closed until vnext :/<br>I&#39;d love to help improve this part of .net, since I think it&#39;s a pretty important one.  </p>
+<p>Omer</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 15, 2006<br>I would love to hear your feedback on CodeDOM and your scenarios that could help us make this better.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>January 16, 2009<br>Hi Thottam, Great article! Extremely helpful! Thanks a lot!</p>
+</li>
+<li><p><strong>Anonymous</strong><br>February 16, 2010<br>is possible to create tree structure of source code using CodeDOM? if yes, can you please give an example?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 18, 2010<br>Nice article, Is there a way to generate CodeDOM from source code (cs file). I am designing an custom forms designer and need to be able to load a cs file and create the form.</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tell us about your experience with COM interop</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Tell us about your experience with COM interop</h1>
+<p class="meta">
+  <time>2006-09-27</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/tell-us-about-your-experience-with-com-interop">original post</a>
+  
+</p>
+<p>COM interoperability is a very powerful feature in the CLR that bridges the gap between native and managed code. It lets you reuse your existing COM and non-COM native DLL in the managed environment easily. It also lets native code call back to managed code in a seamless way.</p>
+<p>It provides a wealth of features which I wanted to talk about here in some detail.</p>
+<ol>
+<li>tlbimp</li>
+<li>tlbexp</li>
+<li>tlbref</li>
+<li>regasm</li>
+<li>RCW and Life Time Management</li>
+<li>CCW</li>
+<li>Marshalling and Custom Marshalling</li>
+<li>pInvoke</li>
+<li>Eventing</li>
+<li>System.Runtime.Interopservices namespace</li>
+<li>MDA and debugging</li>
+<li>Threading/Apartment/Context</li>
+<li>Availability of documentation with code samples</li>
+</ol>
+<p>There are inherent differences in the way native code, COM code and managed code work. This adds to lots of confusion in the ways they interact and work together. This in my opinion has been a significant pain point for users of this technology. I also feel that this area is highly complex when it comes to identifying and solving a scenario, task or problem that you have to solve. As an example, I have been asked the question of when should users use custom marshalling many times now. We want to make the user/developer experience with this feature better and are looking for some input on the same. Here are some questions that I have that will help me understand the problems that our customers face with this technology</p>
+<p>Questions:</p>
+<ol>
+<li><strong>Knowledge/Skill of user</strong><ol>
+<li>Is your usage of COM primarily as a component consumer (e.g. via RAD-style usage in an IDE) or component developer (e.g. via ATL)?</li>
+<li>Have you developed a COM/Unmanaged component in a commercial software package?</li>
+<li>Have you developed a commercial software package on the Visual Basic platform (specifically VB6/VB.NET)?</li>
+<li>Do you view your usage of COM Interop as transitional/migratory, or is it a permanent element of your architecture going forward? How skilled are your developers with unmanaged, COM and managed code?</li>
+<li>Has the COM Interop functionality from the CLR played a role in your application compatibility / backwards compatibility story? Do you find your adoption of .NET is biased by legacy needs?</li>
+</ol>
+</li>
+<li><strong>Customer Scenario and choice of technology</strong><ol>
+<li>What is your end user customer scenario? (Ex: Five components A, B, C, D, E. A is a legacy COM component. B is our UI/Business application in C# which needs functionality from A. etc)</li>
+<li>What is the scenario inside that which drives you to use COM interop as a solution? (Ex: Reuse of existing functionality/library that is available in Com from managed code. Exposing managed API’s for COM to customers etc)</li>
+<li>How did you decide that COM interop was the best solution for the problem?</li>
+<li>How difficult was the decision and what were the alternatives that you considered? (Ex: complete native implementation, re-implementing in managed, managed C++ bridge, COM interop etc)</li>
+<li>What features of COM interop do you use and for what scenarios and reasons? If disparate state them separately with explanation. (Ex: tlbimp, RCW, CCW, Eventing, pInvoke, Marshalling etc)</li>
+<li>What is the diversity of your environment in terms of architecture (32 and 64 bit) and languages (C++, COM, VB, C# etc)?</li>
+</ol>
+</li>
+<li><strong>Developer experience during development</strong><ol>
+<li>Do you use the COM interop technologies from Visual Studio or from command prompt? (Ex: run tlbimp from command or import through Visual Studio)</li>
+<li>What parts of the COM interop technology from the list above does development use to solve the above scenario?</li>
+<li>What is the heaviest of the above that makes the meat of the product? (Ex: Marshalling, Eventing etc)</li>
+<li>What are the most complicated problems that you have encountered during development and in which areas?</li>
+<li>How do you investigate problems in this area? (Ex: Use MDA, Debug using windbg etc)</li>
+</ol>
+</li>
+<li><strong>Servicing experience</strong><ol>
+<li>Have you encountered significant end user problems because of failures in your COM interop later? If yes, which part of COM interop did they come from? (List top 4 areas)</li>
+<li>What were the problems in most of the cases? Was it with the platform or your implementation?</li>
+<li>How did you identify the problem?</li>
+<li>How did you solve the problem?</li>
+</ol>
+</li>
+<li><strong>Debugging experience</strong><ol>
+<li>How do you debug problems in COM interop?</li>
+<li>Do you use windbg, SOS, public symbols etc?</li>
+<li>Do you use MDA’s for your debugging? (<a href="https://msdn2.microsoft.com/en-us/library/d21c150d.aspx">https://msdn2.microsoft.com/en-us/library/d21c150d.aspx</a>)</li>
+<li>Do you look at you native and managed code in oleview and ildasm, reflector to see what is happening under the hood?</li>
+<li>What is your average time spent in a problem in this area? How many problem have you seen in this area in a given product cycle (months)?</li>
+</ol>
+</li>
+<li><strong>Help and documentation available</strong><ol>
+<li>What specific material do you refer for this area and how useful is it?</li>
+<li>Do you know about pInvoke.net? Do you use it?</li>
+<li>How would you rate MSDN documentation for this area? What is lacking if any?</li>
+<li>Do you find enough samples available to get you on the ramp with the various technologies here?</li>
+<li>How do you rate our help and documentation on MDA’s?</li>
+</ol>
+</li>
+<li><strong>Other – Any other things that you want us to know</strong></li>
+</ol>
+<p>I want to be clear that I am not looking for adding new features to this area, but looking for making the experience with the current features easier and better. Your input here will be valuable in driving this technology in the right direction.</p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>September 28, 2006<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>September 28, 2006<br>Why no mention of direct C++ interop using C++/CLI?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>September 28, 2006<br>I think spending resources making COM interop easier is not the way to go.  </p>
+<p>Make it unnecessary by means of managed wrappers.  There are still too many pieces<br>of Win32 with no wrappers.  </p>
+<p>I was hoping for more of this with Vista, but it looks like most of that got chopped.  </p>
+<p>A set of questions for another topic would be:<br>a) Windows Platform interrop,<br>b) 3rd party dll&#39;s, ocx&#39;s etc,  <br>c) legacy in house code.  </p>
+<p>If A, then find out the best subsystems to wrap next..    </p>
+</li>
+<li><p><strong>Anonymous</strong><br>September 29, 2006<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>September 29, 2006<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>September 29, 2006<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 02, 2006<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 03, 2006<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 10, 2006<br>Here is a major issue I have encountered with COM Interop - its a MSDN newsgroup posting I made yesterday : A class in assembly A implements a COM interface as follows : [ComImport, Guid(&quot;CEF04FDF-FE72-11d2-87A5-00C04F6837CF&quot;), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)] internal interface IMyInterface { [PreserveSig] int MyMethod(); } class MyClass : IMyInterface { int MyMethod() { ... } } This interface is exposed to the unmanaged world via COM Interop. Now, assembly B also defines IMyInterface and gets this interface from the unmanaged world as follows : IntPtr unk = GetMyInterface(); // Gets IMyInterface from unmanaged world object obj = Marshal.GetObjectFromIUnkown(unk); // its really the class MyClass from assembly A above IMyInterface myIntf = obj as IMyInterface; // this cast does not work and returns null becuase of separate declarations of IMyInterface in the two assemblies ! How to get this scenario to work? One would think that .Net would recognize that both the interfaces are the same ( based on the ComImport and Guid attributes) and allow the cast, but it doesnt allow the cast. It is not possible for me to use a shared assembly and put the declaration of IMyInterface in that assembly. So how can I solve this problem? Is not always possible to have the interface in the shared assembly, because one .Net assembly may expose an interface (eg COM IDataObject) to the unmanaged world while another .Net assembly may consume the interface. Though the underlying interface is the same, .Net will not allow the casting. (In the case of IDataObject, this situation will not arise if you use the Microsoft defined type IOleDataObject - however this will not be possible for other interfaces). Thus .Net does not support the basic tenet of COM which says that COM is a &quot;binary standard&quot;. It should not matter what the underlying &quot;.Net type&quot; of the interface is as long as the binary contract of the interface is the same. I think this is a serious flaw in COM support of .Net. I would love to hear some more views on this. Regards Bob</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 11, 2006<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 11, 2006<br>I have worked daily for the last couple of years with COM interop and the underlying framework and toolset. One short thing I WISH were added to the interop (I know you weren&#39;t looking to add, but thought I would mention): Disposable RCW&#39;s that did a hard-release on the underlying COM object. This would of made our .NET experience much more natural and intuitive and our COM experience predictable (not to mention saving weeks of work). =) Thanks for gathering feedback!</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 12, 2006<br>COM interop works great (providing you have adam nathan&#39;s book!) The hard one is p/invoke with non-trivial function signatures. Try wrapping (for example) AcceptSecurityContext. The new MDAs help but its still a lot of trial and error. I still end up write clr/c++ code to wrap the win32 calls in many cases. Solutions a) all win32 wrapped b) a wizard in vs c) a file of declarations (VB had this ages ago )</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 16, 2006<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 17, 2006<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 18, 2006<br>Bob:   I understand your scenario as follows. You defined a COM interface in unmanaged code and want to use that in managed code. In that process you redeclared that interface and tried casting the object that you got from unmanaged code to the managed interface that you had declared locally and this failed. Is this correct?   Wouldn&#39;t tlbimp solve the probem for you that it will expose the COm interface in the managed code as well?</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 18, 2006<br>Jude:    Microsoft Office has interop assemblies that it ships. Microsoft.Office.Interop.Word is available already for you to use. Please let me know if this helps.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 18, 2006<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 18, 2006<br>pm:    I agree to your point above. I ran into the same problems when I attempted to solve the CreateProcess in my other blog. I don&#39;t think wrapping all the Win32 API is a feasible, scalable and maintainable solution. A wizard will be a good idea which we have in our mind as well. Thanks for your feedback.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 18, 2006<br>Vivek:    Was your problems with RCW around anything in specific, say life time management for example.    Can you provide information on the marshalling problems you faced?    Thanks for your valuable feedback.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 18, 2006<br>Alois:    I have seen similar requests when it comes to arrays and size which are implied in COM and that they would like to have that exposed in the managed signature. Your ask is different but shares the similar concept.    Can you eloborate on your problem with nested interfaces? I am not able to understand it clearly.    Thanks for your feedback</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 19, 2006<br>Hi Thottam, I was thinking of way to import COM interfaces in a way where I can decide if I want to use the imported functions with default error handling (Marshaller throws an ComException if it does encounter an unkown HResult) or and here comes the extension an extended interface which does allow me to the the original HRESULT without any exception at all. This can be beneficial if you have to call some CoM functions quite often in a try-manner. The rationale behind my idea is very much the same that did lead to the int.TryParse method. A possible way to achieve this would be to create from the base interface a second interface where every function returns the original HRESULT code and passes the return value as out parameter. namespace ComImportLibrary {    // [Flags(TYPEFLAGS.SpecialNonThrowing]    // instruct the Marshaller to treat type casts to this interface in a special way    public interface ITryBaseCalc    {        HResult TryAdd(int a, int b, out int result);    }    [ComImport, Guid(&quot;845FB958-4279-11D2-BF23-00805FBE84A6&quot;)]    public interface IBaseCalc : ITryBaseCalc    {        // interface functions        int Add(int a, int b);    }    // [Flags(TYPEFLAGS.SpecialNonThrowing]    public interface ITryExtendedCalc    {        HResult TryDiv(int a, int b, out int result);    }    [ComImport, Guid(&quot;845FB958-4279-11D2-BF23-00805FBE84A6&quot;)]    public interface IExtendedCalc : IBaseCalc, ITryExtendedCalc    {        int Div(int a, int b);    } } Yours, Alois Kraus</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 22, 2006<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 25, 2006<br>Alois Kraus:    Thanks for the suggestion. It sounds like a good idea.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 26, 2006<br>Hi Thottam, what does happen next? Is this a feature that will seriously considered to be implemented in the next version or is it on the long list of minor improvements which will very likely be skipped for the next release? Yours,  Alois Kraus</p>
+</li>
+<li><p><strong>Anonymous</strong><br>October 27, 2006<br>We are currently planning on the features for the next release. There are a few essential work that we have to do. Apart from that I personally feel that it will be very useful to make the existing experience with this feature better. From the comments here and the thougts that our team has had from working in this area, I will be presenting a plan to our management and take it from there. I am optimistic at this point. I am sorry that I am unable to give details on releases now.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 14, 2009<br>PingBack from <a href="http://cutebirdbaths.info/story.php?id=3542">http://cutebirdbaths.info/story.php?id=3542</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 16, 2009<br>PingBack from <a href="http://topalternativedating.info/story.php?id=12903">http://topalternativedating.info/story.php?id=12903</a></p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

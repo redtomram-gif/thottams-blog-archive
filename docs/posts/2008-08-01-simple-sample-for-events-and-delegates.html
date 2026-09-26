@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simple sample for Events and Delegates</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Simple sample for Events and Delegates</h1>
+<p class="meta">
+  <time>2008-08-01</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/simple-sample-for-events-and-delegates">original post</a>
+  
+</p>
+<p>I wanted to write a small sample to illustrate events and delegates. Here is a compact sample that illustrates it.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">EventSample</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-built_in">delegate</span> <span class="hljs-keyword">void</span> <span class="hljs-title">EventHandler</span>()</span>;
+    <span class="hljs-keyword">public</span> <span class="hljs-keyword">event</span> EventHandler myeh;
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Method</span>()</span>
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;Inside Sample Method ... &quot;</span>);
+    }
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">OnChange</span>()</span>
+    {
+        myeh();
+    }
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        EventSample es = <span class="hljs-keyword">new</span> EventSample();
+        es.myeh += <span class="hljs-keyword">new</span> EventHandler(es.Method);
+        es.OnChange();
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>July 31, 2008<br>PingBack from <a href="http://blog.a-foton.ru/2008/08/simple-sample-for-events-and-delegates/">http://blog.a-foton.ru/2008/08/simple-sample-for-events-and-delegates/</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 25, 2008<br>The comment has been removed</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

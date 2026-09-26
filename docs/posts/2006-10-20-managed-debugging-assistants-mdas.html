@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Managed Debugging Assistants (MDA's)</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Managed Debugging Assistants (MDA's)</h1>
+<p class="meta">
+  <time>2006-10-20</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/managed-debugging-assistants-mdas">original post</a>
+  
+</p>
+<p>When I read through the responses for the questionnaire below I saw that many users were not aware of MDA’s and that drove the topic for this post. I had written a small sample for a simple MDA which I thought that I will share with everyone.</p>
+<p>MDA’s can help you diagnose problems that you might not know about normally. These are like advanced diagnostic messages that tell you what is going wrong in your application. There are many ways to turn MDA’s on and off. Let us look in to them here.</p>
+<p>Consider the following source code (sample.cs):</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Diagnostics;
+<span class="hljs-keyword">using</span> System.Runtime.InteropServices;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Program</span> {
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span> {
+        Beep(<span class="hljs-number">5</span>,<span class="hljs-number">5</span>);
+    }
+    [<span class="hljs-meta">DllImport(<span class="hljs-string">&quot;kernel32.dll&quot;</span>, SetLastError=true)</span>]
+    [<span class="hljs-meta">return: MarshalAs(UnmanagedType.Bool)</span>]
+    <span class="hljs-function"><span class="hljs-keyword">internal</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">extern</span> <span class="hljs-built_in">bool</span> <span class="hljs-title">Beep</span>(<span class="hljs-params"><span class="hljs-built_in">long</span> frequency, <span class="hljs-built_in">long</span> duration</span>)</span>;
+}</code></pre>
+</figure>
+<p>Let us compile this code and execute it :- csc sample.cs /debug</p>
+<p>This runs without any errors. If you enable MDA’s then it will let you know that the marshalling for Beep is wrong as it takes two DROWD and hence the parameter should be “int” instead of “long”. How do you catch this error is the question? MDA’s come in handy for this. Here is how you would do it with MDA’s.</p>
+<p><strong>Step-1: Turning on MDA’s</strong></p>
+<p>There is a global registry key which is used to turn on MDA’s.</p>
+<p>Windows Registry Editor Version 5.00</p>
+<p><code>[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\.NETFramework]</code></p>
+<p>&quot;MDA&quot;=&quot;1&quot;</p>
+<p><strong>Step – 2: Selecting individual MDA’s as required:</strong></p>
+<p>Now you can select individual MDA’s that you want in three different ways as mentioned below</p>
+<ol>
+<li><p>Through an exe.mda.config file</p>
+</li>
+<li><p>Through environment variable</p>
+</li>
+<li><p>Through Exceptions in Visual Studio</p>
+</li>
+</ol>
+<p><strong>1. Enabling MDA’s through sample.exe.mda.config file</strong></p>
+<p>Let us produce sample.exe.mda.config file as below:</p>
+<figure class="code">
+<figcaption>XML</figcaption>
+<pre><code class="hljs"><span class="hljs-tag">&lt;<span class="hljs-name">mdaConfig</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">assistants</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">pInvokeStackImbalance</span> <span class="hljs-attr">enable</span>=<span class="hljs-string">&quot;true&quot;</span>/&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">assistants</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">mdaConfig</span>&gt;</span></code></pre>
+</figure>
+<p>This enables the pInvokeStackImbalance MDA which will fire off when it finds irregularities in marshalling.</p>
+<p><strong>2. Enabling MDA’s through environment variables</strong></p>
+<p>Set the environment variable <code>COMPLUS_MDA as mentioned below.</code></p>
+<p><code>COMPLUS_MDA= pInvokeStackImbalance</code></p>
+<p><strong>3. Enabling MDA’s from Visual Studio</strong></p>
+<p>You can enable MDA’s from Visual Studio by going to Debug-Exceptions-Managing Debugging Assistants and selecting the MDA’s that are of interest to you.</p>
+<p>Let us enable the pInvokeStackImbalance MDA using the sample.exe.mda.config option and run the above executable again. This time you get an error message as follows:</p>
+<p>Managed Debugging Assistant &#39;PInvokeStackImbalance&#39; has detected a problem in sample.exe.</p>
+<p>Additional Information: A call to PInvoke function &#39;sample!Program::Beep&#39; has unbalanced the stack. This is likely because the managed PInvoke signature does not match the unmanaged target signature. Check that the calling convention and parameters of the PInvoke signature match the target unmanaged signature</p>
+<p>This is pretty good information that you can use to correct the signature of the pInvoke from long, long to int,int and re run the code. This time the MDA does not fire up. Your marshalling should be correct then! There is good information about MDA’s at the following locations and I recommend everyone to read them.</p>
+<p>The msdn article at <a href="https://msdn.microsoft.com/msdnmag/issues/06/05/BugBash/default.aspx" title="https://msdn.microsoft.com/msdnmag/issues/06/05/BugBash/default.aspx">MDA</a> walks through the same example that I have here with excellent details. I strongly urge reading through that. I read it and it is extremely useful.</p>
+<p>Other references are:</p>
+<p><a href="../jmstall/managed-debug-assistants-mdas-are-cool">https://blogs.msdn.com/jmstall/archive/2005/11/10/introducing-mdas.aspx</a></p>
+<p><a href="https://msdn2.microsoft.com/en-us/library/d21c150d.aspx">https://msdn2.microsoft.com/en-us/library/d21c150d.aspx</a></p>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>October 31, 2006<br>That is great stuff! For those of us doing WinForms and/or Interop, MDAs look like &quot;just what the doctor ordered&quot;. Thanks for making this kind of information more widely known.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>November 02, 2006<br>I am glad this was useful. It will be nice to know your experience after your tunred on MDA&#39;s in your application and if it was helpful in any form.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>December 01, 2006<br>It provides very useful information. Thanks for doing this.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>December 05, 2006<br>Thanks Tao. I am glad this was useful.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>March 28, 2007<br>hello people is good day!!! <a href="http://autonewsportal.info">http://autonewsportal.info</a> <a href="http://autdotcar.info">http://autdotcar.info</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 12, 2007<br>The comment has been removed</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 11, 2007<br>Try using the following signature for GetVolumeInformation Imports System.Runtime.InteropServices Public Declare Function GetVolumeInformation _    Lib &quot;kernel32&quot; Alias &quot;GetVolumeInformationA&quot; ( _    &lt;MarshalAsAttribute(UnmanagedType.LPStr)&gt; ByVal lpRootPathName As String, _    ByVal lpVolumeNameBuffer As System.IntPtr, _    ByVal nVolumeNameSize As UInteger, _    ByRef lpVolumeSerialNumber As UInteger, _    ByRef lpMaximumComponentLength As UInteger, _    ByRef lpFileSystemFlags As UInteger, _    ByVal lpFileSystemNameBuffer As System.IntPtr, _    ByVal nFileSystemNameSize As UInteger _    ) As &lt;MarshalAsAttribute(UnmanagedType.Bool)&gt; Boolean</p>
+</li>
+<li><p><strong>Anonymous</strong><br>June 12, 2007<br>Actually even better is to use StringBuilder for the 2nd and 7th parameters:  Private Declare Function GetVolumeInformation _    Lib &quot;kernel32&quot; Alias &quot;GetVolumeInformationA&quot; ( _    &lt;MarshalAsAttribute(UnmanagedType.LPStr)&gt; ByVal lpRootPathName As String, _    ByVal lpVolumeNameBuffer As StringBuilder, _    ByVal nVolumeNameSize As UInteger, _    ByRef lpVolumeSerialNumber As UInteger, _    ByRef lpMaximumComponentLength As UInteger, _    ByRef lpFileSystemFlags As UInteger, _    ByVal lpFileSystemNameBuffer As StringBuilder, _    ByVal nFileSystemNameSize As UInteger _    ) As &lt;MarshalAsAttribute(UnmanagedType.Bool)&gt; Boolean</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 12, 2008<br><a href= [http://index7.riesxd.com](http://index7.riesxd.com) >intetin</a> <a href= [http://index3.riesxd.com](http://index3.riesxd.com) >t mobil cell phones plans</a> <a href= [http://index4.riesxd.com](http://index4.riesxd.com) >mfc42.dll islinkedto missing export kernel32.dll</a> <a href= [http://index2.riesxd.com](http://index2.riesxd.com) >deastisdesigns</a> <a href= [http://index8.riesxd.com](http://index8.riesxd.com) >triamcindlone cream</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>February 07, 2012<br>It is really helpful. I was trying how to turn off pInvokeStackImbalance but could not get the answer. Thanks</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

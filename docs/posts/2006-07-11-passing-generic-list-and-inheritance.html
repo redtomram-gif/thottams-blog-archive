@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Passing Generic List and inheritance ...</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Passing Generic List and inheritance ...</h1>
+<p class="meta">
+  <time>2006-07-11</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/passing-generic-list-and-inheritance">original post</a>
+  
+</p>
+<p>I came across this interesting scenario when I was looking into some issues. In a normal method you can pass the derived class instance when a base class instance is expected. In the example below passing dc1 to Method1 shows that you can indeed pass a derived class when a BaseClass was expected. But when you generate a generic List with a derived class and try passing it to function which was expecting a generic list with a base class it does not work. Strange, but I got the error mentioned below.</p>
+<p>To work around it I made the list as a list of base class and limited to access of the derived class by checking on the type. It helps but is not as elegant as it should have been.</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">using</span> System.Collections.Generic;
+<span class="hljs-keyword">using</span> System.Collections;
+<span class="hljs-keyword">class</span> <span class="hljs-title">BaseClass</span>
+{
+    <span class="hljs-keyword">public</span> <span class="hljs-built_in">int</span> field1;
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">BaseClass</span>()</span>
+    {
+        field1 = <span class="hljs-number">30</span>;
+    }
+}
+<span class="hljs-keyword">class</span> <span class="hljs-title">DerivedClass</span> : <span class="hljs-title">BaseClass</span>
+{
+    <span class="hljs-built_in">int</span> field2;
+    DerivedClass()
+    {
+        field1 = <span class="hljs-number">10</span>;
+        field2 = <span class="hljs-number">20</span>;
+    }
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Method1</span>(<span class="hljs-params">BaseClass a</span>)</span>
+    {
+        Console.WriteLine(<span class="hljs-string">&quot;In method1 ..&quot;</span> + field2);
+    }
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">Method2</span>(<span class="hljs-params">List&lt;BaseClass&gt; a</span>)</span>
+    {
+        <span class="hljs-keyword">for</span> (<span class="hljs-built_in">int</span> count = <span class="hljs-number">0</span>; count &lt; a.Count; count++)
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;In Method2 ... &quot;</span> + a[count].field1);
+            <span class="hljs-comment">// To be safe you check the type and so on ...</span>
+            <span class="hljs-comment">//</span>
+            <span class="hljs-keyword">if</span> (a[count].GetType() == <span class="hljs-keyword">typeof</span>(DerivedClass))
+            {
+                Console.WriteLine(<span class="hljs-string">&quot;In method2 ... &quot;</span> + ((DerivedClass)a[count]).field2);
+            }
+        }
+    }
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        BaseClass bc1 = <span class="hljs-keyword">new</span> BaseClass();
+        DerivedClass dc1 = <span class="hljs-keyword">new</span> DerivedClass();
+        DerivedClass dc2 = <span class="hljs-keyword">new</span> DerivedClass();
+        dc2.Method1(dc1);
+        <span class="hljs-comment">// This will give you compilation error:</span>
+        <span class="hljs-comment">//</span>
+        <span class="hljs-comment">// List&lt;DerivedClass&gt; bcl = new List&lt;DerivedClass&gt;();</span>
+        <span class="hljs-comment">// This will work</span>
+        <span class="hljs-comment">//</span>
+        List&lt;BaseClass&gt; bcl = <span class="hljs-keyword">new</span> List&lt;BaseClass&gt;();
+        bcl.Add(dc1);
+        bcl.Add(bc1);
+        dc2.Method2(bcl);
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>July 11, 2006<br>Hi Thottam,  </p>
+<p>I ran into the same situation when I used generics extensively for the first time. And I learned that this is expected behavior.<br>The reason is that Generics are invariant. An good explanation on that can be found at the generics faq at <a href="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dndotnet/html/Fundamentals.asp">http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dndotnet/html/Fundamentals.asp</a><br>Cheers,<br>Dirk</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 11, 2006<br>I did not know about this until I read the article you had mentioned. Thanks for the reference and the comments. I will try to write about that next time from what I understand!</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 11, 2006<br>.NET actually does support covariance, but C# doesn&#39;t expose it. It wouldn&#39;t work for List<T> anyway, since that accepts T in input argument positions - covariance can only work with output arguments. I discussed it on my own blog entry (linked).</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 13, 2006<br>Thanks Barrkel for the reference. It was an excellent read as well.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>August 23, 2007<br>You can get it to work if you make Method2 a generic method like this: void Method2<T>(List<T> a) where T : BaseClass { ... } This will work then: List<DerivedClass> bc1 = new List<DerivedClass>; dc2.Method2(bc1);</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 06, 2009<br>Thanks Nic, just what I was looking for</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unhandled Exception handler (UnhandledExceptionEventHandler) to collect more information about unexpected exceptions</title>
+<link rel="stylesheet" href="../style.css">
+</head>
+<body class="post">
+<header class="site">
+  <a class="brand" href="../index.html">Thottam R. Sriram</a>
+  <span class="tag">MSDN blog archive &middot; 2006&ndash;2009</span>
+</header>
+<main>
+<article>
+<h1>Unhandled Exception handler (UnhandledExceptionEventHandler) to collect more information about unexpected exceptions</h1>
+<p class="meta">
+  <time>2008-04-30</time>
+  <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/unhandled-exception-handler-unhandledexceptioneventhandler-to-collect-more-information-about-unexpected-exceptions">original post</a>
+  <a class="repo" href="https://github.com/redtomram-gif/blog-appdomain-unhandled-exception">code sample &rarr;</a>
+</p>
+<p>To continue on the exception post from last week I did a bit more research and learnt some more. I thought that I will share that with everyone. We had some interesting conversations in our team about exception handling and the following thought came up.</p>
+<p>.NET gives you an option to write an unhandled exception handler which can be used to catch exceptions that you did not expect in your code and hence did not handle in your catch block. These are errors in the code as you did not expect them and should fail the application. This interestingly works even if you “throw;” or “throw new Exception(..)” from within the catch block.</p>
+<p>It will be a good pattern to use this to log information about all unexpected exceptions in the application without introducing a “catch(Exception e)” in the code.</p>
+<p>The sample below demonstrates the code for the exception handler. If you uncomment the throw blocks one then the handler will be invoked when the exception is thrown. Does anyone use this pattern and have benefited from it? Are there other ways to do this? Love to hear your thoughts!</p>
+<figure class="code">
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Sample</span>
+{
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Example</span>()</span>
+    {
+        AppDomain currentDomain = AppDomain.CurrentDomain;
+        currentDomain.UnhandledException += <span class="hljs-keyword">new</span> UnhandledExceptionEventHandler(MyHandler);
+        <span class="hljs-keyword">try</span>
+        {
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Exception(<span class="hljs-string">&quot;First Handled Exception&quot;</span>);
+        }
+        <span class="hljs-keyword">catch</span> (Exception e)
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Catch clause caught : &quot;</span> + e.Message);
+        }
+        <span class="hljs-keyword">try</span>
+        {
+            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> Exception(<span class="hljs-string">&quot;Second Handled Exception&quot;</span>);
+        }
+        <span class="hljs-keyword">catch</span> (Exception e)
+        {
+            Console.WriteLine(<span class="hljs-string">&quot;Catch clause caught : &quot;</span> + e.Message);
+            <span class="hljs-comment">// throw;</span>
+            <span class="hljs-comment">// throw new Exception(&quot;Re-throw second exception&quot;, e);</span>
+        }
+        <span class="hljs-comment">// throw new Exception(&quot;Un-Handled Exception&quot;);</span>
+    }
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">MyHandler</span>(<span class="hljs-params"><span class="hljs-built_in">object</span> sender, UnhandledExceptionEventArgs <span class="hljs-keyword">args</span></span>)</span>
+    {
+        Exception e = (Exception) <span class="hljs-keyword">args</span>.ExceptionObject;
+        Console.WriteLine(<span class="hljs-string">&quot;Exception Message: {0}&quot;</span>, e.Message);
+    }
+    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>()</span>
+    {
+        Example();
+    }
+}</code></pre>
+</figure>
+<h2>Comments</h2>
+<ul>
+<li><p><strong>Anonymous</strong><br>April 30, 2008<br>PingBack from <a href="http://www.travel-hilarity.com/airline_travel/?p=4237">http://www.travel-hilarity.com/airline_travel/?p=4237</a></p>
+</li>
+<li><p><strong>Anonymous</strong><br>April 30, 2008<br>The biggest problem with this is that the exceptions are no longer considered &quot;Unhandled&quot; by Visual Studio when running in the debugger.   As such, it won&#39;t break until after your unhandled handler runs which then loses the original call stack. In our applications, we use an #if !DEBUG to enable the unhandled handler, giving us the best of both worlds.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 02, 2008<br>Didn&#39;t know that this causes visual studio to think the exception to be handled. I have to try this, but looks like the DEBUG is a good work around!</p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 02, 2008<br>Thottam, Meet Larry: <a href="http://blogs.msdn.com/larryosterman/archive/2008/05/01/resilience-is-not-necessarily-a-good-thing.aspx">http://blogs.msdn.com/larryosterman/archive/2008/05/01/resilience-is-not-necessarily-a-good-thing.aspx</a> He blogged about Eric&#39;s post: <a href="http://blogs.msdn.com/eric_brechner/archive/2008/05/01/crash-dummies-resilience.aspx">http://blogs.msdn.com/eric_brechner/archive/2008/05/01/crash-dummies-resilience.aspx</a> Interesting that so many &#39;softies are blogging about handling unexpected exceptions (or not).</p>
+</li>
+<li><p><strong>Anonymous</strong><br>May 15, 2008<br>Thanks Drew for the link. So close and yet I have not read his blog before. Interesting articles about exceptions and others too!</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 01, 2008<br>I&#39;m not a programmer; I got an error message titled &quot;Microsoft .NET Framework and starting &quot;an unhandled exception...&quot; and I can&#39;t remove it from my display. Is it possible to fix it, delete it, etc. without knowing how to program? I tried the &quot;restore&quot; but it didn&#39;t.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 02, 2008<br>I don&#39;t understand your scenario completely, but let me try. Right click on your task bar and select Task Manager. Select the Applications tab and you should be able to end this error message dialog from there if it does not have any close button on it which I doubt.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>July 31, 2008<br>Umm, this is a joke, right? And you work at Microsoft? Your blog post comes like 6 years too late and illustrates nothing. Actually, it will do more harm than it helps other people. What you published may work in the special case presented, but it isn&#39;t anyway near what is considered to be best practice.</p>
+</li>
+<li><p><strong>Anonymous</strong><br>December 23, 2009<br>MikeP, I am trying to implement a handler for unexpected exceptions. Can you please post some pointers (links, msdn etc) as to what the best practice is. Thanks in advance</p>
+</li>
+</ul>
+
+</article>
+<p class="back"><a href="../index.html">&larr; All posts</a></p>
+</main>
+<footer class="site">
+  Archived from <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/">Microsoft Learn</a>.
+  Source on <a href="https://github.com/redtomram-gif/thottams-blog-archive">GitHub</a>.
+</footer>
+</body>
+</html>
