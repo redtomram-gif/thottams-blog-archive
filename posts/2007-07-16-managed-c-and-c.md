@@ -1,7 +1,7 @@
 ---
 title: "Managed C++ and C#"
 date: 2007-07-16
-slug: managed-c-and-c
+slug: managed-cplusplus-and-csharp
 source: https://learn.microsoft.com/en-us/archive/blogs/thottams/managed-c-and-c
 ---
 
