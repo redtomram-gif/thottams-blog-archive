@@ -7,52 +7,52 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/reflecting-on-p
 
 # Reflecting on ParameterInfo for Generic class when ContainsGenericParameter is FALSE will return null
 
-```csharp
-using System;
-using System.Reflection;
-public class MyClass<T>
-{
-    public delegate T MyDelegate();
-    public MyClass(MyDelegate del){}
-}
-public class Program
-{
-    public static void Main()
+<!-- C# -->
+
+    using System;
+    using System.Reflection;
+    public class MyClass<T>
     {
-        Type type = typeof(MyClass<>);
-        if(type == null)
+        public delegate T MyDelegate();
+        public MyClass(MyDelegate del){}
+    }
+    public class Program
+    {
+        public static void Main()
         {
-            Console.WriteLine("Type is: NULL");
-        }
-        else
-        {
-            Console.WriteLine("Type is: " + type.ToString());
-        }
-        ConstructorInfo constructor = type.GetConstructors()[0];
-        if(constructor == null)
-        {
-            Console.WriteLine("ConstructorInfo is: Null");
-        }
-        else
-        {
-            Console.WriteLine("ConstrutorInfo is: "+constructor.ToString());
-        }
-        ParameterInfo parameter = constructor.GetParameters()[0];
-        if(parameter == null)
-        Console.WriteLine("ParameterInfo is: Null");
-        else
-        Console.WriteLine("Parameterinfo is: "+parameter.ToString());
-        if(parameter.ParameterType.ContainsGenericParameters == false)
-        {
-            Console.WriteLine("FullName of Parameter type will be null:"+parameter.ParameterType.FullName);
-        }
-        else
-        {
-            Console.WriteLine("FullName of Parameter type:"+parameter.ParameterType.FullName);
+            Type type = typeof(MyClass<>);
+            if(type == null)
+            {
+                Console.WriteLine("Type is: NULL");
+            }
+            else
+            {
+                Console.WriteLine("Type is: " + type.ToString());
+            }
+            ConstructorInfo constructor = type.GetConstructors()[0];
+            if(constructor == null)
+            {
+                Console.WriteLine("ConstructorInfo is: Null");
+            }
+            else
+            {
+                Console.WriteLine("ConstrutorInfo is: "+constructor.ToString());
+            }
+            ParameterInfo parameter = constructor.GetParameters()[0];
+            if(parameter == null)
+            Console.WriteLine("ParameterInfo is: Null");
+            else
+            Console.WriteLine("Parameterinfo is: "+parameter.ToString());
+            if(parameter.ParameterType.ContainsGenericParameters == false)
+            {
+                Console.WriteLine("FullName of Parameter type will be null:"+parameter.ParameterType.FullName);
+            }
+            else
+            {
+                Console.WriteLine("FullName of Parameter type:"+parameter.ParameterType.FullName);
+            }
         }
     }
-}
-```
 
 The above code demonstrates that Reflecting on a Generic parameter when its ContainsGenericParameter value is false will return a null value in FullName. When the type of the paramter is well defined the FullName will return the appropriate value.
 

@@ -13,51 +13,51 @@ Let us look into the sample below. Let us do a Type.GetType for Foo and provide 
 
 Copy the source below to TypeSample.cs and the config to TypeSample.exe.config
 
-```csharp
-using System;
-using System.Reflection;
-class DomSample {
-    public static void Main(){
-        try {
-            Type ty1 = Type.GetType("Foo, Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94");
-            if (ty1 != null) {
-                Console.WriteLine("V1 Type = {0}", ty1.Assembly.FullName.ToString());
+<!-- C# -->
+
+    using System;
+    using System.Reflection;
+    class DomSample {
+        public static void Main(){
+            try {
+                Type ty1 = Type.GetType("Foo, Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94");
+                if (ty1 != null) {
+                    Console.WriteLine("V1 Type = {0}", ty1.Assembly.FullName.ToString());
+                }
+                else {
+                    Console.WriteLine("Unable to find type ...");
+                }
             }
-            else {
-                Console.WriteLine("Unable to find type ...");
+            catch (Exception e) {
+                Console.WriteLine(e.ToString());
             }
-        }
-        catch (Exception e) {
-            Console.WriteLine(e.ToString());
         }
     }
-}
-```
 
 
-```xml
-<configuration>
-   <runtime>
-      <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
-         <probing privatePath="v1" />
-      </assemblyBinding>
-   </runtime>
-</configuration>
-```
+<!-- XML -->
+
+    <configuration>
+       <runtime>
+          <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+             <probing privatePath="v1" />
+          </assemblyBinding>
+       </runtime>
+    </configuration>
 
 
 Make sure that you create a path v1 under APPBASE and create a Foo.cs which is compiled and signed to Foo.dll. Copy the following source to Foo.cs and comple it to Foo.dll and sign it with the key (see my article on signinig)
 
-```csharp
-using System;
-using System.Reflection;
-[assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
-public class Foo {
-    public void Bar() {
-        Console.WriteLine("Version = {0}", (Assembly.GetExecutingAssembly()).ToString());
+<!-- C# -->
+
+    using System;
+    using System.Reflection;
+    [assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
+    public class Foo {
+        public void Bar() {
+            Console.WriteLine("Version = {0}", (Assembly.GetExecutingAssembly()).ToString());
+        }
     }
-}
-```
 
 If you run TypeSample.exe you will get the following output
 
@@ -149,27 +149,27 @@ Now let us modify the code above to use LoadFrom and then try the Type.GetType.
 
 Copy the code below to TypeSampleLoadFrom.cs and compile it to TypeSampleLoadFrom.exe. Let us not provide a config file this time such Type.GetType cannot find the assembly Foo when it tries to load it.
 
-```csharp
-using System;
-using System.Reflection;
-class DomSample {
-    public static void Main() {
-        try {
-            Assembly.LoadFrom("c:\\Blog\\May2007\\v2\\Foo.dll");
-            Type ty1 = Type.GetType("Foo, Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94");
-            if(ty1 != null) {
-                Console.WriteLine("V1 Type = {0}",ty1.Assembly.FullName.ToString());
+<!-- C# -->
+
+    using System;
+    using System.Reflection;
+    class DomSample {
+        public static void Main() {
+            try {
+                Assembly.LoadFrom("c:\\Blog\\May2007\\v2\\Foo.dll");
+                Type ty1 = Type.GetType("Foo, Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94");
+                if(ty1 != null) {
+                    Console.WriteLine("V1 Type = {0}",ty1.Assembly.FullName.ToString());
+                }
+                else {
+                    Console.WriteLine("Unable to find type ...");
+                }
             }
-            else {
-                Console.WriteLine("Unable to find type ...");
+            catch(Exception e) {
+                Console.WriteLine(e.ToString());
             }
-        }
-        catch(Exception e) {
-            Console.WriteLine(e.ToString());
         }
     }
-}
-```
 
 The above program yields the result "Unable to find type ...". If you watch the program under ntsd you will notice that Foo.dll is loaded from the LoadFrom, but the Type.GetType was not able to use the already loaded Foo.dll or find Foo.dll to load it to retreive the type information
 
@@ -252,15 +252,15 @@ SecurityDescriptor: 00306b88
 Let us modify the above sample and add a config TypeSampleLoadFrom.exe.config as follows
 
 
-```xml
-<configuration>
-   <runtime>
-      <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
-         <probing privatePath="v1" />
-      </assemblyBinding>
-   </runtime>
-</configuration>
-```
+<!-- XML -->
+
+    <configuration>
+       <runtime>
+          <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+             <probing privatePath="v1" />
+          </assemblyBinding>
+       </runtime>
+    </configuration>
 
 
 You will get the output V1 Type = Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94.

@@ -9,35 +9,35 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/ntsd-and-sos-ad
 
 I wanted to set a conditional break point from managed code and it was hard to do that using SOS. In the sample below, let us assume that I want to break in to the method ThreadMethod when a specific thread tries to access it. I want to thank [Varun Sekhri](https://blogs.gotdotnet.com/varunsekhri/ "Varun Sekhri"), Rajesh Gunnalan and Michael Rayhelson who helped me figure out a few things that I did not know about.
 
-```csharp
-using System;
-using System.Threading;
-public class sample
-{
-    public void ThreadMethod()
+<!-- C# -->
+
+    using System;
+    using System.Threading;
+    public class sample
     {
-        while(true)
+        public void ThreadMethod()
         {
-            Console.WriteLine("{0}", Thread.CurrentThread.Name);
-            Thread.Sleep(600);
+            while(true)
+            {
+                Console.WriteLine("{0}", Thread.CurrentThread.Name);
+                Thread.Sleep(600);
+            }
+        }
+        static void Main()
+        {
+            sample s = new sample();
+            Thread t1 = new Thread(s.ThreadMethod);
+            Thread t2 = new Thread(s.ThreadMethod);
+            t1.Name = "First Thread";
+            t2.Name = "Second Thread";
+            t1.Start();
+            t2.Start();
+            Console.WriteLine("Enter any string to stop execution:");
+            String line = Console.ReadLine();
+            t1.Abort();
+            t2.Abort();
         }
     }
-    static void Main()
-    {
-        sample s = new sample();
-        Thread t1 = new Thread(s.ThreadMethod);
-        Thread t2 = new Thread(s.ThreadMethod);
-        t1.Name = "First Thread";
-        t2.Name = "Second Thread";
-        t1.Start();
-        t2.Start();
-        Console.WriteLine("Enter any string to stop execution:");
-        String line = Console.ReadLine();
-        t1.Abort();
-        t2.Abort();
-    }
-}
-```
 
 **Here is how you would do it:**
 
@@ -57,11 +57,11 @@ Reloading current modules
 
 ....
 
-```text
-0:000> sxe ld mscorwks
-0:000> g
-0:000> .loadby sos mscorwks
-```
+<!-- Console -->
+
+    0:000> sxe ld mscorwks
+    0:000> g
+    0:000> .loadby sos mscorwks
 
 Let us set a break point on Main to begin with
 
@@ -115,11 +115,11 @@ When you hit the break point, if you look below thread ID 3 is trying to access 
 
 1 e [c:\test\thread.cs @ 7] 0001 (0001) 0:**** thread!sample.ThreadMethod()
 
-```text
-0:000> bc 0
-0:000> bc 1
-0:000> !Threads
-```
+<!-- Console -->
+
+    0:000> bc 0
+    0:000> bc 1
+    0:000> !Threads
 
 ThreadCount: 4
 
@@ -137,11 +137,11 @@ PreEmptive GC Alloc Lock
 
 ID OSID ThreadOBJ State GC Context Domain Count APT Exception
 
-```text
-   0 1 f34 00180f70 a020 Enabled 01381cac:01381fe8 0014c100 1 MTA
-   2 2 e68 00152318 b220 Enabled 00000000:00000000 0014c100 0 MTA (Finalizer)
-   3 3 988 00199f28 b020 Disabled 0138202c:01383fe8 0014c100 0 MTA
-```
+<!-- Console -->
+
+       0 1 f34 00180f70 a020 Enabled 01381cac:01381fe8 0014c100 1 MTA
+       2 2 e68 00152318 b220 Enabled 00000000:00000000 0014c100 0 MTA (Finalizer)
+       3 3 988 00199f28 b020 Disabled 0138202c:01383fe8 0014c100 0 MTA
 
 XXXX 4 6fc 0019a700 9420 Enabled 00000000:00000000 0014c100 0 Ukn
 
@@ -219,14 +219,14 @@ thread!sample.ThreadMethod()+0x29 [c:\test\thread.cs @ 10]:
 
 **From the unassembly above, we identify that the address of WriteLine is** 00dd01f8. Now you can set an unmanaged break point when thread 3 access this line as below.
 
-```text
-0:000> ~3 bp 00dd01f8
-0:000> g
-Breakpoint 0 hit
-eax=01381a00 ebx=00000001 ecx=01382014 edx=01381a00 esi=01382014 edi=01381a00
-eip=00dd01f8 esp=00edf8a0 ebp=01381afc iopl=0 nv up ei pl nz na po nc
-cs=001b ss=0023 ds=0023 es=0023 fs=003b gs=0000 efl=00000202
-```
+<!-- Console -->
+
+    0:000> ~3 bp 00dd01f8
+    0:000> g
+    Breakpoint 0 hit
+    eax=01381a00 ebx=00000001 ecx=01382014 edx=01381a00 esi=01382014 edi=01381a00
+    eip=00dd01f8 esp=00edf8a0 ebp=01381afc iopl=0 nv up ei pl nz na po nc
+    cs=001b ss=0023 ds=0023 es=0023 fs=003b gs=0000 efl=00000202
 
 thread!sample.ThreadMethod()+0x38:
 
@@ -238,15 +238,15 @@ thread!sample.ThreadMethod()+0x38:
 
 . 3 Id: 528.988 Suspend: 1 Teb: 7ffdc000 Unfrozen
 
-```text
-      Start: mscorwks!Thread::intermediateThreadProc (79ecafc5)
-      Priority: 0 Priority class: 32 Affinity: 3
-0:000> g
-Breakpoint 0 hit
-eax=01381a00 ebx=00000001 ecx=01382014 edx=01381a00 esi=01382014 edi=01381a00
-eip=00dd01f8 esp=00edf8a0 ebp=01381afc iopl=0 nv up ei pl nz na po nc
-cs=001b ss=0023 ds=0023 es=0023 fs=003b gs=0000 efl=00000202
-```
+<!-- Console -->
+
+          Start: mscorwks!Thread::intermediateThreadProc (79ecafc5)
+          Priority: 0 Priority class: 32 Affinity: 3
+    0:000> g
+    Breakpoint 0 hit
+    eax=01381a00 ebx=00000001 ecx=01382014 edx=01381a00 esi=01382014 edi=01381a00
+    eip=00dd01f8 esp=00edf8a0 ebp=01381afc iopl=0 nv up ei pl nz na po nc
+    cs=001b ss=0023 ds=0023 es=0023 fs=003b gs=0000 efl=00000202
 
 thread!sample.ThreadMethod()+0x38:
 
@@ -256,10 +256,10 @@ thread!sample.ThreadMethod()+0x38:
 
 . 3 Id: 528.988 Suspend: 1 Teb: 7ffdc000 Unfrozen
 
-```text
-      Start: mscorwks!Thread::intermediateThreadProc (79ecafc5)
-      Priority: 0 Priority class: 32 Affinity: 3
-```
+<!-- Console -->
+
+          Start: mscorwks!Thread::intermediateThreadProc (79ecafc5)
+          Priority: 0 Priority class: 32 Affinity: 3
 
 ## Comments
 

@@ -11,67 +11,67 @@ I want to talk about Xml Serialization this month. One of the work I was involve
 
 If you are generating XML in a clumsy way using printf containing the XML tags, I would strongly suggest you to look into this technology. Incidetaly this plays well with Linq too. The XML after it is loaded into the object can be parsed with Linq queries. I will write a sample for that soon.
 
-```csharp
-using System;
-using System.Collections.Generic;
-using System.Xml;
-using System.Xml.Serialization;
-namespace Sample
-{
-    public class Company
+<!-- C# -->
+
+    using System;
+    using System.Collections.Generic;
+    using System.Xml;
+    using System.Xml.Serialization;
+    namespace Sample
     {
-        List<Book> books;
-        [XmlElement(ElementName = "Book")]
-        public List<Book> Books
+        public class Company
         {
-            get
+            List<Book> books;
+            [XmlElement(ElementName = "Book")]
+            public List<Book> Books
             {
-                if (this.books == null)
+                get
                 {
-                    this.books = new List<Book>();
-                }
-                return books;
-            }
-            set { }
-        }
-    }
-    public class Book
-    {
-        [XmlAttribute(AttributeName = "Title")]
-        public string Name { get; set; }
-        [XmlAttribute(AttributeName = "Author")]
-        public string Author { get; set; }
-        [XmlAttribute(AttributeName = "Year")]
-        public string Year { get; set; }
-    }
-    public class Demo
-    {
-        static void Main(string[] args)
-        {
-            Company c = new Company
-            {
-                Books =
-                {
-                    new Book
+                    if (this.books == null)
                     {
-                        Name = "First Book",
-                        Author = "First Author",
-                        Year = "First Year",
-                    },
-                    new Book
-                    {
-                        Name = "Second Book",
-                        Author = "Second Author",
-                        Year = "Second Year",
+                        this.books = new List<Book>();
                     }
+                    return books;
                 }
-            };
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(Company));
-            xmlSerializer.Serialize(Console.Out, c);
+                set { }
+            }
+        }
+        public class Book
+        {
+            [XmlAttribute(AttributeName = "Title")]
+            public string Name { get; set; }
+            [XmlAttribute(AttributeName = "Author")]
+            public string Author { get; set; }
+            [XmlAttribute(AttributeName = "Year")]
+            public string Year { get; set; }
+        }
+        public class Demo
+        {
+            static void Main(string[] args)
+            {
+                Company c = new Company
+                {
+                    Books =
+                    {
+                        new Book
+                        {
+                            Name = "First Book",
+                            Author = "First Author",
+                            Year = "First Year",
+                        },
+                        new Book
+                        {
+                            Name = "Second Book",
+                            Author = "Second Author",
+                            Year = "Second Year",
+                        }
+                    }
+                };
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(Company));
+                xmlSerializer.Serialize(Console.Out, c);
+            }
         }
     }
-}
-```
 
 I find that there are too many ways to load and parse XML such as XDocument, XPath, XMLSerialize, XDocument and so on. I feel it to be hard to make the right choice of technology for the scenario on hand sometimes. Yet again, documentation leaves you stranded in this space!
 

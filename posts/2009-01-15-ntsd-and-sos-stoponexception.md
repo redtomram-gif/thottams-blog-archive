@@ -7,47 +7,47 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/ntsd-and-sos-st
 
 # NTSD and SOS: StopOnException
 
-```text
-using System;
-class Program
-{
-    static void Main(string[] args)
+<!-- Console -->
+
+    using System;
+    class Program
     {
-        Program p = new Program();
-        p.ExceptionSample();
-    }
-    private void ExceptionSample()
-    {
-        int i=0;
-        while (i < 100)
+        static void Main(string[] args)
         {
-            if (i == 60)
+            Program p = new Program();
+            p.ExceptionSample();
+        }
+        private void ExceptionSample()
+        {
+            int i=0;
+            while (i < 100)
             {
-                try
+                if (i == 60)
                 {
-                    throw new ArgumentException();
+                    try
+                    {
+                        throw new ArgumentException();
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
-                catch (Exception)
+                else
                 {
+                    try
+                    {
+                        throw new OutOfMemoryException();
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
+                i++;
             }
-            else
-            {
-                try
-                {
-                    throw new OutOfMemoryException();
-                }
-                catch (Exception)
-                {
-                }
-            }
-            i++;
         }
     }
-}
 
-!StopOnException comes in handy when you want if you want to break when a specific exception occurs.
-```
+    !StopOnException comes in handy when you want if you want to break when a specific exception occurs.
 
 csc /debug Program.cs
 
@@ -59,10 +59,10 @@ sxe ld mscorwks
 
 g
 
-```text
-.loadby sos msorwks
-!StopOnException -Create System.ArgumentException 1
-```
+<!-- Console -->
+
+    .loadby sos msorwks
+    !StopOnException -Create System.ArgumentException 1
 
 g
 
@@ -74,19 +74,19 @@ Child-SP RetAddr Call Site
 
 000000000019ee50 000007ff00180182 Program.ExceptionSample()
 
-```text
-    PARAMETERS:
-        this = 0x0000000002603358
-    LOCALS:
-        0x000000000019ee78 = 0x000000000000003c
-        0x000000000019ee7c = 0x0000000000000000
-000000000019eec0 000007fefa3f2672 Program.Main(System.String[])
-    PARAMETERS:
-        args = 0x0000000002603338
-    LOCALS:
-        0x000000000019eee0 = 0x0000000002603358
-!pe
-```
+<!-- Console -->
+
+        PARAMETERS:
+            this = 0x0000000002603358
+        LOCALS:
+            0x000000000019ee78 = 0x000000000000003c
+            0x000000000019ee7c = 0x0000000000000000
+    000000000019eec0 000007fefa3f2672 Program.Main(System.String[])
+        PARAMETERS:
+            args = 0x0000000002603338
+        LOCALS:
+            0x000000000019eee0 = 0x0000000002603358
+    !pe
 
 Exception object: 00000000026087d0
 

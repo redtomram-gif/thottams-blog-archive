@@ -13,16 +13,16 @@ Here is how this works:
 
 Writing the original library (original.cs)
 
-```csharp
-using System;
-public class ClassToBeForwardedLater
-{
-    public void SomeMethod()
+<!-- C# -->
+
+    using System;
+    public class ClassToBeForwardedLater
     {
-        Console.WriteLine("Inside ClassToBeForwardedLater in Original.dll");
+        public void SomeMethod()
+        {
+            Console.WriteLine("Inside ClassToBeForwardedLater in Original.dll");
+        }
     }
-}
-```
 
 Let us compile this to original.dll as below
 
@@ -30,17 +30,17 @@ csc /t:library original.cs
 
 Building the application using the original assembly (application.exe)
 
-```csharp
-using System;
-class Application
-{
-    public static void Main()
+<!-- C# -->
+
+    using System;
+    class Application
     {
-        ClassToBeForwardedLater ctbf = new ClassToBeForwardedLater();
-        ctbf.SomeMethod();
+        public static void Main()
+        {
+            ClassToBeForwardedLater ctbf = new ClassToBeForwardedLater();
+            ctbf.SomeMethod();
+        }
     }
-}
-```
 
 Let us compile the executable as below
 
@@ -52,16 +52,16 @@ Inside ClassToBeForwardedLater in Original.dll
 
 Re-implementing the original assembly in a new assembly (newlibrary.cs)
 
-```csharp
-using System;
-public class ClassToBeForwardedLater
-{
-    public void SomeMethod()
+<!-- C# -->
+
+    using System;
+    public class ClassToBeForwardedLater
     {
-        Console.WriteLine("Inside ClassToBeForwarded in newlibrary");
+        public void SomeMethod()
+        {
+            Console.WriteLine("Inside ClassToBeForwarded in newlibrary");
+        }
     }
-}
-```
 
 Let us compile the newlibrary.dll as below
 
@@ -69,11 +69,11 @@ csc /t:library newlibrary.cs
 
 Re-publish the original assembly, but this time with a type forwarded
 
-```csharp
-using System;
-using System.Runtime.CompilerServices;
-[assembly:TypeForwardedTo(typeof(ClassToBeForwardedLater))]
-```
+<!-- C# -->
+
+    using System;
+    using System.Runtime.CompilerServices;
+    [assembly:TypeForwardedTo(typeof(ClassToBeForwardedLater))]
 
 Let us compile the original library as below
 

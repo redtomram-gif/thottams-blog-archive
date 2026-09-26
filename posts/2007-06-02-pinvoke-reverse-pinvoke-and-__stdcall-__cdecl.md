@@ -13,41 +13,41 @@ Copy code to: nat.cpp
 
 Compile: cl /LD nat.cpp
 
-```cpp
-#include <stdio.h>
-#include <string.h>
-typedef void ( *callback)(wchar_t * str);
-extern "C" __declspec(dllexport) void caller(wchar_t * input, int count, callback call)
-{
-    for(int i = 0; i < count; i++)
+<!-- C++ -->
+
+    #include <stdio.h>
+    #include <string.h>
+    typedef void ( *callback)(wchar_t * str);
+    extern "C" __declspec(dllexport) void caller(wchar_t * input, int count, callback call)
     {
-        call(input);
+        for(int i = 0; i < count; i++)
+        {
+            call(input);
+        }
     }
-}
-```
 
 Copy code to: man.cs
 
 Compile: csc man.cs
 
-```csharp
-using System.Runtime.InteropServices;
-public class foo
-{
-    public delegate void callback(string str);
-    public static void callee(string str)
+<!-- C# -->
+
+    using System.Runtime.InteropServices;
+    public class foo
     {
-        System.Console.WriteLine("Managed: " +str);
+        public delegate void callback(string str);
+        public static void callee(string str)
+        {
+            System.Console.WriteLine("Managed: " +str);
+        }
+        public static int Main()
+        {
+            caller("Hello World!", 10, new callback(foo.callee));
+            return 0;
+        }
+        [DllImport("nat.dll",CallingConvention=CallingConvention.StdCall)]
+        public static extern void caller(string str, int count, callback call);
     }
-    public static int Main()
-    {
-        caller("Hello World!", 10, new callback(foo.callee));
-        return 0;
-    }
-    [DllImport("nat.dll",CallingConvention=CallingConvention.StdCall)]
-    public static extern void caller(string str, int count, callback call);
-}
-```
 
 The above code prints the “Managed: Hello World!” twice and exits. To fix this let us change the calling convention to __stdcall.
 
@@ -55,18 +55,18 @@ Copy code to: nat.cpp
 
 Compile: cl /LD nat.cpp
 
-```cpp
-#include <stdio.h>
-#include <string.h>
-typedef void (__stdcall *callback)(wchar_t * str);
-extern "C" __declspec(dllexport) void __stdcall caller(wchar_t * input, int count, callback call)
-{
-    for(int i = 0; i < count; i++)
+<!-- C++ -->
+
+    #include <stdio.h>
+    #include <string.h>
+    typedef void (__stdcall *callback)(wchar_t * str);
+    extern "C" __declspec(dllexport) void __stdcall caller(wchar_t * input, int count, callback call)
     {
-        call(input);
+        for(int i = 0; i < count; i++)
+        {
+            call(input);
+        }
     }
-}
-```
 
 Now if you run the code it will print the message “Managed: Hello World!” 10 times. Marshalling and getting the signatures can be extremely subtle.
 

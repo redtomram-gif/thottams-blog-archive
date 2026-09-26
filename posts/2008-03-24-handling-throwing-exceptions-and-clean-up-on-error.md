@@ -23,73 +23,73 @@ There are four ways to throw an exception in my opinion. They are:
 
 4. Throw with the original exception as an internal exception
 
-```csharp
-a. throw ArgumentException(innerException);
-using System;
-class Sample
-{
-    public void Method1()
+<!-- C# -->
+
+    a. throw ArgumentException(innerException);
+    using System;
+    class Sample
     {
-        // possible throw options
-        // throw new ArgumentException(); - Origin of the exception
-    }
-    public void Method2()
-    {
-        try
-        {
-            Method1();
-        }
-        catch(ArgumentException ae)
+        public void Method1()
         {
             // possible throw options
-            // throw;
-            // - Preserves the original stack
-            // throw ae;
-            // - Breaks the stack an and throws the same exception from now on
-            // throw new ArgumentException(ae);
-            // - throws a new exception with an inner exception
-            // throw new ArgumentException();
-            // - Throws a new exception
+            // throw new ArgumentException(); - Origin of the exception
         }
-        catch(Exception e)
+        public void Method2()
         {
-            Console.WriteLine(e.ToString());
-        }
-    }
-    public void Method3()
-    {
-        bool cleanup = true;
-        try
-        {
-            Method2();
-            Method1();
-            cleanup = false;
-        }
-        catch (Exception)
-        {
-            // perform Cleanup on error
-        }
-        finally
-        {
-            if (cleanup)
+            try
             {
-                // perform cleanup on error
+                Method1();
+            }
+            catch(ArgumentException ae)
+            {
+                // possible throw options
+                // throw;
+                // - Preserves the original stack
+                // throw ae;
+                // - Breaks the stack an and throws the same exception from now on
+                // throw new ArgumentException(ae);
+                // - throws a new exception with an inner exception
+                // throw new ArgumentException();
+                // - Throws a new exception
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+        }
+        public void Method3()
+        {
+            bool cleanup = true;
+            try
+            {
+                Method2();
+                Method1();
+                cleanup = false;
+            }
+            catch (Exception)
+            {
+                // perform Cleanup on error
+            }
+            finally
+            {
+                if (cleanup)
+                {
+                    // perform cleanup on error
+                }
+            }
+        }
+        public static void Main()
+        {
+            Sample s = new Sample();
+            try {
+                s.Method2();
+            }
+            catch(ArgumentException ae)
+            {
+                Console.WriteLine(ae.ToString());
             }
         }
     }
-    public static void Main()
-    {
-        Sample s = new Sample();
-        try {
-            s.Method2();
-        }
-        catch(ArgumentException ae)
-        {
-            Console.WriteLine(ae.ToString());
-        }
-    }
-}
-```
 
 I personally would like to classify them as into two categories,
 
@@ -103,10 +103,10 @@ a. Throw new ArgumentException()
 
 b. Throw new ArgumentException(innerException)
 
-```csharp
-c. Throw e;
-d. Throw;
-```
+<!-- C# -->
+
+    c. Throw e;
+    d. Throw;
 
 There are not many options during the origin of the exception and so that is very clear. The confusion comes only when an exception passes through your code and you attempt to handle it.
 
@@ -124,10 +124,10 @@ a. Throw new ArgumentException(innerException); (or)
 
 2. If you want to log contextual information and pass on the same exception
 
-```csharp
-a. Throw;
-If you use the finally pattern as below, then you don’t need the throw;
-```
+<!-- C# -->
+
+    a. Throw;
+    If you use the finally pattern as below, then you don’t need the throw;
 
 If you use the Exception pattern as shown below then you need the throw to preserve the stack.
 

@@ -11,61 +11,61 @@ I came across this interesting scenario when I was looking into some issues. In 
 
 To work around it I made the list as a list of base class and limited to access of the derived class by checking on the type. It helps but is not as elegant as it should have been.
 
-```csharp
-using System;
-using System.Collections.Generic;
-using System.Collections;
-class BaseClass
-{
-    public int field1;
-    public BaseClass()
+<!-- C# -->
+
+    using System;
+    using System.Collections.Generic;
+    using System.Collections;
+    class BaseClass
     {
-        field1 = 30;
-    }
-}
-class DerivedClass : BaseClass
-{
-    int field2;
-    DerivedClass()
-    {
-        field1 = 10;
-        field2 = 20;
-    }
-    void Method1(BaseClass a)
-    {
-        Console.WriteLine("In method1 .." + field2);
-    }
-    void Method2(List<BaseClass> a)
-    {
-        for (int count = 0; count < a.Count; count++)
+        public int field1;
+        public BaseClass()
         {
-            Console.WriteLine("In Method2 ... " + a[count].field1);
-            // To be safe you check the type and so on ...
-            //
-            if (a[count].GetType() == typeof(DerivedClass))
-            {
-                Console.WriteLine("In method2 ... " + ((DerivedClass)a[count]).field2);
-            }
+            field1 = 30;
         }
     }
-    static void Main()
+    class DerivedClass : BaseClass
     {
-        BaseClass bc1 = new BaseClass();
-        DerivedClass dc1 = new DerivedClass();
-        DerivedClass dc2 = new DerivedClass();
-        dc2.Method1(dc1);
-        // This will give you compilation error:
-        //
-        // List<DerivedClass> bcl = new List<DerivedClass>();
-        // This will work
-        //
-        List<BaseClass> bcl = new List<BaseClass>();
-        bcl.Add(dc1);
-        bcl.Add(bc1);
-        dc2.Method2(bcl);
+        int field2;
+        DerivedClass()
+        {
+            field1 = 10;
+            field2 = 20;
+        }
+        void Method1(BaseClass a)
+        {
+            Console.WriteLine("In method1 .." + field2);
+        }
+        void Method2(List<BaseClass> a)
+        {
+            for (int count = 0; count < a.Count; count++)
+            {
+                Console.WriteLine("In Method2 ... " + a[count].field1);
+                // To be safe you check the type and so on ...
+                //
+                if (a[count].GetType() == typeof(DerivedClass))
+                {
+                    Console.WriteLine("In method2 ... " + ((DerivedClass)a[count]).field2);
+                }
+            }
+        }
+        static void Main()
+        {
+            BaseClass bc1 = new BaseClass();
+            DerivedClass dc1 = new DerivedClass();
+            DerivedClass dc2 = new DerivedClass();
+            dc2.Method1(dc1);
+            // This will give you compilation error:
+            //
+            // List<DerivedClass> bcl = new List<DerivedClass>();
+            // This will work
+            //
+            List<BaseClass> bcl = new List<BaseClass>();
+            bcl.Add(dc1);
+            bcl.Add(bc1);
+            dc2.Method2(bcl);
+        }
     }
-}
-```
 
 ## Comments
 

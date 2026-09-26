@@ -9,24 +9,24 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/debugging-load-
 
 Fusion log comes in very handy when you want to understand or debug binding behaviors. Let us take the sample code below. Copy the code to DomSample.cs and compile it. Let us assume for now that the code tries to load some arbitrary assembly “Foo” which does not exist. If you run this code you will see the following exception.
 
-```csharp
-using System;
-using System.Reflection;
-class DomSample
-{
-    public static void Main()
+<!-- C# -->
+
+    using System;
+    using System.Reflection;
+    class DomSample
     {
-        try
+        public static void Main()
         {
-            Assembly.Load("Foo");
-        }
-        catch(Exception e)
-        {
-            Console.WriteLine(e.ToString());
+            try
+            {
+                Assembly.Load("Foo");
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
         }
     }
-}
-```
 
 System.IO.FileNotFoundException: Could not load file or assembly 'Foo' or one of its dependencies. The system cannot find the file specified.
 
@@ -79,15 +79,15 @@ LOG: Attempting download of new URL file:///C:/blog/june/Foo/Foo.EXE.
 If you notice it clearly tells you the various paths the binder searched to find the file. Let us add some oribing paths to this executables configuration and see what happens. Let us create the file DomSample.exe.config and add the following to it:
 
 
-```xml
-<configuration>
-   <runtime>
-      <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
-         <probing privatePath="BAR" />
-      </assemblyBinding>
-   </runtime>
-</configuration>
-```
+<!-- XML -->
+
+    <configuration>
+       <runtime>
+          <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+             <probing privatePath="BAR" />
+          </assemblyBinding>
+       </runtime>
+    </configuration>
 
 
 If you run the executable now you will find that the binder searches in a few more locations to find the assembly Foo this time. The results from the log look as below:

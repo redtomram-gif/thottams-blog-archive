@@ -13,19 +13,19 @@ MDA’s can help you diagnose problems that you might not know about normally. T
 
 Consider the following source code (sample.cs):
 
-```csharp
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-public class Program {
-    public static void Main() {
-        Beep(5,5);
+<!-- C# -->
+
+    using System;
+    using System.Diagnostics;
+    using System.Runtime.InteropServices;
+    public class Program {
+        public static void Main() {
+            Beep(5,5);
+        }
+        [DllImport("kernel32.dll", SetLastError=true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool Beep(long frequency, long duration);
     }
-    [DllImport("kernel32.dll", SetLastError=true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    internal static extern bool Beep(long frequency, long duration);
-}
-```
 
 Let us compile this code and execute it :- csc sample.cs /debug
 
@@ -56,13 +56,13 @@ Now you can select individual MDA’s that you want in three different ways as m
 Let us produce sample.exe.mda.config file as below:
 
 
-```xml
-<mdaConfig>
-  <assistants>
-    <pInvokeStackImbalance enable="true"/>
-  </assistants>
-</mdaConfig>
-```
+<!-- XML -->
+
+    <mdaConfig>
+      <assistants>
+        <pInvokeStackImbalance enable="true"/>
+      </assistants>
+    </mdaConfig>
 
 
 This enables the pInvokeStackImbalance MDA which will fire off when it finds irregularities in marshalling.

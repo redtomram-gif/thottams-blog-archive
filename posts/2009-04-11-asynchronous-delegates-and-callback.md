@@ -13,73 +13,73 @@ When you do a BeginInvoke the delegate is invoked on a thread from the thread po
 
 In the sample below if you remove the try catch block in the callback or replace the exception.Add(e) with a throw, then the exception will crash the process. If you swallow the exception then you will be hiding failures and continuing which could result in other failures.
 
-```csharp
-using System;
-using System.Threading;
-using System.Runtime.Remoting.Messaging;
-using System.Collections.Generic;
-namespace Delegate
-{
-    public class SampleClass
+<!-- C# -->
+
+    using System;
+    using System.Threading;
+    using System.Runtime.Remoting.Messaging;
+    using System.Collections.Generic;
+    namespace Delegate
     {
-        public static bool SampleMethod()
+        public class SampleClass
         {
-            Console.WriteLine("Inside sample method ...");
-            throw new ArgumentException();
-        }
-    }
-    public delegate bool SampleMethodCaller();
-    public class DelegateSample
-    {
-        List<Exception> exceptions;
-        ManualResetEvent waiter;
-        public DelegateSample()
-        {
-            exceptions = new List<Exception>();
-        }
-        public void CallBackMethodForDelegate(IAsyncResult result)
-        {
-            SampleMethodCaller smd = (SampleMethodCaller)((AsyncResult)result).AsyncDelegate;
-            try
+            public static bool SampleMethod()
             {
-                bool returnValue = smd.EndInvoke(result);
-            }
-            catch (ArgumentException e)
-            {
-                exceptions.Add(e);
-            }
-            finally
-            {
-                waiter.Set();
+                Console.WriteLine("Inside sample method ...");
+                throw new ArgumentException();
             }
         }
-        public void CallDelegateUsingCallBack()
+        public delegate bool SampleMethodCaller();
+        public class DelegateSample
         {
-            try
+            List<Exception> exceptions;
+            ManualResetEvent waiter;
+            public DelegateSample()
             {
-                waiter = new ManualResetEvent(false);
-                SampleMethodCaller smd = new SampleMethodCaller(SampleClass.SampleMethod);
-                IAsyncResult result = smd.BeginInvoke(CallBackMethodForDelegate, null);
-                waiter.WaitOne();
-                if (exceptions.Count != 0)
+                exceptions = new List<Exception>();
+            }
+            public void CallBackMethodForDelegate(IAsyncResult result)
+            {
+                SampleMethodCaller smd = (SampleMethodCaller)((AsyncResult)result).AsyncDelegate;
+                try
                 {
-                    throw exceptions[0];
+                    bool returnValue = smd.EndInvoke(result);
+                }
+                catch (ArgumentException e)
+                {
+                    exceptions.Add(e);
+                }
+                finally
+                {
+                    waiter.Set();
                 }
             }
-            catch (ArgumentException)
+            public void CallDelegateUsingCallBack()
             {
-                Console.WriteLine("Catch exceptions here ...");
+                try
+                {
+                    waiter = new ManualResetEvent(false);
+                    SampleMethodCaller smd = new SampleMethodCaller(SampleClass.SampleMethod);
+                    IAsyncResult result = smd.BeginInvoke(CallBackMethodForDelegate, null);
+                    waiter.WaitOne();
+                    if (exceptions.Count != 0)
+                    {
+                        throw exceptions[0];
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    Console.WriteLine("Catch exceptions here ...");
+                }
+            }
+            public static void Main()
+            {
+                DelegateSample ds = new DelegateSample();
+                ds.CallDelegateUsingCallBack();
+                Console.WriteLine(" -----------------");
             }
         }
-        public static void Main()
-        {
-            DelegateSample ds = new DelegateSample();
-            ds.CallDelegateUsingCallBack();
-            Console.WriteLine(" -----------------");
-        }
     }
-}
-```
 
 ## Comments
 

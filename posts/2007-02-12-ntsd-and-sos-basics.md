@@ -13,23 +13,23 @@ We can go deeper into some of the in depth concepts in the next post.
 
 Let us take a simple console application as below:
 
-```csharp
-using System;
-public class sample
-{
-    string str;
-    public void MyMethod(string arg)
+<!-- C# -->
+
+    using System;
+    public class sample
     {
-        str = "Member Variable";
-        Console.WriteLine("Argument: {0} - {1]", arg, str);
+        string str;
+        public void MyMethod(string arg)
+        {
+            str = "Member Variable";
+            Console.WriteLine("Argument: {0} - {1]", arg, str);
+        }
+        static void Main()
+        {
+            sample s = new sample();
+            s.MyMethod("Hello");
+        }
     }
-    static void Main()
-    {
-        sample s = new sample();
-        s.MyMethod("Hello");
-    }
-}
-```
 
 We would like to do the following as part of our debugging.
 
@@ -45,27 +45,27 @@ This would generate App.exe and App.pdb. Now, let us start debugging this applic
 
 C:\Blog>ntsd App.exe
 
-```text
-0:000> .symfix
-0:000> .sympath+ .
-0:000> .reload
-0:000> sxe –c “ “ clrn
-0:000> g
-0:000> .loadby sos mscorwks
-0:000> !bpmd App.exe sample.MyMethod
-0:000> g
-0:000> !clrstack –a
-OS Thread Id: 0x154c (0)
-ESP EIP
-001bf268 009700f0 sample.MyMethod(System.String)
-    PARAMETERS:
-        this = 0x01501964
-        arg = 0x01501948
-001bf26c 009700a9 sample.Main()
-    LOCALS:
-        <CLR reg> = 0x01501964
-001bf490 79e8273b [GCFrame: 001bf490]
-```
+<!-- Console -->
+
+    0:000> .symfix
+    0:000> .sympath+ .
+    0:000> .reload
+    0:000> sxe –c “ “ clrn
+    0:000> g
+    0:000> .loadby sos mscorwks
+    0:000> !bpmd App.exe sample.MyMethod
+    0:000> g
+    0:000> !clrstack –a
+    OS Thread Id: 0x154c (0)
+    ESP EIP
+    001bf268 009700f0 sample.MyMethod(System.String)
+        PARAMETERS:
+            this = 0x01501964
+            arg = 0x01501948
+    001bf26c 009700a9 sample.Main()
+        LOCALS:
+            <CLR reg> = 0x01501964
+    001bf490 79e8273b [GCFrame: 001bf490]
 
 
 `0:000> !DumpObj 0x01501948`
@@ -114,10 +114,10 @@ MT Field Offset Type VT Attr Value Name
 
 790fc6cc 4000001 4 System.String 0 instance 00000000 str
 
-```text
-// Type in a couple of “p” until you get to the place where the local variable is assgned the value “Member Variable”
-0:000> !DumpObj 0x01501964
-```
+<!-- Console -->
+
+    // Type in a couple of “p” until you get to the place where the local variable is assgned the value “Member Variable”
+    0:000> !DumpObj 0x01501964
 
 Name: sample
 

@@ -15,107 +15,107 @@ If you step through the code below you will note that the creation of Enclosing 
 
 Strangely, the types get created but an exception is thrown in the first call to CreateType. I caught the exception and ignored it and looked into the assembly that is generated and the type and the constructor was indeed created. This is not the best work around, but still gets you over this hurdle if you get into it.
 
-```csharp
-using System;
-using System.Reflection;
-using System.Reflection.Emit;
-/*
- * class Enclosing
- * {
- *     public void Enclosing()
- *     {
- *         Console.WriteLine("Hello");
- *     }
- *     class Nested1
- *     {
- *         int a;
- *         int b;
- *         Nested2 c;
- *     }
- *     class Nested2
- *     {
- *         int a;
- *         int b;
- *     }
- *     Nested1 a;
- *     Nested2 b;
- * }
- */
-public interface IHelloWorld
-{
-    void HelloWorld();
-}
-class Class1
-{
-    static TypeBuilder enc, nested1, nested2;
-    static AssemblyBuilder ab;
-    static ModuleBuilder mb;
-    static void Main(string[] args)
+<!-- C# -->
+
+    using System;
+    using System.Reflection;
+    using System.Reflection.Emit;
+    /*
+     * class Enclosing
+     * {
+     *     public void Enclosing()
+     *     {
+     *         Console.WriteLine("Hello");
+     *     }
+     *     class Nested1
+     *     {
+     *         int a;
+     *         int b;
+     *         Nested2 c;
+     *     }
+     *     class Nested2
+     *     {
+     *         int a;
+     *         int b;
+     *     }
+     *     Nested1 a;
+     *     Nested2 b;
+     * }
+     */
+    public interface IHelloWorld
     {
-        AppDomain.CurrentDomain.TypeResolve += new ResolveEventHandler(CurrentDomain_TypeResolve);
-        AssemblyName name = new AssemblyName();
-        name.Name = "test";
-        ab = AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave);
-        mb = ab.DefineDynamicModule("test", "test.dll");
-        enc = mb.DefineType("Enclosing", TypeAttributes.Public | TypeAttributes.Class, null, new Type[] { typeof(IHelloWorld) });
-        nested1 = enc.DefineNestedType("Nested1", TypeAttributes.Sealed | TypeAttributes.NestedPublic, typeof(System.ValueType));
-        nested2 = enc.DefineNestedType("Nested2", TypeAttributes.Sealed | TypeAttributes.NestedPublic, typeof(System.ValueType));
-        nested1.DefineField("a", typeof(int), FieldAttributes.Public);
-        nested1.DefineField("b", typeof(int), FieldAttributes.Public);
-        nested1.DefineField("c", nested2, FieldAttributes.Public);
-        nested2.DefineField("a", typeof(int), FieldAttributes.Public);
-        nested2.DefineField("b", typeof(int), FieldAttributes.Public);
-        enc.DefineField("a", nested1, FieldAttributes.Public);
-        enc.DefineField("b", nested2, FieldAttributes.Public);
-        ConstructorBuilder myConstructorBuilder = enc.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, Type.EmptyTypes);
-        ILGenerator myConstructorIL = myConstructorBuilder.GetILGenerator();
-        myConstructorIL.Emit(OpCodes.Ldstr, "Enc Constructor Called");
-        MethodInfo infoMethod = typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) });
-        myConstructorIL.Emit(OpCodes.Call, infoMethod);
-        myConstructorIL.Emit(OpCodes.Ret);
-        MethodBuilder meth = enc.DefineMethod("HelloWorld", MethodAttributes.Public | MethodAttributes.Virtual, typeof(void), Type.EmptyTypes);
-        ILGenerator il = meth.GetILGenerator();
-        il.Emit(OpCodes.Ldstr, "Enc::HelloWorld() method called!");
-        MethodInfo writeMethod = typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) });
-        il.Emit(OpCodes.Call, writeMethod);
-        il.Emit(OpCodes.Ret);
-        Type t =null;
-        try
-        {
-            t = enc.CreateType();
-        }
-        catch (Exception e) { Console.WriteLine(e.ToString()); }
-        Console.WriteLine("Creating Type: {0}", t.ToString());
-        IHelloWorld ins = (IHelloWorld)Activator.CreateInstance(t);
-        ins.HelloWorld();
+        void HelloWorld();
     }
-    private static Assembly CurrentDomain_TypeResolve(object sender, ResolveEventArgs args)
+    class Class1
     {
-        Type newtype = null;
-        if (args.Name == "Nested2")
+        static TypeBuilder enc, nested1, nested2;
+        static AssemblyBuilder ab;
+        static ModuleBuilder mb;
+        static void Main(string[] args)
         {
-            newtype = nested2.CreateType();
-            return mb.Assembly;
-        }
-        if (args.Name == "Nested1")
-        {
+            AppDomain.CurrentDomain.TypeResolve += new ResolveEventHandler(CurrentDomain_TypeResolve);
+            AssemblyName name = new AssemblyName();
+            name.Name = "test";
+            ab = AppDomain.CurrentDomain.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndSave);
+            mb = ab.DefineDynamicModule("test", "test.dll");
+            enc = mb.DefineType("Enclosing", TypeAttributes.Public | TypeAttributes.Class, null, new Type[] { typeof(IHelloWorld) });
+            nested1 = enc.DefineNestedType("Nested1", TypeAttributes.Sealed | TypeAttributes.NestedPublic, typeof(System.ValueType));
+            nested2 = enc.DefineNestedType("Nested2", TypeAttributes.Sealed | TypeAttributes.NestedPublic, typeof(System.ValueType));
+            nested1.DefineField("a", typeof(int), FieldAttributes.Public);
+            nested1.DefineField("b", typeof(int), FieldAttributes.Public);
+            nested1.DefineField("c", nested2, FieldAttributes.Public);
+            nested2.DefineField("a", typeof(int), FieldAttributes.Public);
+            nested2.DefineField("b", typeof(int), FieldAttributes.Public);
+            enc.DefineField("a", nested1, FieldAttributes.Public);
+            enc.DefineField("b", nested2, FieldAttributes.Public);
+            ConstructorBuilder myConstructorBuilder = enc.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, Type.EmptyTypes);
+            ILGenerator myConstructorIL = myConstructorBuilder.GetILGenerator();
+            myConstructorIL.Emit(OpCodes.Ldstr, "Enc Constructor Called");
+            MethodInfo infoMethod = typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) });
+            myConstructorIL.Emit(OpCodes.Call, infoMethod);
+            myConstructorIL.Emit(OpCodes.Ret);
+            MethodBuilder meth = enc.DefineMethod("HelloWorld", MethodAttributes.Public | MethodAttributes.Virtual, typeof(void), Type.EmptyTypes);
+            ILGenerator il = meth.GetILGenerator();
+            il.Emit(OpCodes.Ldstr, "Enc::HelloWorld() method called!");
+            MethodInfo writeMethod = typeof(Console).GetMethod("WriteLine", new Type[] { typeof(string) });
+            il.Emit(OpCodes.Call, writeMethod);
+            il.Emit(OpCodes.Ret);
+            Type t =null;
             try
             {
-                newtype = nested1.CreateType();
+                t = enc.CreateType();
             }
-            catch (Exception e) { }
-            return mb.Assembly;
+            catch (Exception e) { Console.WriteLine(e.ToString()); }
+            Console.WriteLine("Creating Type: {0}", t.ToString());
+            IHelloWorld ins = (IHelloWorld)Activator.CreateInstance(t);
+            ins.HelloWorld();
         }
-        if (args.Name == "Enclosing")
+        private static Assembly CurrentDomain_TypeResolve(object sender, ResolveEventArgs args)
         {
-            try
+            Type newtype = null;
+            if (args.Name == "Nested2")
             {
-                newtype = enc.CreateType();
+                newtype = nested2.CreateType();
+                return mb.Assembly;
             }
-            catch (Exception e) { }
-            return mb.Assembly;
+            if (args.Name == "Nested1")
+            {
+                try
+                {
+                    newtype = nested1.CreateType();
+                }
+                catch (Exception e) { }
+                return mb.Assembly;
+            }
+            if (args.Name == "Enclosing")
+            {
+                try
+                {
+                    newtype = enc.CreateType();
+                }
+                catch (Exception e) { }
+                return mb.Assembly;
+            }
+            return Assembly.GetExecutingAssembly();
         }
-        return Assembly.GetExecutingAssembly();
     }
-}
-```

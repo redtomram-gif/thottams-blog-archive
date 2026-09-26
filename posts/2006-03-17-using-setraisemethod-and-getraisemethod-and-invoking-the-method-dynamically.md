@@ -14,53 +14,53 @@ The GetRaiseMethod will return the method that was set through SetRaiseMethod if
 MSDN remarks for GetRaiseMethod:  
 This method returns a null reference (Nothing in Visual Basic) for events declared with the C# event keyword or the Visual Basic Event keyword. This is because the C# and Visual Basic compilers do not generate such a method.
 
-```csharp
-using System;
-using System.Threading;
-using System.Reflection;
-using System.Reflection.Emit;
-public class MyApplication
-{
-    public delegate void MyEvent(Object temp);
-    public static void Main()
+<!-- C# -->
+
+    using System;
+    using System.Threading;
+    using System.Reflection;
+    using System.Reflection.Emit;
+    public class MyApplication
     {
-        // create the type
-        //
-        Type helloWorldClassType = CreateCallee();
-        // GetRaiseMethod
-        //
-        EventInfo ei = helloWorldClassType.GetEvent("Click", BindingFlags.Public | BindingFlags.Instance);
-        MethodInfo rm = ei.GetRaiseMethod();
-        Console.WriteLine("Raise Method for event {0} is {1}", ei.Name, rm.Name);
-        Console.WriteLine(helloWorldClassType.GetType().ToString());
-        // Invoke the dynamic method
-        //
-        MethodInfo dm = helloWorldClassType.GetMethod("OnClick");
-        Object o = Activator.CreateInstance(helloWorldClassType);
-        // Both of them call the emitted method
-        //
-        dm.Invoke(o, new Object[1]);
-        rm.Invoke(o, new Object[1]);
+        public delegate void MyEvent(Object temp);
+        public static void Main()
+        {
+            // create the type
+            //
+            Type helloWorldClassType = CreateCallee();
+            // GetRaiseMethod
+            //
+            EventInfo ei = helloWorldClassType.GetEvent("Click", BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo rm = ei.GetRaiseMethod();
+            Console.WriteLine("Raise Method for event {0} is {1}", ei.Name, rm.Name);
+            Console.WriteLine(helloWorldClassType.GetType().ToString());
+            // Invoke the dynamic method
+            //
+            MethodInfo dm = helloWorldClassType.GetMethod("OnClick");
+            Object o = Activator.CreateInstance(helloWorldClassType);
+            // Both of them call the emitted method
+            //
+            dm.Invoke(o, new Object[1]);
+            rm.Invoke(o, new Object[1]);
+        }
+        private static Type CreateCallee()
+        {
+            AppDomain myDomain = Thread.GetDomain();
+            AssemblyName assemblyName = new AssemblyName();
+            assemblyName.Name = "EmittedAssembly";
+            AssemblyBuilder myAssembly = myDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+            ModuleBuilder myModule = myAssembly.DefineDynamicModule("EmittedModule");
+            TypeBuilder helloWorldClass = myModule.DefineType("HelloWorld", TypeAttributes.Public);
+            MethodBuilder myMethod1 = helloWorldClass.DefineMethod("OnClick", MethodAttributes.Public, typeof(void), new Type[1] { typeof(Object) });
+            ILGenerator methodIL1 = myMethod1.GetILGenerator();
+            methodIL1.EmitWriteLine("This is the emitted method");
+            methodIL1.Emit(OpCodes.Ret);
+            EventBuilder myEvent1 = helloWorldClass.DefineEvent("Click", EventAttributes.None, typeof(MyEvent));
+            myEvent1.SetRaiseMethod(myMethod1);
+            Type helloWorldClassType = helloWorldClass.CreateType();
+            return helloWorldClassType;
+        }
     }
-    private static Type CreateCallee()
-    {
-        AppDomain myDomain = Thread.GetDomain();
-        AssemblyName assemblyName = new AssemblyName();
-        assemblyName.Name = "EmittedAssembly";
-        AssemblyBuilder myAssembly = myDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
-        ModuleBuilder myModule = myAssembly.DefineDynamicModule("EmittedModule");
-        TypeBuilder helloWorldClass = myModule.DefineType("HelloWorld", TypeAttributes.Public);
-        MethodBuilder myMethod1 = helloWorldClass.DefineMethod("OnClick", MethodAttributes.Public, typeof(void), new Type[1] { typeof(Object) });
-        ILGenerator methodIL1 = myMethod1.GetILGenerator();
-        methodIL1.EmitWriteLine("This is the emitted method");
-        methodIL1.Emit(OpCodes.Ret);
-        EventBuilder myEvent1 = helloWorldClass.DefineEvent("Click", EventAttributes.None, typeof(MyEvent));
-        myEvent1.SetRaiseMethod(myMethod1);
-        Type helloWorldClassType = helloWorldClass.CreateType();
-        return helloWorldClassType;
-    }
-}
-```
 
 ## Comments
 

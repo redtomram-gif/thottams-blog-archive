@@ -27,62 +27,62 @@ The EventSchemaTraceListener, EventLogTraceListener and EventProviderTraceListen
 
 ETW.cs:
 
-```csharp
-using System;
-using System.Diagnostics;
+<!-- C# -->
 
-/// <summary>
-/// EventProviderTraeListener:
-///   https://msdn.microsoft.com/en-us/library/system.diagnostics.eventing.eventprovidertracelistener.aspx
-/// Trace Switch:
-///   https://msdn.microsoft.com/en-us/library/aa983740.aspx
-/// </summary>
-class ETWSample
-{
-    static void Main(string[] args)
+    using System;
+    using System.Diagnostics;
+
+    /// <summary>
+    /// EventProviderTraeListener:
+    ///   https://msdn.microsoft.com/en-us/library/system.diagnostics.eventing.eventprovidertracelistener.aspx
+    /// Trace Switch:
+    ///   https://msdn.microsoft.com/en-us/library/aa983740.aspx
+    /// </summary>
+    class ETWSample
     {
-        TraceSource myTraceSource = new TraceSource("TraceSourceApp");
-        myTraceSource.TraceEvent(TraceEventType.Error, 1, "Tracing Error Message.");
-        myTraceSource.TraceEvent(TraceEventType.Warning, 2, "Tracing Warning Message.");
-        myTraceSource.TraceEvent(TraceEventType.Information, 3, "Tracing Information.");
-        myTraceSource.TraceEvent(TraceEventType.Verbose, 4, "Tracing Verbose Message.");
-        myTraceSource.TraceEvent(TraceEventType.Critical, 5, "Tracing Critical Message.");
-        myTraceSource.Close();
-        return;
+        static void Main(string[] args)
+        {
+            TraceSource myTraceSource = new TraceSource("TraceSourceApp");
+            myTraceSource.TraceEvent(TraceEventType.Error, 1, "Tracing Error Message.");
+            myTraceSource.TraceEvent(TraceEventType.Warning, 2, "Tracing Warning Message.");
+            myTraceSource.TraceEvent(TraceEventType.Information, 3, "Tracing Information.");
+            myTraceSource.TraceEvent(TraceEventType.Verbose, 4, "Tracing Verbose Message.");
+            myTraceSource.TraceEvent(TraceEventType.Critical, 5, "Tracing Critical Message.");
+            myTraceSource.Close();
+            return;
+        }
     }
-}
-```
 
 I also wrote the following configuration file such that the appropriate listeners are added to the source.
 
 ETW.exe.config
 
 
-```xml
-<configuration>
-  <system.diagnostics>
-    <sources>
-      <source name="TraceSourceApp" switchName="SourceSwitch" switchType="System.Diagnostics.SourceSwitch">
-        <listeners>
-          <add name="ConsoleListener"/>
-          <add name="ETWListener"/>
-          <remove name="Default"/>
-        </listeners>
-      </source>
-    </sources>
+<!-- XML -->
 
-    <switches>
-      <add name="SourceSwitch" value="Verbose" />
-    </switches>
+    <configuration>
+      <system.diagnostics>
+        <sources>
+          <source name="TraceSourceApp" switchName="SourceSwitch" switchType="System.Diagnostics.SourceSwitch">
+            <listeners>
+              <add name="ConsoleListener"/>
+              <add name="ETWListener"/>
+              <remove name="Default"/>
+            </listeners>
+          </source>
+        </sources>
 
-    <sharedListeners>
-      <add name="ConsoleListener" type="System.Diagnostics.ConsoleTraceListener"/>
-      <add name="ETWListener" type="System.Diagnostics.Eventing.EventProviderTraceListener, System.Core, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
-               initializeData="{BA2DC22C-CCCE-4D17-AFC9-9811DD739970}" />
-    </sharedListeners>
-  </system.diagnostics>
-</configuration>
-```
+        <switches>
+          <add name="SourceSwitch" value="Verbose" />
+        </switches>
+
+        <sharedListeners>
+          <add name="ConsoleListener" type="System.Diagnostics.ConsoleTraceListener"/>
+          <add name="ETWListener" type="System.Diagnostics.Eventing.EventProviderTraceListener, System.Core, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
+                   initializeData="{BA2DC22C-CCCE-4D17-AFC9-9811DD739970}" />
+        </sharedListeners>
+      </system.diagnostics>
+    </configuration>
 
 
 I compiled the cs file as csc ETW.cs /d:TRACE and got etw.exe. On running etw.exe I see the trace messages in the screen. This is because of the fact that consolelistener is added as a listener.

@@ -55,84 +55,84 @@ RevertDeny from Main()
 
 Calling method MethodDemandingFileIOPermission succeeded
 
-```csharp
-using System;
-using System.Reflection;
-using System.Security.Permissions;
-using System.Security;
-using System.IO;
-class Sample
-{
-    public static void Main()
-    {
-        FileIOPermission fileIOPerm = new FileIOPermission(PermissionState.Unrestricted);
-        fileIOPerm.Deny();
+<!-- C# -->
 
-        Console.WriteLine("Deny FileIOPermission");
-        try
-        {
-            Sample.MethodDemandingFileIOPermission();
-        }
-        catch(Exception e)
-        {
-            Console.WriteLine(" Unable to access MethodDemandingFileIOPermission after Deny");
-        }
-        Sample.AssertAndCall(fileIOPerm);
-        Console.WriteLine("Assert permission reverted when returned to Main()");
-        try
-        {
-            Sample.MethodDemandingFileIOPermission();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(" Unable to access MethodDemandingFileIOPermission Assert reverted on return");
-        }
-        CodeAccessPermission.RevertDeny();
-        Console.WriteLine("RevertDeny from Main()");
-        try
-        {
-            Sample.MethodDemandingFileIOPermission();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(" Unable to access MethodDemandingFileIOPermission Assert reverted on return");
-        }
-        Sample.AssertDeclarativelyAndCall();
-    }
-    static public void AssertAndCall(FileIOPermission fileIOPerm)
+    using System;
+    using System.Reflection;
+    using System.Security.Permissions;
+    using System.Security;
+    using System.IO;
+    class Sample
     {
-        Console.WriteLine("Assert FileIOPermission from another method");
-        fileIOPerm.Assert();
-        Sample.MethodDemandingFileIOPermission();
-        CodeAccessPermission.RevertAssert();
-        Console.WriteLine("RevertAssert in AssertAndCall and call again");
+        public static void Main()
+        {
+            FileIOPermission fileIOPerm = new FileIOPermission(PermissionState.Unrestricted);
+            fileIOPerm.Deny();
 
-        try
+            Console.WriteLine("Deny FileIOPermission");
+            try
+            {
+                Sample.MethodDemandingFileIOPermission();
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(" Unable to access MethodDemandingFileIOPermission after Deny");
+            }
+            Sample.AssertAndCall(fileIOPerm);
+            Console.WriteLine("Assert permission reverted when returned to Main()");
+            try
+            {
+                Sample.MethodDemandingFileIOPermission();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(" Unable to access MethodDemandingFileIOPermission Assert reverted on return");
+            }
+            CodeAccessPermission.RevertDeny();
+            Console.WriteLine("RevertDeny from Main()");
+            try
+            {
+                Sample.MethodDemandingFileIOPermission();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(" Unable to access MethodDemandingFileIOPermission Assert reverted on return");
+            }
+            Sample.AssertDeclarativelyAndCall();
+        }
+        static public void AssertAndCall(FileIOPermission fileIOPerm)
         {
+            Console.WriteLine("Assert FileIOPermission from another method");
+            fileIOPerm.Assert();
+            Sample.MethodDemandingFileIOPermission();
+            CodeAccessPermission.RevertAssert();
+            Console.WriteLine("RevertAssert in AssertAndCall and call again");
+
+            try
+            {
+                Sample.MethodDemandingFileIOPermission();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(" Unable to access MethodDemandingFileIOPermission Assert reverted in AssertAndCall");
+            }
+            Console.WriteLine("Assert FileIOPermission one more time from another method");
+            fileIOPerm.Assert();
             Sample.MethodDemandingFileIOPermission();
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(" Unable to access MethodDemandingFileIOPermission Assert reverted in AssertAndCall");
-        }
-        Console.WriteLine("Assert FileIOPermission one more time from another method");
-        fileIOPerm.Assert();
-        Sample.MethodDemandingFileIOPermission();
-    }
 
-    [FileIOPermissionAttribute(SecurityAction.Assert, Unrestricted = true)]
-    static public void AssertDeclarativelyAndCall()
-    {
-        Console.WriteLine("Assert FileIOPermission Declaratively");
-        Sample.MethodDemandingFileIOPermission();
+        [FileIOPermissionAttribute(SecurityAction.Assert, Unrestricted = true)]
+        static public void AssertDeclarativelyAndCall()
+        {
+            Console.WriteLine("Assert FileIOPermission Declaratively");
+            Sample.MethodDemandingFileIOPermission();
+        }
+        [FileIOPermissionAttribute(SecurityAction.Demand, Unrestricted = true)]
+        static public void MethodDemandingFileIOPermission()
+        {
+            Console.WriteLine(" Calling method MethodDemandingFileIOPermission succeeded");
+        }
     }
-    [FileIOPermissionAttribute(SecurityAction.Demand, Unrestricted = true)]
-    static public void MethodDemandingFileIOPermission()
-    {
-        Console.WriteLine(" Calling method MethodDemandingFileIOPermission succeeded");
-    }
-}
-```
 
 ## Comments
 

@@ -23,18 +23,18 @@ How do you specify all of these in an assembly? It is real simple. Let us walk o
 
 Let us create a directory C:\versionsample\bin\v1\helper.cs as below
 
-```csharp
-using System;
-using System.Reflection;
-[assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
-public class Foo
-{
-    public void Bar()
+<!-- C# -->
+
+    using System;
+    using System.Reflection;
+    [assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
+    public class Foo
     {
-        Console.WriteLine("Inside HelperMethod: Version = {0}", (Assembly.GetExecutingAssembly()).ToString());
+        public void Bar()
+        {
+            Console.WriteLine("Inside HelperMethod: Version = {0}", (Assembly.GetExecutingAssembly()).ToString());
+        }
     }
-}
-```
 
 Now let us sign it with a key pair. In order to do that run sn –k sgkey.snk and generate key pair.
 
@@ -48,18 +48,18 @@ If you ildasm helper.dll you will see the version number to be 1.0.0.0 and the p
 
 Let us create a directory C:\versionsample\bin\v2\helper.cs as below
 
-```csharp
-using System;
-using System.Reflection;
-[assembly: System.Reflection.AssemblyVersion("2.0.0.0")]
-public class Helper
-{
-    public void HelperMethod()
+<!-- C# -->
+
+    using System;
+    using System.Reflection;
+    [assembly: System.Reflection.AssemblyVersion("2.0.0.0")]
+    public class Helper
     {
-        Console.WriteLine("Inside HelperMethod: Version = {0}", (Assembly.GetExecutingAssembly()).ToString());
+        public void HelperMethod()
+        {
+            Console.WriteLine("Inside HelperMethod: Version = {0}", (Assembly.GetExecutingAssembly()).ToString());
+        }
     }
-}
-```
 
 You can compile this with the same key file to a library
 
@@ -67,17 +67,17 @@ csc /target:library /out:helper.dll /keyfile.sgkey.snk helper.cs
 
 Let us write the application as below and compile it with helper.dll from the v1 directory as below:
 
-```csharp
-using System;
-public class sample
-{
-    static void Main(string[] args)
+<!-- C# -->
+
+    using System;
+    public class sample
     {
-        Foo f = new Foo();
-        f.Bar();
+        static void Main(string[] args)
+        {
+            Foo f = new Foo();
+            f.Bar();
+        }
     }
-}
-```
 
 csc /reference:bin\v1\helper.dll Application.cs
 
@@ -86,23 +86,23 @@ Let us create a config file for the application as below:
 Application.exe.config:
 
 
-```xml
-<configuration>
-   <runtime>
-      <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
-         <dependentAssembly>
-            <assemblyIdentity name="Helper"
-                              publicKeyToken="bcabfaff346163aa"
-                         culture="neutral" />
-            <codeBase version="1.0.0.0"
-                      href="c:\versionsample\bin\v1\helper.dll"/>
-            <codeBase version="2.0.0.0"
-                      href="c:\versionsample\bin\v2\helper.dll"/>
-         </dependentAssembly>
-      </assemblyBinding>
-   </runtime>
-</configuration>
-```
+<!-- XML -->
+
+    <configuration>
+       <runtime>
+          <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+             <dependentAssembly>
+                <assemblyIdentity name="Helper"
+                                  publicKeyToken="bcabfaff346163aa"
+                             culture="neutral" />
+                <codeBase version="1.0.0.0"
+                          href="c:\versionsample\bin\v1\helper.dll"/>
+                <codeBase version="2.0.0.0"
+                          href="c:\versionsample\bin\v2\helper.dll"/>
+             </dependentAssembly>
+          </assemblyBinding>
+       </runtime>
+    </configuration>
 
 
 If you run the application, you will get the following output:
@@ -114,24 +114,24 @@ Inside HelperMethod: Version = helper, Version=1.0.0.0, Culture=neutral, PublicK
 In order to bind the application to version 2.0.0.0 of the helper assembly, let us add a bindingRedirect which moves version 1.0.0.0 to 2.0.0.0.
 
 
-```xml
-<configuration>
-   <runtime>
-      <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
-         <dependentAssembly>
-            <assemblyIdentity name="Helper"
-                              publicKeyToken="bcabfaff346163aa"
-                         culture="neutral" />
-            <bindingRedirect oldVersion="1.0.0.0" newVersion="2.0.0.0"/>
-            <codeBase version="1.0.0.0"
-                      href="c:\versionsample\bin\v1\helper.dll"/>
-            <codeBase version="2.0.0.0"
-                    href="c:\versionsample\bin\v2\helper.dll"/>
-         </dependentAssembly>
-      </assemblyBinding>
-   </runtime>
-</configuration>
-```
+<!-- XML -->
+
+    <configuration>
+       <runtime>
+          <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+             <dependentAssembly>
+                <assemblyIdentity name="Helper"
+                                  publicKeyToken="bcabfaff346163aa"
+                             culture="neutral" />
+                <bindingRedirect oldVersion="1.0.0.0" newVersion="2.0.0.0"/>
+                <codeBase version="1.0.0.0"
+                          href="c:\versionsample\bin\v1\helper.dll"/>
+                <codeBase version="2.0.0.0"
+                        href="c:\versionsample\bin\v2\helper.dll"/>
+             </dependentAssembly>
+          </assemblyBinding>
+       </runtime>
+    </configuration>
 
 
 Now if you run the application you will see the following output:

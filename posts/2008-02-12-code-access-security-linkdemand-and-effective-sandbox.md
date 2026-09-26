@@ -35,98 +35,98 @@ I want to thanks Shawn Farkas for helping me with this blog post. He has tons of
 
 **Main.cs:**
 
-```csharp
-using System;
-using System.Security;
-using System.Security.Permissions;
-using System.Reflection;
-using System.Runtime.Remoting;
+<!-- C# -->
 
-class Sample
-{
-    public static void Main()
+    using System;
+    using System.Security;
+    using System.Security.Permissions;
+    using System.Reflection;
+    using System.Runtime.Remoting;
+
+    class Sample
     {
-        AppDomainSetup ads = new AppDomainSetup();
-        ads.ApplicationBase = System.Environment.CurrentDirectory;
+        public static void Main()
+        {
+            AppDomainSetup ads = new AppDomainSetup();
+            ads.ApplicationBase = System.Environment.CurrentDirectory;
 
-        PermissionSet psMain = new PermissionSet(PermissionState.None);
-        SecurityPermission sec = new SecurityPermission(PermissionState.Unrestricted);
-        psMain.AddPermission(sec);
-        AppDomain md = AppDomain.CreateDomain("A", null, ads, psMain, null);
-        ObjectHandle obj = md.CreateInstance(@"A", "A");
-        A a = (A)obj.Unwrap();
+            PermissionSet psMain = new PermissionSet(PermissionState.None);
+            SecurityPermission sec = new SecurityPermission(PermissionState.Unrestricted);
+            psMain.AddPermission(sec);
+            AppDomain md = AppDomain.CreateDomain("A", null, ads, psMain, null);
+            ObjectHandle obj = md.CreateInstance(@"A", "A");
+            A a = (A)obj.Unwrap();
 
-        PermissionSet psFirst = new PermissionSet(PermissionState.None);
-        EnvironmentPermission env1 = new EnvironmentPermission(PermissionState.Unrestricted);
-        psFirst.AddPermission(sec);
-        psFirst.AddPermission(env1);
-        AppDomain fd = AppDomain.CreateDomain("B", null, ads, psFirst, null);
-        ObjectHandle obj1 = fd.CreateInstance(@"B", "B");
-        B b = (B)obj1.Unwrap();
+            PermissionSet psFirst = new PermissionSet(PermissionState.None);
+            EnvironmentPermission env1 = new EnvironmentPermission(PermissionState.Unrestricted);
+            psFirst.AddPermission(sec);
+            psFirst.AddPermission(env1);
+            AppDomain fd = AppDomain.CreateDomain("B", null, ads, psFirst, null);
+            ObjectHandle obj1 = fd.CreateInstance(@"B", "B");
+            B b = (B)obj1.Unwrap();
 
-        PermissionSet psSecond = new PermissionSet(PermissionState.None);
-        psSecond.AddPermission(sec);
-        AppDomain sd = AppDomain.CreateDomain("C", null, ads, psSecond, null);
-        ObjectHandle obj2 = sd.CreateInstance(@"C", "C");
-        C c = (C)obj2.Unwrap();
-        a.MethodMain(b, c);
+            PermissionSet psSecond = new PermissionSet(PermissionState.None);
+            psSecond.AddPermission(sec);
+            AppDomain sd = AppDomain.CreateDomain("C", null, ads, psSecond, null);
+            ObjectHandle obj2 = sd.CreateInstance(@"C", "C");
+            C c = (C)obj2.Unwrap();
+            a.MethodMain(b, c);
+        }
     }
-}
-```
 
 **A.cs:**
 
-```csharp
-using System;
-using System.Security;
-using System.Security.Permissions;
-using System.Reflection;
-using System.Runtime.Remoting;
+<!-- C# -->
 
-public class A : MarshalByRefObject
-{
-    public void Method(B b, C c)
+    using System;
+    using System.Security;
+    using System.Security.Permissions;
+    using System.Reflection;
+    using System.Runtime.Remoting;
+
+    public class A : MarshalByRefObject
     {
-        Console.WriteLine("Inside A::Method");
-        b.Method(c);
+        public void Method(B b, C c)
+        {
+            Console.WriteLine("Inside A::Method");
+            b.Method(c);
+        }
     }
-}
-```
 
 **B.cs:**
 
-```csharp
-using System;
-using System.Security;
-using System.Reflection;
+<!-- C# -->
 
-public class B : MarshalByRefObject
-{
-    public void Method(C c)
+    using System;
+    using System.Security;
+    using System.Reflection;
+
+    public class B : MarshalByRefObject
     {
-        Console.WriteLine("Inside B::Method");
-        c.Method();
+        public void Method(C c)
+        {
+            Console.WriteLine("Inside B::Method");
+            c.Method();
+        }
     }
-}
-```
 
 **C.cs:**
 
-```csharp
-using System;
-using System.Security;
-using System.Security.Permissions;
+<!-- C# -->
 
-[SerializableAttribute()]
-public class C
-{
-    [EnvironmentPermissionAttribute(SecurityAction.LinkDemand, Unrestricted = true)]
-    public void Method()
+    using System;
+    using System.Security;
+    using System.Security.Permissions;
+
+    [SerializableAttribute()]
+    public class C
     {
-        Console.WriteLine("Inside C::Method");
+        [EnvironmentPermissionAttribute(SecurityAction.LinkDemand, Unrestricted = true)]
+        public void Method()
+        {
+            Console.WriteLine("Inside C::Method");
+        }
     }
-}
-```
 
 ## Comments
 

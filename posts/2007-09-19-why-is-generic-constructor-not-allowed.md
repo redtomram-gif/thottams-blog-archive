@@ -19,30 +19,30 @@ The reason is simple. You can have a class Foo<T> and a class Foo as described i
 
 there is no way for the compiler to find out the right class constructor to call.
 
-```csharp
-namespace Sample
-{
-    using System;
-    public class Foo <T>
+<!-- C# -->
+
+    namespace Sample
     {
-    }
-    class Foo
-    {
-        public Foo<T>()
+        using System;
+        public class Foo <T>
         {
-            Console.WriteLine("This is generic Foo class {0}",typeof(T));
+        }
+        class Foo
+        {
+            public Foo<T>()
+            {
+                Console.WriteLine("This is generic Foo class {0}",typeof(T));
+            }
+        }
+        public class Bar
+        {
+            static public void Main()
+            {
+                Foo fooGenericInstance;
+                fooGenericInstance = new Foo<Int32>();
+            }
         }
     }
-    public class Bar
-    {
-        static public void Main()
-        {
-            Foo fooGenericInstance;
-            fooGenericInstance = new Foo<Int32>();
-        }
-    }
-}
-```
 
 ## Comments
 

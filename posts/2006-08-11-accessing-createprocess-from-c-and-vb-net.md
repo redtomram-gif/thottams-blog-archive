@@ -9,78 +9,78 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/accessing-creat
 
 I came across this issue recently. I was trying to access CreateProcess using DLLImport from managed code using C# and VB.Net. Here is my code from C#:
 
-```csharp
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-public struct PROCESS_INFORMATION
-{
-    public IntPtr hProcess;
-    public IntPtr hThread;
-    public uint dwProcessId;
-    public uint dwThreadId;
-}
-public struct STARTUPINFO
-{
-    public uint cb;
-    public string lpReserved;
-    public string lpDesktop;
-    public string lpTitle;
-    public uint dwX;
-    public uint dwY;
-    public uint dwXSize;
-    public uint dwYSize;
-    public uint dwXCountChars;
-    public uint dwYCountChars;
-    public uint dwFillAttribute;
-    public uint dwFlags;
-    public short wShowWindow;
-    public short cbReserved2;
-    public IntPtr lpReserved2;
-    public IntPtr hStdInput;
-    public IntPtr hStdOutput;
-    public IntPtr hStdError;
-}
-public struct SECURITY_ATTRIBUTES
-{
-    public int length;
-    public IntPtr lpSecurityDescriptor;
-    public bool bInheritHandle;
-}
-public class Program
-{
-    public static void Main()
+<!-- C# -->
+
+    using System;
+    using System.Diagnostics;
+    using System.Runtime.InteropServices;
+    public struct PROCESS_INFORMATION
     {
-        STARTUPINFO si = new STARTUPINFO();
-        PROCESS_INFORMATION pi = new PROCESS_INFORMATION();
-        CreateProcess("C:\\WINDOWS\\SYSTEM32\\Calc.exe", null, IntPtr.Zero, IntPtr.Zero, false, 0, IntPtr.Zero, null, ref si, out pi);
-        Console.ReadLine();
+        public IntPtr hProcess;
+        public IntPtr hThread;
+        public uint dwProcessId;
+        public uint dwThreadId;
     }
-    [DllImport("kernel32.dll")]
-    static extern bool CreateProcess(string lpApplicationName, string lpCommandLine, IntPtr lpProcessAttributes, IntPtr lpThreadAttributes,
-        bool bInheritHandles, uint dwCreationFlags, IntPtr lpEnvironment,
-        string lpCurrentDirectory, ref STARTUPINFO lpStartupInfo,out PROCESS_INFORMATION lpProcessInformation);
-}
-```
+    public struct STARTUPINFO
+    {
+        public uint cb;
+        public string lpReserved;
+        public string lpDesktop;
+        public string lpTitle;
+        public uint dwX;
+        public uint dwY;
+        public uint dwXSize;
+        public uint dwYSize;
+        public uint dwXCountChars;
+        public uint dwYCountChars;
+        public uint dwFillAttribute;
+        public uint dwFlags;
+        public short wShowWindow;
+        public short cbReserved2;
+        public IntPtr lpReserved2;
+        public IntPtr hStdInput;
+        public IntPtr hStdOutput;
+        public IntPtr hStdError;
+    }
+    public struct SECURITY_ATTRIBUTES
+    {
+        public int length;
+        public IntPtr lpSecurityDescriptor;
+        public bool bInheritHandle;
+    }
+    public class Program
+    {
+        public static void Main()
+        {
+            STARTUPINFO si = new STARTUPINFO();
+            PROCESS_INFORMATION pi = new PROCESS_INFORMATION();
+            CreateProcess("C:\\WINDOWS\\SYSTEM32\\Calc.exe", null, IntPtr.Zero, IntPtr.Zero, false, 0, IntPtr.Zero, null, ref si, out pi);
+            Console.ReadLine();
+        }
+        [DllImport("kernel32.dll")]
+        static extern bool CreateProcess(string lpApplicationName, string lpCommandLine, IntPtr lpProcessAttributes, IntPtr lpThreadAttributes,
+            bool bInheritHandles, uint dwCreationFlags, IntPtr lpEnvironment,
+            string lpCurrentDirectory, ref STARTUPINFO lpStartupInfo,out PROCESS_INFORMATION lpProcessInformation);
+    }
 
 This works like a charm. I initially had problems with this VB code. I looked at the IL code for both and figured out that I had constructed structures in C# for Process_Information, Security_Attricutes etc, but had marked them as classes in VB. This was mking the call to fail. I figured this out after looking into the IL from VB and C# to see what was different between the two. I changed the VB to struct and it works like a charm in VB too. Check the VB code below!
 
-```vb
-Imports System.Runtime.InteropServices
-Imports System.Security.Permissions
-Imports System.Reflection
-Module Module1
-Sub Main()
-StartupNotepad()
-Console.ReadLine()
-End Sub
-Sub StartupNotepad()
-Dim retValue As Boolean
-Dim pInfo As PROCESS_INFORMATION = New PROCESS_INFORMATION()
-Dim sInfo As STARTUPINFO = New STARTUPINFO()
-retValue = CreateProcess("c:\\windows\\system32\\NotePad.exe", Nothing, IntPtr.Zero, IntPtr.Zero, False, 0, IntPtr.Zero, Nothing, sInfo, pInfo)
-End Sub
-```
+<!-- VB.NET -->
+
+    Imports System.Runtime.InteropServices
+    Imports System.Security.Permissions
+    Imports System.Reflection
+    Module Module1
+    Sub Main()
+    StartupNotepad()
+    Console.ReadLine()
+    End Sub
+    Sub StartupNotepad()
+    Dim retValue As Boolean
+    Dim pInfo As PROCESS_INFORMATION = New PROCESS_INFORMATION()
+    Dim sInfo As STARTUPINFO = New STARTUPINFO()
+    retValue = CreateProcess("c:\\windows\\system32\\NotePad.exe", Nothing, IntPtr.Zero, IntPtr.Zero, False, 0, IntPtr.Zero, Nothing, sInfo, pInfo)
+    End Sub
 
 <StructLayout(LayoutKind.Sequential)> _
 
@@ -174,10 +174,10 @@ ByRef lpStartupInfo As STARTUPINFO, _
 
 ByRef lpProcessInformation As PROCESS_INFORMATION) As Boolean
 
-```vb
-End Function
-End Module
-```
+<!-- VB.NET -->
+
+    End Function
+    End Module
 
 ## Comments
 

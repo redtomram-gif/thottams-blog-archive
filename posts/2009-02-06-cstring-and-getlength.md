@@ -9,13 +9,13 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/cstring-and-get
 
 I ran into this problem recently when debugging some native code and thought that it will be good to share this with everyone.
 
-```cpp
-CString sampleString = CString(_T("Sample\0String"), 14);
-int len = sampleString.GetLength(); // len is 14
-CString trimmedString = sampleString.Trim(); // trimmedString = "Sample"
-CString newstring = CString(sampleString); // newString = "Sample"
-len = newstring.GetLength(); // len = 14
-```
+<!-- C++ -->
+
+    CString sampleString = CString(_T("Sample\0String"), 14);
+    int len = sampleString.GetLength(); // len is 14
+    CString trimmedString = sampleString.Trim(); // trimmedString = "Sample"
+    CString newstring = CString(sampleString); // newString = "Sample"
+    len = newstring.GetLength(); // len = 14
 
 CString GetLength returns the length that you passed to it in the constructor and not the length of the string. This can be confusing if you copy the string and loop through the length. It can also be the cause of bugs is you get the length and use CString.GetBuffer() and loop through the buffer for the length.
 

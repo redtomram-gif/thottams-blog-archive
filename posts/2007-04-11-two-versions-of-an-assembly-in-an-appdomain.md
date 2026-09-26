@@ -13,66 +13,66 @@ Let us make a small sample to illustrate the problem that you will encounter if 
 
 Let us call this DomSample.cs
 
-```csharp
-using System;
-using System.Reflection;
-class DomSample {
-    public static void Main() {
-        try {
-            Assembly a1 = Assembly.Load("Foo, Version=2.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94");
-            Assembly a2 = Assembly.Load("Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94");
-            Type ty1 = Type.GetType("Foo, Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94");
-            Type ty2 = Type.GetType("Foo, Foo, Version=2.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94");
-            Console.WriteLine("V1 Type = {0}", ty1.Assembly.FullName.ToString());
-            Console.WriteLine("V2 Type = {0}", ty2.Assembly.FullName.ToString());
-            if (!Type.Equals(ty1, ty2)){
-                Console.WriteLine("The types are different");
+<!-- C# -->
+
+    using System;
+    using System.Reflection;
+    class DomSample {
+        public static void Main() {
+            try {
+                Assembly a1 = Assembly.Load("Foo, Version=2.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94");
+                Assembly a2 = Assembly.Load("Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94");
+                Type ty1 = Type.GetType("Foo, Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94");
+                Type ty2 = Type.GetType("Foo, Foo, Version=2.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94");
+                Console.WriteLine("V1 Type = {0}", ty1.Assembly.FullName.ToString());
+                Console.WriteLine("V2 Type = {0}", ty2.Assembly.FullName.ToString());
+                if (!Type.Equals(ty1, ty2)){
+                    Console.WriteLine("The types are different");
+                }
+                Foo t1 = (Foo)Activator.CreateInstance(ty1);
+                Foo t2 = (Foo)Activator.CreateInstance(ty2);
             }
-            Foo t1 = (Foo)Activator.CreateInstance(ty1);
-            Foo t2 = (Foo)Activator.CreateInstance(ty2);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e.ToString());
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
         }
     }
-}
-```
 
 Let us call this v1/Helper.cs
 
-```csharp
-using System;
-using System.Reflection;
-[assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
-public class Helper {
-    public void HelperMethod() {
-        Console.WriteLine("Version = {0}", (Assembly.GetExecutingAssembly()).ToString());
+<!-- C# -->
+
+    using System;
+    using System.Reflection;
+    [assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
+    public class Helper {
+        public void HelperMethod() {
+            Console.WriteLine("Version = {0}", (Assembly.GetExecutingAssembly()).ToString());
+        }
     }
-}
-```
 
 Let us call this v2/Helper.cs
 
-```csharp
-using System;
-using System.Reflection;
-[assembly: System.Reflection.AssemblyVersion("2.0.0.0")]
-public class Helper {
-    public void HelperMethod() {
-        Console.WriteLine("Version = {0}", (Assembly.GetExecutingAssembly()).ToString());
+<!-- C# -->
+
+    using System;
+    using System.Reflection;
+    [assembly: System.Reflection.AssemblyVersion("2.0.0.0")]
+    public class Helper {
+        public void HelperMethod() {
+            Console.WriteLine("Version = {0}", (Assembly.GetExecutingAssembly()).ToString());
+        }
     }
-}
-```
 
 Let us compile the two versions of the helper methods and place them in the GAC using gacutil /I Helper.dll accordingly. Let us compile the DomSample.cs using one of the versions of the helper assembly and execute it.
 
 C:\temp\AppDomain>DomMain.exe
 
-```text
-V1 Type = Helper, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94
-V2 Type = Helper, Version=2.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94
-```
+<!-- Console -->
+
+    V1 Type = Helper, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94
+    V2 Type = Helper, Version=2.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94
 
 The types are different
 

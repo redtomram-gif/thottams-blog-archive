@@ -9,45 +9,45 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/overriding-a-pr
 
 When you override a property using new with a new type there is discrepancy in behavior from C# and reflection. C# is not aware of the property in the base class and it has been overridden by the new property. But reflection is well aware of both the properties depending on what you are asking for. If you want the derived class property only you need to specify the BindingFlags.DeclaredOnly flag or else it will walk the entire hierarchy.
 
-```csharp
-using System;
-using System.Reflection;
-class Base {
-    public string MyName {
-        set {}
-        get{ return "Hello";}
-    }
-}
-class Derived : Base {
-    public new int MyName {
-        set {}
-    }
-}
-class Test {
-    public static void Main() {
-        Base b = new Base();
-        Derived d = new Derived();
-        // Trying to get all properties works
-        //
-        PropertyInfo[] p = (PropertyInfo [])typeof(Derived).GetProperties();
-        foreach(PropertyInfo p1 in p) {
-            Console.WriteLine(p1.ToString());
+<!-- C# -->
+
+    using System;
+    using System.Reflection;
+    class Base {
+        public string MyName {
+            set {}
+            get{ return "Hello";}
         }
-        // Trying to get the property from the derived class alone works
-        //
-        PropertyInfo p2 = typeof(Derived).GetProperty("MyName", BindingFlags.DeclaredOnly|BindingFlags.Instance | BindingFlags.Public);
-        if(p2 != null) {
-            Console.WriteLine(p2.ToString());
-        }
-        // This call is ambiguous and throws an exception (System.Reflection.AmbiguousMatchException)
-        //
-        typeof(Derived).GetProperty("MyName",BindingFlags.Instance | BindingFlags.Public);
-        // This will not compile as the get property is not defined in the derived class
-        //
-        // Console.WriteLine("Value of MyName in derived class: ", d.MyName);
     }
-}
-```
+    class Derived : Base {
+        public new int MyName {
+            set {}
+        }
+    }
+    class Test {
+        public static void Main() {
+            Base b = new Base();
+            Derived d = new Derived();
+            // Trying to get all properties works
+            //
+            PropertyInfo[] p = (PropertyInfo [])typeof(Derived).GetProperties();
+            foreach(PropertyInfo p1 in p) {
+                Console.WriteLine(p1.ToString());
+            }
+            // Trying to get the property from the derived class alone works
+            //
+            PropertyInfo p2 = typeof(Derived).GetProperty("MyName", BindingFlags.DeclaredOnly|BindingFlags.Instance | BindingFlags.Public);
+            if(p2 != null) {
+                Console.WriteLine(p2.ToString());
+            }
+            // This call is ambiguous and throws an exception (System.Reflection.AmbiguousMatchException)
+            //
+            typeof(Derived).GetProperty("MyName",BindingFlags.Instance | BindingFlags.Public);
+            // This will not compile as the get property is not defined in the derived class
+            //
+            // Console.WriteLine("Value of MyName in derived class: ", d.MyName);
+        }
+    }
 
 ## Comments
 

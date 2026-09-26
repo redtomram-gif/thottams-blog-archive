@@ -13,29 +13,29 @@ Managed C++ code:
 
 #using <mscorlib.dll>
 
-```cpp
-#include <vcclr.h>
-using namespace System;
-#include <stdio.h>
-#include <wchar.h>
-__declspec(dllexport) void NativeFlatMethod(const wchar_t *szParam)
-{
-    wprintf(L"%s \n", szParam);
-}
-```
+<!-- C++ -->
+
+    #include <vcclr.h>
+    using namespace System;
+    #include <stdio.h>
+    #include <wchar.h>
+    __declspec(dllexport) void NativeFlatMethod(const wchar_t *szParam)
+    {
+        wprintf(L"%s \n", szParam);
+    }
 
 __gc public class FlatAPIWrapper
 
-```csharp
-{
-    public:
-    static void NativeFlatMethodWrapper(System::String *szParam)
+<!-- C# -->
+
     {
-        const wchar_t __pin *pChar = PtrToStringChars(szParam);
-        NativeFlatMethod(pChar);
-    }
-};
-```
+        public:
+        static void NativeFlatMethodWrapper(System::String *szParam)
+        {
+            const wchar_t __pin *pChar = PtrToStringChars(szParam);
+            NativeFlatMethod(pChar);
+        }
+    };
 
 Copy the above code to native.cpp and compile it as below
 
@@ -45,17 +45,17 @@ You can ildasm the resultant assembly and see its contents. Now we want to write
 
 Managed code:
 
-```csharp
-using System;
-using System.Runtime.InteropServices;
-class Program
-{
-    static void Main()
+<!-- C# -->
+
+    using System;
+    using System.Runtime.InteropServices;
+    class Program
     {
-        FlatAPIWrapper.NativeFlatMethodWrapper("FLAT API called through Managed C++ wrapper");
+        static void Main()
+        {
+            FlatAPIWrapper.NativeFlatMethodWrapper("FLAT API called through Managed C++ wrapper");
+        }
     }
-}
-```
 
 Copy the above code to managed.cs and compile it as below
 

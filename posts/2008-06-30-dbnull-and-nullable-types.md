@@ -11,25 +11,25 @@ When we have C# code interacting with the data base you run into this problem. L
 
 When you query the database for employee, the dataset or datareader will have DBNull for age. Now, this DBNull is not the same as C# null. This is the beginning of the problem. In order to make sure your code works properly, it has to expect that the reader can return a DBNull. You have to do the following in your code:
 
-```csharp
-int? age = null;
-if (!DBNull.Value.Equals(reader["Age"]))
-{
-    age = (int)reader["Age"];
-}
-```
+<!-- C# -->
+
+    int? age = null;
+    if (!DBNull.Value.Equals(reader["Age"]))
+    {
+        age = (int)reader["Age"];
+    }
 
 This code converts the DBNull to a C# null. The lack of common null types between the two makes code have two sets of defaults for data, one in the DB and the other in C#. Which can get confusing.
 
 If you don't use nullable types due to performance, you have to invent your own null value:
 
-```csharp
-int age = -1;
-if (!DBNull.Value.Equals(reader["Age"]))
-{
-    age = (int)reader["Age"];
-}
-```
+<!-- C# -->
+
+    int age = -1;
+    if (!DBNull.Value.Equals(reader["Age"]))
+    {
+        age = (int)reader["Age"];
+    }
 
 This conversion seems ugly and it is all over the code. Is there any other elegant solution to this?
 

@@ -9,28 +9,28 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/simple-sample-f
 
 I wanted to write a small sample to illustrate events and delegates. Here is a compact sample that illustrates it.
 
-```csharp
-using System;
-public class EventSample
-{
-    public delegate void EventHandler();
-    public event EventHandler myeh;
-    public void Method()
+<!-- C# -->
+
+    using System;
+    public class EventSample
     {
-        Console.WriteLine("Inside Sample Method ... ");
+        public delegate void EventHandler();
+        public event EventHandler myeh;
+        public void Method()
+        {
+            Console.WriteLine("Inside Sample Method ... ");
+        }
+        public void OnChange()
+        {
+            myeh();
+        }
+        public static void Main()
+        {
+            EventSample es = new EventSample();
+            es.myeh += new EventHandler(es.Method);
+            es.OnChange();
+        }
     }
-    public void OnChange()
-    {
-        myeh();
-    }
-    public static void Main()
-    {
-        EventSample es = new EventSample();
-        es.myeh += new EventHandler(es.Method);
-        es.OnChange();
-    }
-}
-```
 
 ## Comments
 

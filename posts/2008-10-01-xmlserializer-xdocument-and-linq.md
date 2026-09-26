@@ -9,97 +9,97 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/xmlserializer-x
 
 I took the sample from my previous post and wanted to use LINQ to query the XML. You can pretty much use the power of SQL on the document object to richly query for things you are looking for.
 
-```csharp
-using System;
-using System.Linq;
-using System.Xml.Linq;
-using System.Collections.Generic;
-using System.Xml;
-using System.Xml.Serialization;
-using System.IO;
-namespace Sample
-{
-    public class Company
-    {
-        List<Book> books;
-        [XmlElement(ElementName = "Book")]
-        public List<Book> Books
-        {
-            get
-            {
-                if (this.books == null)
-                {
-                    this.books = new List<Book>();
-                }
-                return books;
-            }
-            set { }
-        }
-    }
-    public class Book
-    {
-        [XmlAttribute(AttributeName = "Title")]
-        public string Name { get; set; }
-        [XmlAttribute(AttributeName = "Author")]
-        public string Author { get; set; }
-        [XmlAttribute(AttributeName = "Year")]
-        public string Year { get; set; }
-    }
-    public class Demo
-    {
-        static void Main(string[] args)
-        {
-            Company c = new Company
-            {
-                Books =
-                {
-                    new Book
-                    {
-                        Name = "First Book",
-                        Author = "First Author",
-                        Year = "First Year",
-                    },
-                    new Book
-                    {
-                        Name = "Second Book",
-                        Author = "Second Author",
-                        Year = "Second Year",
-                    },
-                    new Book
-                    {
-                        Name = "Third Book",
-                        Author = "Third Author",
-                        Year = "Third Year",
-                    },
-                    new Book
-                    {
-                        Name = "Fourth Book",
-                        Author = "Fourth Author",
-                        Year = "Fourth Year",
-                    },
-                    new Book
-                    {
-                        Name = "Fifth Book",
-                        Author = "Fifth Author",
-                        Year = "Fifth Year",
-                    }
-                }
-            };
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(Company));
-            FileStream fs = new FileStream("test.xml", FileMode.Create);
-            xmlSerializer.Serialize(fs, c);
-            fs.Close();
-            XDocument doc = XDocument.Load("test.xml");
+<!-- C# -->
 
-            var bks = from books in doc.Elements("Company").Elements("Book") where (books.Attribute("Title").Value.Equals("Fourth Book")) select books;
-            foreach (var book in bks)
+    using System;
+    using System.Linq;
+    using System.Xml.Linq;
+    using System.Collections.Generic;
+    using System.Xml;
+    using System.Xml.Serialization;
+    using System.IO;
+    namespace Sample
+    {
+        public class Company
+        {
+            List<Book> books;
+            [XmlElement(ElementName = "Book")]
+            public List<Book> Books
             {
-                Console.WriteLine(book);
+                get
+                {
+                    if (this.books == null)
+                    {
+                        this.books = new List<Book>();
+                    }
+                    return books;
+                }
+                set { }
+            }
+        }
+        public class Book
+        {
+            [XmlAttribute(AttributeName = "Title")]
+            public string Name { get; set; }
+            [XmlAttribute(AttributeName = "Author")]
+            public string Author { get; set; }
+            [XmlAttribute(AttributeName = "Year")]
+            public string Year { get; set; }
+        }
+        public class Demo
+        {
+            static void Main(string[] args)
+            {
+                Company c = new Company
+                {
+                    Books =
+                    {
+                        new Book
+                        {
+                            Name = "First Book",
+                            Author = "First Author",
+                            Year = "First Year",
+                        },
+                        new Book
+                        {
+                            Name = "Second Book",
+                            Author = "Second Author",
+                            Year = "Second Year",
+                        },
+                        new Book
+                        {
+                            Name = "Third Book",
+                            Author = "Third Author",
+                            Year = "Third Year",
+                        },
+                        new Book
+                        {
+                            Name = "Fourth Book",
+                            Author = "Fourth Author",
+                            Year = "Fourth Year",
+                        },
+                        new Book
+                        {
+                            Name = "Fifth Book",
+                            Author = "Fifth Author",
+                            Year = "Fifth Year",
+                        }
+                    }
+                };
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(Company));
+                FileStream fs = new FileStream("test.xml", FileMode.Create);
+                xmlSerializer.Serialize(fs, c);
+                fs.Close();
+                XDocument doc = XDocument.Load("test.xml");
+
+                var bks = from books in doc.Elements("Company").Elements("Book") where (books.Attribute("Title").Value.Equals("Fourth Book")) select books;
+                foreach (var book in bks)
+                {
+                    Console.WriteLine(book);
+                }
             }
         }
     }
-}
-```
 
 ## Comments
 

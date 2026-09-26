@@ -15,45 +15,45 @@ It will be a good pattern to use this to log information about all unexpected ex
 
 The sample below demonstrates the code for the exception handler. If you uncomment the throw blocks one then the handler will be invoked when the exception is thrown. Does anyone use this pattern and have benefited from it? Are there other ways to do this? Love to hear your thoughts!
 
-```csharp
-using System;
-public class Sample
-{
-    public static void Example()
+<!-- C# -->
+
+    using System;
+    public class Sample
     {
-        AppDomain currentDomain = AppDomain.CurrentDomain;
-        currentDomain.UnhandledException += new UnhandledExceptionEventHandler(MyHandler);
-        try
+        public static void Example()
         {
-            throw new Exception("First Handled Exception");
+            AppDomain currentDomain = AppDomain.CurrentDomain;
+            currentDomain.UnhandledException += new UnhandledExceptionEventHandler(MyHandler);
+            try
+            {
+                throw new Exception("First Handled Exception");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Catch clause caught : " + e.Message);
+            }
+            try
+            {
+                throw new Exception("Second Handled Exception");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Catch clause caught : " + e.Message);
+                // throw;
+                // throw new Exception("Re-throw second exception", e);
+            }
+            // throw new Exception("Un-Handled Exception");
         }
-        catch (Exception e)
+        static void MyHandler(object sender, UnhandledExceptionEventArgs args)
         {
-            Console.WriteLine("Catch clause caught : " + e.Message);
+            Exception e = (Exception) args.ExceptionObject;
+            Console.WriteLine("Exception Message: {0}", e.Message);
         }
-        try
+        public static void Main()
         {
-            throw new Exception("Second Handled Exception");
+            Example();
         }
-        catch (Exception e)
-        {
-            Console.WriteLine("Catch clause caught : " + e.Message);
-            // throw;
-            // throw new Exception("Re-throw second exception", e);
-        }
-        // throw new Exception("Un-Handled Exception");
     }
-    static void MyHandler(object sender, UnhandledExceptionEventArgs args)
-    {
-        Exception e = (Exception) args.ExceptionObject;
-        Console.WriteLine("Exception Message: {0}", e.Message);
-    }
-    public static void Main()
-    {
-        Example();
-    }
-}
-```
 
 ## Comments
 
