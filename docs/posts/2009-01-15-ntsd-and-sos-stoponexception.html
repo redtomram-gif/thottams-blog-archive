@@ -19,66 +19,84 @@
   <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/ntsd-and-sos-stoponexception">original post</a>
   <a class="repo" href="https://redtomram-gif.github.io/blog-ntsd-stoponexception-sample/">code sample &rarr;</a>
 </p>
+<p><code>!StopOnException</code> comes in handy when you want to break when a specific
+exception occurs.</p>
+<p>The program below throws an <code>OutOfMemoryException</code> on every iteration of the
+loop except one, where it throws a single <code>ArgumentException</code>. That gives you
+something to practise on: plenty of noise, and one exception you actually care
+about.</p>
 <figure class="code">
-<figcaption>Console</figcaption>
-<pre><code class="hljs">using System;
-class Program
+<figcaption>C#</figcaption>
+<pre><code class="hljs"><span class="hljs-keyword">using</span> System;
+<span class="hljs-keyword">class</span> <span class="hljs-title">Program</span>
 {
-    static void Main(string[] args)
+    <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">Main</span>(<span class="hljs-params"><span class="hljs-built_in">string</span>[] <span class="hljs-keyword">args</span></span>)</span>
     {
-        Program p = new Program();
+        Program p = <span class="hljs-keyword">new</span> Program();
         p.ExceptionSample();
     }
-    private void ExceptionSample()
+    <span class="hljs-function"><span class="hljs-keyword">private</span> <span class="hljs-keyword">void</span> <span class="hljs-title">ExceptionSample</span>()</span>
     {
-        int i=0;
-        while (i &lt; 100)
+        <span class="hljs-built_in">int</span> i=<span class="hljs-number">0</span>;
+        <span class="hljs-keyword">while</span> (i &lt; <span class="hljs-number">100</span>)
         {
-            if (i == 60)
+            <span class="hljs-keyword">if</span> (i == <span class="hljs-number">60</span>)
             {
-                try
+                <span class="hljs-keyword">try</span>
                 {
-                    throw new ArgumentException();
+                    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> ArgumentException();
                 }
-                catch (Exception)
+                <span class="hljs-keyword">catch</span> (Exception)
                 {
                 }
             }
-            else
+            <span class="hljs-keyword">else</span>
             {
-                try
+                <span class="hljs-keyword">try</span>
                 {
-                    throw new OutOfMemoryException();
+                    <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> OutOfMemoryException();
                 }
-                catch (Exception)
+                <span class="hljs-keyword">catch</span> (Exception)
                 {
                 }
             }
             i++;
         }
     }
-}
-
-!StopOnException comes in handy when you want if you want to break when a specific exception occurs.</code></pre>
+}</code></pre>
 </figure>
-<p>csc /debug Program.cs</p>
-<p>ntsd program.exe</p>
-<p><code>.sympath+ .</code></p>
-<p>sxe ld mscorwks</p>
-<p>g</p>
+<p>Build it with debug information and start it under the debugger:</p>
 <figure class="code">
 <figcaption>Console</figcaption>
-<pre><code class="hljs">.loadby sos msorwks
-!StopOnException -Create System.ArgumentException 1</code></pre>
+<pre><code class="hljs">csc /debug Program.cs
+ntsd program.exe</code></pre>
 </figure>
-<p>g</p>
-<p><code>!ClrStack -a</code></p>
-<p>OS Thread Id: 0x103c (0)</p>
-<p>Child-SP RetAddr Call Site</p>
-<p>000000000019ee50 000007ff00180182 Program.ExceptionSample()</p>
+<p>Add the current directory to the symbol path, break when the runtime is loaded,
+and let the program go:</p>
 <figure class="code">
 <figcaption>Console</figcaption>
-<pre><code class="hljs">    PARAMETERS:
+<pre><code class="hljs">.sympath+ .
+sxe ld mscorwks
+g</code></pre>
+</figure>
+<p>Now that mscorwks is loaded, load SOS, tell it to stop the first time an
+<code>ArgumentException</code> is created, and continue:</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">.loadby sos mscorwks
+!StopOnException -Create System.ArgumentException 1
+g</code></pre>
+</figure>
+<p>The debugger breaks on the iteration that throws <code>ArgumentException</code>.
+<code>!ClrStack -a</code> shows the managed stack along with the parameters and locals of
+each frame:</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">!ClrStack -a
+OS Thread Id: 0x103c (0)
+Child-SP         RetAddr          Call Site
+000000000019ee50 000007ff00180182 Program.ExceptionSample()
+    PARAMETERS:
         this = 0x0000000002603358
     LOCALS:
         0x000000000019ee78 = 0x000000000000003c
@@ -87,17 +105,28 @@ class Program
     PARAMETERS:
         args = 0x0000000002603338
     LOCALS:
-        0x000000000019eee0 = 0x0000000002603358
-!pe</code></pre>
+        0x000000000019eee0 = 0x0000000002603358</code></pre>
 </figure>
-<p>Exception object: 00000000026087d0</p>
-<p>Exception type: System.ArgumentException</p>
-<p>Message: Value does not fall within the expected range.</p>
-<p>InnerException: <none></p>
-<p><code>StackTrace (generated):</code></p>
-<none><p>StackTraceString: <none></p>
-<p>HResult: 80070057</p>
-<p>This will stop when the exception occurs. You can print the details of the exception using pe and look into locals using the clrstack -a. This comes in handy if you want to debug some problem and want to break when the exception occurs.</p>
+<p>The first local of <code>ExceptionSample</code> is <code>0x3c</code>, which is 60 — exactly the
+iteration that throws the <code>ArgumentException</code>.</p>
+<p><code>!pe</code> prints the details of the exception itself:</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">!pe
+Exception object: 00000000026087d0
+Exception type: System.ArgumentException
+Message: Value does not fall within the expected range.
+InnerException: &lt;none&gt;
+StackTrace (generated):
+&lt;none&gt;
+StackTraceString: &lt;none&gt;
+HResult: 80070057</code></pre>
+</figure>
+<p>This will stop when the exception occurs. You can print the details of the
+exception using <code>!pe</code> and look into the locals using <code>!ClrStack -a</code>. This comes
+in handy when you want to debug a problem and break at the point the exception
+is thrown, rather than sifting through every exception the process happens to
+raise.</p>
 
 </article>
 <p class="back"><a href="../index.html">&larr; All posts</a></p>

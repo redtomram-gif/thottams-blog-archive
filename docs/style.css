@@ -153,7 +153,7 @@ figure.code pre {
   overflow-x: auto;
 }
 figure.code code {
-  font: 13px/1.6 ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  font: 13px/1.45 ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
   tab-size: 4;
   white-space: pre;
 }
