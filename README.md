@@ -70,6 +70,7 @@ Where a post has an accompanying runnable sample, the code lives in its own repo
 - [blog-mfc-cstring-getlength](https://github.com/redtomram-gif/blog-mfc-cstring-getlength)
 - [blog-ntsd-stoponexception-sample](https://github.com/redtomram-gif/blog-ntsd-stoponexception-sample)
 - [blog-partition-range-math](https://github.com/redtomram-gif/blog-partition-range-math)
+- [blog-partitionmap-wpf-viewer](https://github.com/redtomram-gif/blog-partitionmap-wpf-viewer)
 - [blog-threads-ntsd-breakpoint-sample](https://github.com/redtomram-gif/blog-threads-ntsd-breakpoint-sample)
 
 ## Notes
