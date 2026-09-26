@@ -31,7 +31,7 @@ Where a post has an accompanying runnable sample, the code lives in its own repo
 | 2007-09-19 | [Same name for a generic and non-generic class](https://redtomram-gif.github.io/thottams-blog-archive/posts/2007-09-19-same-name-for-a-generic-and-non-generic-class.html) |  |
 | 2007-08-20 | [New role within Microsoft](https://redtomram-gif.github.io/thottams-blog-archive/posts/2007-08-20-new-role-within-microsoft.html) |  |
 | 2007-08-20 | [MSDN article about COM Connection Points and managed client](https://redtomram-gif.github.io/thottams-blog-archive/posts/2007-08-20-msdn-article-about-com-connection-points-and-managed-client.html) |  |
-| 2007-07-16 | [Managed C++ and C#](https://redtomram-gif.github.io/thottams-blog-archive/posts/2007-07-16-managed-c-and-c.html) |  |
+| 2007-07-16 | [Managed C++ and C#](https://redtomram-gif.github.io/thottams-blog-archive/posts/2007-07-16-managed-cplusplus-and-csharp.html) |  |
 | 2007-06-11 | [How to control the version of .NET Framework your application runs against?](https://redtomram-gif.github.io/thottams-blog-archive/posts/2007-06-11-how-to-control-the-version-of-net-framework-your-application-runs-against.html) |  |
 | 2007-06-02 | [Debugging load problems using fusion log](https://redtomram-gif.github.io/thottams-blog-archive/posts/2007-06-02-debugging-load-problems-using-fusion-log.html) |  |
 | 2007-06-02 | [PInvoke-Reverse PInvoke and __stdcall - __cdecl](https://redtomram-gif.github.io/thottams-blog-archive/posts/2007-06-02-pinvoke-reverse-pinvoke-and-__stdcall-__cdecl.html) |  |
