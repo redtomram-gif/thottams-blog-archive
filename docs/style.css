@@ -151,6 +151,10 @@ figure.code pre {
   margin: 0;
   padding: 14px 16px;
   overflow-x: auto;
+  /* Must match the inner code element: the pre's own line-height sets the line
+     box strut, so inheriting the body's 1.75 would space the lines apart. */
+  font-size: 13px;
+  line-height: 1.45;
 }
 figure.code code {
   font: 13px/1.45 ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
