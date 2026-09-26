@@ -23,7 +23,7 @@ There are four ways to throw an exception in my opinion. They are:
 
 4. Throw with the original exception as an internal exception
 
-```
+```csharp
 a. throw ArgumentException(innerException);
 using System;
 class Sample
@@ -42,7 +42,7 @@ class Sample
         catch(ArgumentException ae)
         {
             // possible throw options
-          // throw;
+            // throw;
             // - Preserves the original stack
             // throw ae;
             // - Breaks the stack an and throws the same exception from now on
@@ -103,7 +103,7 @@ a. Throw new ArgumentException()
 
 b. Throw new ArgumentException(innerException)
 
-```
+```text
 c. Throw e;
 d. Throw;
 ```
@@ -124,7 +124,7 @@ a. Throw new ArgumentException(innerException); (or)
 
 2. If you want to log contextual information and pass on the same exception
 
-```
+```text
 a. Throw;
 If you use the finally pattern as below, then you don’t need the throw;
 ```

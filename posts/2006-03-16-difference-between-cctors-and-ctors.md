@@ -13,36 +13,36 @@ A simple print with Name will tell you if this is a ctor or a cctor.
 
 The example below demonstrates this scenario clearly.
 
-```
+```csharp
 using System;
 using System.Reflection;
 class Test
 {
-// This is the cctor for the class
-static Test() { }
-// These two are the constructors for the class
-public Test(int i) { }
-public Test(string s) { }
+    // This is the cctor for the class
+    static Test() { }
+    // These two are the constructors for the class
+    public Test(int i) { }
+    public Test(string s) { }
 }
 class Demo
 {
-static void Main()
-{
-// This will give a compilation error as there is no
-// constructor for Test that does not take any parameters
-//
-//Test t = new Test();
-Type[] paramtypes = new Type[0];
-// Call to get a constructor that does not take any parameters using the BindingFlags.Static will return the .cctor which
-// is the static constructor, but this cannot be invoked
-//
+    static void Main()
+    {
+        // This will give a compilation error as there is no
+        // constructor for Test that does not take any parameters
+        //
+        //Test t = new Test();
+        Type[] paramtypes = new Type[0];
+        // Call to get a constructor that does not take any parameters using the BindingFlags.Static will return the .cctor which
+        // is the static constructor, but this cannot be invoked
+        //
 ```
 
 ConstructorInfo ctor = typeof(Test).GetConstructor(
 
 BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null,
 
-```
+```csharp
 CallingConventions.Standard, paramtypes, null);
 // The below snippet of code will return 3 constructors
 //
@@ -52,7 +52,7 @@ ConstructorInfo[] c = typeof(Test).GetConstructors(BindingFlags.Static | Binding
 // This cannot be invoked.
 foreach (ConstructorInfo c1 in c)
 {
-Console.WriteLine(c1.ToString());
+    Console.WriteLine(c1.ToString());
 }
 // The below snippet of code will return 2 constructors
 //
@@ -62,7 +62,7 @@ ctor = typeof(Test).GetConstructor(
 
 BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null,
 
-```
+```csharp
 CallingConventions.Standard, paramtypes, null);
 c = typeof(Test).GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 // Reflection returns the static constructor for the type as well which cannot be invoked explicitly
@@ -70,7 +70,7 @@ c = typeof(Test).GetConstructors(BindingFlags.Instance | BindingFlags.Public | B
 // This cannot be invoked.
 foreach (ConstructorInfo c1 in c)
 {
-Console.WriteLine(c1.ToString());
+    Console.WriteLine(c1.ToString());
 }
 // This constructor cannot be invoked as this is .cctor for the type. You will get a System.MemberAccessException
 //

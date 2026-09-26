@@ -13,7 +13,7 @@ Copy code to: nat.cpp
 
 Compile: cl /LD nat.cpp
 
-```
+```cpp
 #include <stdio.h>
 #include <string.h>
 typedef void ( *callback)(wchar_t * str);
@@ -21,12 +21,12 @@ typedef void ( *callback)(wchar_t * str);
 
 extern "C" __declspec(dllexport) void caller(wchar_t * input, int count, callback call)
 
-```
+```cpp
 {
-      for(int i = 0; i < count; i++)
-      {
-            call(input);
-      }
+    for(int i = 0; i < count; i++)
+    {
+        call(input);
+    }
 }
 ```
 
@@ -34,7 +34,7 @@ Copy code to: man.cs
 
 Compile: csc man.cs
 
-```
+```csharp
 using System.Runtime.InteropServices;
 public class foo
 {
@@ -59,7 +59,7 @@ Copy code to: nat.cpp
 
 Compile: cl /LD nat.cpp
 
-```
+```cpp
 #include <stdio.h>
 #include <string.h>
 typedef void (__stdcall *callback)(wchar_t * str);
@@ -67,12 +67,12 @@ typedef void (__stdcall *callback)(wchar_t * str);
 
 extern "C" __declspec(dllexport) void __stdcall caller(wchar_t * input, int count, callback call)
 
-```
+```cpp
 {
-      for(int i = 0; i < count; i++)
-      {
-            call(input);
-      }
+    for(int i = 0; i < count; i++)
+    {
+        call(input);
+    }
 }
 ```
 

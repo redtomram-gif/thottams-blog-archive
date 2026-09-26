@@ -9,7 +9,7 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/cstring-and-get
 
 I ran into this problem recently when debugging some native code and thought that it will be good to share this with everyone.
 
-```
+```cpp
 CString sampleString = CString(_T("Sample\0String"), 14);
 int len = sampleString.GetLength(); // len is 14
 ```

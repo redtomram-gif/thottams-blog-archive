@@ -9,7 +9,7 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/xmlserializer-x
 
 I took the sample from my previous post and wanted to use LINQ to query the XML. You can pretty much use the power of SQL on the document object to richly query for things you are looking for.
 
-```
+```csharp
 using System;
 using System.Linq;
 using System.Xml.Linq;
@@ -31,7 +31,7 @@ namespace Sample
                 {
                     this.books = new List<Book>();
                 }
-              return books;
+                return books;
             }
             set { }
         }
@@ -51,7 +51,7 @@ namespace Sample
         {
             Company c = new Company
             {
-          Books =
+                Books =
                 {
                     new Book
                     {
@@ -59,7 +59,7 @@ namespace Sample
                         Author = "First Author",
                         Year = "First Year",
                     },
-          new Book
+                    new Book
                     {
                         Name = "Second Book",
                         Author = "Second Author",

@@ -35,7 +35,7 @@ I want to thanks Shawn Farkas for helping me with this blog post. He has tons of
 
 **Main.cs:**
 
-```
+```csharp
 using System;
 using System.Security;
 using System.Security.Permissions;
@@ -76,7 +76,7 @@ class Sample
 
 **A.cs:**
 
-```
+```csharp
 using System;
 using System.Security;
 using System.Security.Permissions;
@@ -95,7 +95,7 @@ public class A : MarshalByRefObject
 
 **B.cs:**
 
-```
+```csharp
 using System;
 using System.Security;
 using System.Reflection;
@@ -112,7 +112,7 @@ public class B : MarshalByRefObject
 
 **C.cs:**
 
-```
+```csharp
 using System;
 using System.Security;
 using System.Security.Permissions;

@@ -13,7 +13,7 @@ When you do a BeginInvoke the delegate is invoked on a thread from the thread po
 
 In the sample below if you remove the try catch block in the callback or replace the exception.Add(e) with a throw, then the exception will crash the process. If you swallow the exception then you will be hiding failures and continuing which could result in other failures.
 
-```
+```csharp
 using System;
 using System.Threading;
 using System.Runtime.Remoting.Messaging;
@@ -44,9 +44,9 @@ namespace Delegate
             {
                 bool returnValue = smd.EndInvoke(result);
             }
-      catch (ArgumentException e)
+            catch (ArgumentException e)
             {
-            exceptions.Add(e);
+                exceptions.Add(e);
             }
             finally
             {
@@ -60,7 +60,7 @@ namespace Delegate
                 waiter = new ManualResetEvent(false);
                 SampleMethodCaller smd = new SampleMethodCaller(SampleClass.SampleMethod);
                 IAsyncResult result = smd.BeginInvoke(CallBackMethodForDelegate, null);
-     waiter.WaitOne();
+                waiter.WaitOne();
                 if (exceptions.Count != 0)
                 {
                     throw exceptions[0];

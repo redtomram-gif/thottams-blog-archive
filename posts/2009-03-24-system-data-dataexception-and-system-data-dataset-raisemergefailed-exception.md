@@ -11,7 +11,7 @@ This was another interesting issue I encountered recently. The error presented i
 
 Unhandled Exception: System.Data.DataException: <target>.Column2 and <source>.Column2 have conflicting properties: DataType property mismatch.
 
-```
+```text
    at System.Data.DataSet.RaiseMergeFailed(DataTable table, String conflict, MissingSchemaAction missingSchemaAction)
    at System.Data.Merger.MergeSchema(DataTable table)
    at System.Data.Merger.MergeTableData(DataTable src)
@@ -31,7 +31,7 @@ Hope it is useful to others who have run into a similar stack and are trying to 
 
 I have tweaked a sample from MSDN to expose the same stack.
 
-```
+```csharp
 using System;
 using System.Collections.Generic;
 using System.Linq;

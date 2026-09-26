@@ -23,7 +23,7 @@ How do you specify all of these in an assembly? It is real simple. Let us walk o
 
 Let us create a directory C:\versionsample\bin\v1\helper.cs as below
 
-```
+```csharp
 using System;
 using System.Reflection;
 [assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
@@ -32,7 +32,7 @@ public class Foo
     public void Bar()
     {
         Console.WriteLine("Inside HelperMethod: Version = {0}", (Assembly.GetExecutingAssembly()).ToString());
-  }
+    }
 }
 ```
 
@@ -48,7 +48,7 @@ If you ildasm helper.dll you will see the version number to be 1.0.0.0 and the p
 
 Let us create a directory C:\versionsample\bin\v2\helper.cs as below
 
-```
+```csharp
 using System;
 using System.Reflection;
 [assembly: System.Reflection.AssemblyVersion("2.0.0.0")]
@@ -67,7 +67,7 @@ csc /target:library /out:helper.dll /keyfile.sgkey.snk helper.cs
 
 Let us write the application as below and compile it with helper.dll from the v1 directory as below:
 
-```
+```csharp
 using System;
 public class sample
 {
@@ -87,7 +87,7 @@ Application.exe.config:
 
 <configuration>
 
-```
+```xml
    <runtime>
       <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
          <dependentAssembly>
@@ -115,7 +115,7 @@ In order to bind the application to version 2.0.0.0 of the helper assembly, let 
 
 <configuration>
 
-```
+```xml
    <runtime>
       <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
          <dependentAssembly>

@@ -13,7 +13,7 @@ I wanted to create a generic list of my class in power shell. It was an interest
 
 When I tried to create a generic list of say type int it was straight forward ... well sort of ... the syntax was awkward, but still worked.
 
-```
+```powershell
 $list = New-Object "System.Collections.Generic.List``1[System.Int32]"
 $list.Add(3)
 $list
@@ -21,7 +21,7 @@ $list
 
 I wrote a sample assembly as below:
 
-```
+```csharp
 using System;
 public class Sample
 {
@@ -49,7 +49,7 @@ At line:1 char:19 + $list = New-Object <<<< "System.Collections.Generic.List``1[
 
 I am not sure why this is not working as the syntax is very similar to the one I had above for Int32. After some search and experimenting I figured out another way to get the generic list working.
 
-```
+```powershell
 $si = new-object Sample
 $st = [Type] $si.GetType()
 $base = [System.Collections.Generic.List``1]

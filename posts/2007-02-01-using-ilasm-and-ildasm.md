@@ -9,7 +9,7 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/using-ilasm-and
 
 I wanted to write another small sample to demonstrate how you can use ilasm to modify a compiled assembly. The sample is very simple, but demonstrates the concept well. Let us take App.cs which contains the following code:
 
-```
+```csharp
 using System;
 public class sample
 {

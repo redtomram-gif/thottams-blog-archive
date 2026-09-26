@@ -9,7 +9,7 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/ntsd-and-sos-ad
 
 I wanted to set a conditional break point from managed code and it was hard to do that using SOS. In the sample below, let us assume that I want to break in to the method ThreadMethod when a specific thread tries to access it. I want to thank [Varun Sekhri](https://blogs.gotdotnet.com/varunsekhri/ "Varun Sekhri"), Rajesh Gunnalan and Michael Rayhelson who helped me figure out a few things that I did not know about.
 
-```
+```csharp
 using System;
 using System.Threading;
 public class sample
@@ -20,7 +20,7 @@ public class sample
         {
             Console.WriteLine("{0}", Thread.CurrentThread.Name);
             Thread.Sleep(600);
-  }
+        }
     }
     static void Main()
     {
@@ -57,7 +57,7 @@ Reloading current modules
 
 ....
 
-```
+```text
 0:000> sxe ld mscorwks
 0:000> g
 0:000> .loadby sos mscorwks
@@ -115,7 +115,7 @@ When you hit the break point, if you look below thread ID 3 is trying to access 
 
 1 e [c:\test\thread.cs @ 7] 0001 (0001) 0:**** thread!sample.ThreadMethod()
 
-```
+```text
 0:000> bc 0
 0:000> bc 1
 0:000> !Threads
@@ -133,7 +133,7 @@ DeadThread: 0
 
 Hosted Runtime: no
 
-```
+```text
                                       PreEmptive GC Alloc Lock
        ID OSID ThreadOBJ State GC Context Domain Count APT Exception
    0 1 f34 00180f70 a020 Enabled 01381cac:01381fe8 0014c100 1 MTA
@@ -217,7 +217,7 @@ thread!sample.ThreadMethod()+0x29 [c:\test\thread.cs @ 10]:
 
 **From the unassembly above, we identify that the address of WriteLine is** 00dd01f8. Now you can set an unmanaged break point when thread 3 access this line as below.
 
-```
+```text
 0:000> ~3 bp 00dd01f8
 0:000> g
 ```
@@ -240,7 +240,7 @@ thread!sample.ThreadMethod()+0x38:
 
 . 3 Id: 528.988 Suspend: 1 Teb: 7ffdc000 Unfrozen
 
-```
+```text
       Start: mscorwks!Thread::intermediateThreadProc (79ecafc5)
       Priority: 0 Priority class: 32 Affinity: 3
 0:000> g
@@ -262,7 +262,7 @@ thread!sample.ThreadMethod()+0x38:
 
 . 3 Id: 528.988 Suspend: 1 Teb: 7ffdc000 Unfrozen
 
-```
+```text
       Start: mscorwks!Thread::intermediateThreadProc (79ecafc5)
       Priority: 0 Priority class: 32 Affinity: 3
 ```

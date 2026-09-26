@@ -9,7 +9,7 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/simple-sample-f
 
 I wanted to write a small sample to illustrate events and delegates. Here is a compact sample that illustrates it.
 
-```
+```csharp
 using System;
 public class EventSample
 {

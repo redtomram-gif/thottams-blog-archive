@@ -9,14 +9,14 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/same-name-for-a
 
 I was writing a sample to do something and I noticed that when I declare and instantiate a generic class, I had to pass the generic type in two places:
 
-```
+```csharp
 1. Foo<Int32> fooGenericInstance;
 2. FooGenericInstance = new Foo<Int32>();
 ```
 
 First I was not sure why I had to pass the type is two places. After some pondering I came to the following conclusion.
 
-```
+```csharp
 namespace Sample
 {
     using System;
@@ -42,7 +42,7 @@ namespace Sample
 
 C# allows you have the same name for a generic and non-generic class. So you can write code such as below which has two types essentially which are Foo and Foo<T>. Now you have to make it very explicit both during instantiation and construction the class and constructor you are referring to. Thus you end up passing the type T in two places.
 
-```
+```csharp
 namespace Sample
 {
     using System;

@@ -11,7 +11,7 @@ I wanted to write about delegates this month. There are different ways in which 
 
 If you want to execute a delegate asynchronously and still want to have good control from the caller then invoke it explicitly from a thread. The sample below demonstrates multiple ways you can invoke a delegate and each has its own features with it. Till I wrote this, I didn’t realize that there are 6 ways to invoke a delegate and I am sure there are a few more that I am missing here. It was also interesting that when you execute a delegate on a thread then it cannot return a value as the caller of the thread is gone when the thread returns. If you want to pass parameters to the delegate in the thread you can use the ParameterizedThread option which is very useful.
 
-```
+```csharp
 using System;
 using System.Threading;
 using System.Runtime.Remoting.Messaging;
@@ -103,7 +103,7 @@ namespace Delegate
             ds.CallDelegateUsingInvoke();
             Console.WriteLine(" -----------------");
             ds.CallDelegate();
-          Console.WriteLine(" -----------------");
+            Console.WriteLine(" -----------------");
             ds.CallDelegateDynamicInvoke();
             Console.WriteLine(" -----------------");
             ds.CallingDelegateOnAThread();

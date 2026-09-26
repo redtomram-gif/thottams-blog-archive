@@ -13,7 +13,7 @@ MDA’s can help you diagnose problems that you might not know about normally. T
 
 Consider the following source code (sample.cs):
 
-```
+```csharp
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -57,7 +57,7 @@ Let us produce sample.exe.mda.config file as below:
 
 <mdaConfig>
 
-```
+```xml
   <assistants>
     <pInvokeStackImbalance enable="true"/>
   </assistants>

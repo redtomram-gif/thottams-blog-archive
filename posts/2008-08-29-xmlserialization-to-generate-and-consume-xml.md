@@ -11,7 +11,7 @@ I want to talk about Xml Serialization this month. One of the work I was involve
 
 If you are generating XML in a clumsy way using printf containing the XML tags, I would strongly suggest you to look into this technology. Incidetaly this plays well with Linq too. The XML after it is loaded into the object can be parsed with Linq queries. I will write a sample for that soon.
 
-```
+```csharp
 using System;
 using System.Collections.Generic;
 using System.Xml;

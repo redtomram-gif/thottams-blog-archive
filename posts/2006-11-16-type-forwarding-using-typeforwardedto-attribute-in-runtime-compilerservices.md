@@ -13,7 +13,7 @@ Here is how this works:
 
 Writing the original library (original.cs)
 
-```
+```csharp
 using System;
 public class ClassToBeForwardedLater
 {
@@ -30,7 +30,7 @@ csc /t:library original.cs
 
 Building the application using the original assembly (application.exe)
 
-```
+```csharp
 using System;
 class Application
 {
@@ -52,7 +52,7 @@ Inside ClassToBeForwardedLater in Original.dll
 
 Re-implementing the original assembly in a new assembly (newlibrary.cs)
 
-```
+```csharp
 using System;
 public class ClassToBeForwardedLater
 {
@@ -69,11 +69,11 @@ csc /t:library newlibrary.cs
 
 Re-publish the original assembly, but this time with a type forwarded
 
-```
+```csharp
 using System;
 using System.Runtime.CompilerServices;
 [assembly:TypeForwardedTo(typeof(ClassToBeForwardedLater))]
-      Let us compile the original library as below
+Let us compile the original library as below
 ```
 
 csc /t:library /r:newlibrary.dll original.cs

@@ -27,7 +27,7 @@ The EventSchemaTraceListener, EventLogTraceListener and EventProviderTraceListen
 
 ETW.cs:
 
-```
+```csharp
 using System;
 using System.Diagnostics;
 
@@ -59,7 +59,7 @@ ETW.exe.config
 
 <configuration>
 
-```
+```xml
   <system.diagnostics>
     <sources>
       <source name="TraceSourceApp" switchName="SourceSwitch" switchType="System.Diagnostics.SourceSwitch">

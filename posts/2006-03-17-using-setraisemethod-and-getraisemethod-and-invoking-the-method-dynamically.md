@@ -14,7 +14,7 @@ The GetRaiseMethod will return the method that was set through SetRaiseMethod if
 MSDN remarks for GetRaiseMethod:  
 This method returns a null reference (Nothing in Visual Basic) for events declared with the C# event keyword or the Visual Basic Event keyword. This is because the C# and Visual Basic compilers do not generate such a method.
 
-```
+```csharp
 using System;
 using System.Threading;
 using System.Reflection;
@@ -42,7 +42,7 @@ public class MyApplication
         dm.Invoke(o, new Object[1]);
         rm.Invoke(o, new Object[1]);
     }
-  private static Type CreateCallee()
+    private static Type CreateCallee()
     {
         AppDomain myDomain = Thread.GetDomain();
         AssemblyName assemblyName = new AssemblyName();

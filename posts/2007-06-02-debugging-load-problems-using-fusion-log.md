@@ -9,7 +9,7 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/debugging-load-
 
 Fusion log comes in very handy when you want to understand or debug binding behaviors. Let us take the sample code below. Copy the code to DomSample.cs and compile it. Let us assume for now that the code tries to load some arbitrary assembly “Foo” which does not exist. If you run this code you will see the following exception.
 
-```
+```csharp
 using System;
 using System.Reflection;
 class DomSample
@@ -80,7 +80,7 @@ If you notice it clearly tells you the various paths the binder searched to find
 
 <configuration>
 
-```
+```xml
    <runtime>
       <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
          <probing privatePath="BAR" />

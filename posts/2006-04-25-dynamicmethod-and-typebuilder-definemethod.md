@@ -16,7 +16,7 @@ You don’t need a type or assembly to generate a method using DynamicMethod. A 
 
 The sample below shows how dynamic methods can be created using DynamicMethods. The example also demonstrated how you can invoke a generic method from within the DynamicMethod.
 
-```
+```csharp
 using System;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -52,7 +52,7 @@ class Demo {
 
 The second method of creating a method dynamically is by using TypeBuilder.DefineMethod. In this the method is associated with a type. The sample below demonstrates how to create a method using the define method and call it.
 
-```
+```csharp
 using System;
 using System.Collections.Generic;
 using System.Text;

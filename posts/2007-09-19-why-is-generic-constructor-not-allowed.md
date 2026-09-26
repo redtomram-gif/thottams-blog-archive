@@ -19,7 +19,7 @@ The reason is simple. You can have a class Foo<T> and a class Foo as described i
 
 there is no way for the compiler to find out the right class constructor to call.
 
-```
+```csharp
 namespace Sample
 {
     using System;

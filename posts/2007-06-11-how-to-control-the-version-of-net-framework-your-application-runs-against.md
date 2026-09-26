@@ -9,7 +9,7 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/how-to-control-
 
 Let us look at a small sample that illustrated how this configuration entry works.
 
-```
+```csharp
 using System;
 class Sample
 {
@@ -24,7 +24,7 @@ Let us copy this code to RequireRuntime.cs and compile it. Let us now add a conf
 
 <configuration>
 
-```
+```xml
    <startup>
       <requiredRuntime version="v2.0.50727"/>
    </startup>
@@ -36,7 +36,7 @@ Let us modify the configuration file to require a different version that does no
 
 <configuration>
 
-```
+```xml
    <startup>
       <requiredRuntime version="v5.0.50727"/>
    </startup>

@@ -53,8 +53,8 @@ We now revert the Deny from Main and make the call to make sure that it was the 
 
 RevertDeny from Main()
 
-```
-  Calling method MethodDemandingFileIOPermission succeeded
+```csharp
+Calling method MethodDemandingFileIOPermission succeeded
 using System;
 using System.Reflection;
 using System.Security.Permissions;
@@ -78,7 +78,7 @@ class Sample
         }
         Sample.AssertAndCall(fileIOPerm);
         Console.WriteLine("Assert permission reverted when returned to Main()");
-  try
+        try
         {
             Sample.MethodDemandingFileIOPermission();
         }
@@ -120,7 +120,7 @@ class Sample
     }
 
     [FileIOPermissionAttribute(SecurityAction.Assert, Unrestricted = true)]
-  static public void AssertDeclarativelyAndCall()
+    static public void AssertDeclarativelyAndCall()
     {
         Console.WriteLine("Assert FileIOPermission Declaratively");
         Sample.MethodDemandingFileIOPermission();
@@ -130,7 +130,7 @@ class Sample
     {
         Console.WriteLine(" Calling method MethodDemandingFileIOPermission succeeded");
     }
- }
+}
 ```
 
 ## Comments

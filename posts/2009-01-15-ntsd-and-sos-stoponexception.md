@@ -7,7 +7,7 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/ntsd-and-sos-st
 
 # NTSD and SOS: StopOnException
 
-```
+```text
 using System;
 class Program
 {
@@ -57,7 +57,7 @@ ntsd program.exe
 
 sxe ld mscorwks
 
-```
+```text
 g
 .loadby sos msorwks
 !StopOnException -Create System.ArgumentException 1
@@ -71,7 +71,7 @@ Child-SP RetAddr Call Site
 
 000000000019ee50 000007ff00180182 Program.ExceptionSample()
 
-```
+```text
     PARAMETERS:
         this = 0x0000000002603358
     LOCALS:
@@ -81,7 +81,7 @@ Child-SP RetAddr Call Site
 
 000000000019eec0 000007fefa3f2672 Program.Main(System.String[])
 
-```
+```text
     PARAMETERS:
         args = 0x0000000002603338
     LOCALS:

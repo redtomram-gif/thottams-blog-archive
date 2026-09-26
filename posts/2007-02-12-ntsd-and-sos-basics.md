@@ -13,7 +13,7 @@ We can go deeper into some of the in depth concepts in the next post.
 
 Let us take a simple console application as below:
 
-```
+```csharp
 using System;
 public class sample
 {
@@ -45,7 +45,7 @@ This would generate App.exe and App.pdb. Now, let us start debugging this applic
 
 C:\Blog>ntsd App.exe
 
-```
+```text
 0:000> .symfix
 0:000> .sympath+ .
 0:000> .reload
@@ -63,7 +63,7 @@ ESP EIP
 
 001bf268 009700f0 sample.MyMethod(System.String)
 
-```
+```text
     PARAMETERS:
         this = 0x01501964
         arg = 0x01501948
@@ -71,7 +71,7 @@ ESP EIP
 
 001bf26c 009700a9 sample.Main()
 
-```
+```text
     LOCALS:
         <CLR reg> = 0x01501964
 ```
@@ -124,7 +124,7 @@ Fields:
 
 790fc6cc 4000001 4 System.String 0 instance 00000000 str
 
-```
+```text
 // Type in a couple of “p” until you get to the place where the local variable is assgned the value “Member Variable”
 0:000> !DumpObj 0x01501964
 ```

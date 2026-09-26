@@ -9,7 +9,7 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/accessing-creat
 
 I came across this issue recently. I was trying to access CreateProcess using DLLImport from managed code using C# and VB.Net. Here is my code from C#:
 
-```
+```csharp
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -56,10 +56,10 @@ public class Program
         CreateProcess("C:\\WINDOWS\\SYSTEM32\\Calc.exe", null, IntPtr.Zero, IntPtr.Zero, false, 0, IntPtr.Zero, null, ref si, out pi);
         Console.ReadLine();
     }
-[DllImport("kernel32.dll")]
-static extern bool CreateProcess(string lpApplicationName, string lpCommandLine, IntPtr lpProcessAttributes, IntPtr lpThreadAttributes,
-                        bool bInheritHandles, uint dwCreationFlags, IntPtr lpEnvironment,
-                        string lpCurrentDirectory, ref STARTUPINFO lpStartupInfo,out PROCESS_INFORMATION lpProcessInformation);
+    [DllImport("kernel32.dll")]
+    static extern bool CreateProcess(string lpApplicationName, string lpCommandLine, IntPtr lpProcessAttributes, IntPtr lpThreadAttributes,
+        bool bInheritHandles, uint dwCreationFlags, IntPtr lpEnvironment,
+        string lpCurrentDirectory, ref STARTUPINFO lpStartupInfo,out PROCESS_INFORMATION lpProcessInformation);
 }
 ```
 

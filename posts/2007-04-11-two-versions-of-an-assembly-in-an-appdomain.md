@@ -13,7 +13,7 @@ Let us make a small sample to illustrate the problem that you will encounter if 
 
 Let us call this DomSample.cs
 
-```
+```csharp
 using System;
 using System.Reflection;
 class DomSample {
@@ -41,7 +41,7 @@ class DomSample {
 
 Let us call this v1/Helper.cs
 
-```
+```csharp
 using System;
 using System.Reflection;
 [assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
@@ -54,7 +54,7 @@ public class Helper {
 
 Let us call this v2/Helper.cs
 
-```
+```csharp
 using System;
 using System.Reflection;
 [assembly: System.Reflection.AssemblyVersion("2.0.0.0")]

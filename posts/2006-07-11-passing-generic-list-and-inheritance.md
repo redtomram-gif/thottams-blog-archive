@@ -11,7 +11,7 @@ I came across this interesting scenario when I was looking into some issues. In 
 
 To work around it I made the list as a list of base class and limited to access of the derived class by checking on the type. It helps but is not as elegant as it should have been.
 
-```
+```csharp
 using System;
 using System.Collections.Generic;
 using System.Collections;

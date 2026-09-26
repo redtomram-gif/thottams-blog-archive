@@ -11,7 +11,7 @@ This example illustrates how you can define a generic dynamic method and call it
 
 The body of the HelloWorld Method accesses the parameter passed to the method and prints it by calling WriteLine. I have created a module so that you can see the IL that is generated from this code.
 
-```
+```csharp
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -22,7 +22,7 @@ public interface IHelloWorld {
 }
 public class HelloClass {
     static void Main(string[] args) {
-     AppDomain cd = System.Threading.Thread.GetDomain();
+        AppDomain cd = System.Threading.Thread.GetDomain();
         AssemblyName an = new AssemblyName();
         an.Name = "HelloClass";
         AssemblyBuilder ab = cd.DefineDynamicAssembly(an, AssemblyBuilderAccess.RunAndSave);

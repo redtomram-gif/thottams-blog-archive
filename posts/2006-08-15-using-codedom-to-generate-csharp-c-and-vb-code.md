@@ -17,7 +17,7 @@ I have tried to capture the basics of this with a sample below. The sample demon
 
 The second is the most common scenario. You generate the code using the CodeCompileUnit and use the language provider of choice to generate the code and compile it to get the executable. This is often used in IDE which provide you with startup projects.
 
-```
+```csharp
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
@@ -44,7 +44,7 @@ public class CodeDomSample
         codedomsamplenamespace.Imports.Add(firstimport);
         // Create a type inside the namespace - public class CodeDomSample
         //
-      CodeTypeDeclaration newType = new CodeTypeDeclaration("CodeDomSample");
+        CodeTypeDeclaration newType = new CodeTypeDeclaration("CodeDomSample");
         newType.Attributes = MemberAttributes.Public;
         // Create a Main method which will be entry point for the class
         // public static void Main
@@ -101,45 +101,45 @@ public class CodeDomSample
         switch (codeprovider)
         {
             case "CSHARP":
-                // Generate Code from Compile Unit using CSharp code provider
-                //
-                CSharpCodeProvider csharpcodeprovider = new CSharpCodeProvider();
-                if (csharpcodeprovider.FileExtension[0] == '.')
-                {
-                    sourceFile = "CSharpSample" + csharpcodeprovider.FileExtension;
-                }
-                else
-                {
-                    sourceFile = "CSharpSample." + csharpcodeprovider.FileExtension;
-                }
-                IndentedTextWriter tw1 = new IndentedTextWriter(new StreamWriter(sourceFile, false), " ");
-                csharpcodeprovider.GenerateCodeFromCompileUnit(ccu, tw1, new CodeGeneratorOptions());
-                tw1.Close();
-                cp.GenerateExecutable = true;
-                cp.OutputAssembly = "CSharpSample.exe";
-                cp.GenerateInMemory = false;
-                cr = csharpcodeprovider.CompileAssemblyFromDom(cp, ccu);
-                break;
+            // Generate Code from Compile Unit using CSharp code provider
+            //
+            CSharpCodeProvider csharpcodeprovider = new CSharpCodeProvider();
+            if (csharpcodeprovider.FileExtension[0] == '.')
+            {
+                sourceFile = "CSharpSample" + csharpcodeprovider.FileExtension;
+            }
+            else
+            {
+                sourceFile = "CSharpSample." + csharpcodeprovider.FileExtension;
+            }
+            IndentedTextWriter tw1 = new IndentedTextWriter(new StreamWriter(sourceFile, false), " ");
+            csharpcodeprovider.GenerateCodeFromCompileUnit(ccu, tw1, new CodeGeneratorOptions());
+            tw1.Close();
+            cp.GenerateExecutable = true;
+            cp.OutputAssembly = "CSharpSample.exe";
+            cp.GenerateInMemory = false;
+            cr = csharpcodeprovider.CompileAssemblyFromDom(cp, ccu);
+            break;
             case "VBASIC":
-                // Generate Code from Compile Unit using VB code provider
-                //
-                VBCodeProvider vbcodeprovider = new VBCodeProvider();
-                if (vbcodeprovider.FileExtension[0] == '.')
-                {
-                    sourceFile = "VBSample" + vbcodeprovider.FileExtension;
-             }
-                else
-                {
-                    sourceFile = "VBSample." + vbcodeprovider.FileExtension;
-                }
-                IndentedTextWriter tw2 = new IndentedTextWriter(new StreamWriter(sourceFile, false), " ");
-       vbcodeprovider.GenerateCodeFromCompileUnit(ccu, tw2, new CodeGeneratorOptions());
-                tw2.Close();
-                cp.GenerateExecutable = true;
-                cp.OutputAssembly = "VBSample.exe";
-                cp.GenerateInMemory = false;
-                cr = vbcodeprovider.CompileAssemblyFromDom(cp, ccu);
-                break;
+            // Generate Code from Compile Unit using VB code provider
+            //
+            VBCodeProvider vbcodeprovider = new VBCodeProvider();
+            if (vbcodeprovider.FileExtension[0] == '.')
+            {
+                sourceFile = "VBSample" + vbcodeprovider.FileExtension;
+            }
+            else
+            {
+                sourceFile = "VBSample." + vbcodeprovider.FileExtension;
+            }
+            IndentedTextWriter tw2 = new IndentedTextWriter(new StreamWriter(sourceFile, false), " ");
+            vbcodeprovider.GenerateCodeFromCompileUnit(ccu, tw2, new CodeGeneratorOptions());
+            tw2.Close();
+            cp.GenerateExecutable = true;
+            cp.OutputAssembly = "VBSample.exe";
+            cp.GenerateInMemory = false;
+            cr = vbcodeprovider.CompileAssemblyFromDom(cp, ccu);
+            break;
         }
         return;
     }
@@ -149,7 +149,7 @@ public class CodeDomSample
     {
         String sourcecode = "\nusing System;\npublic class Sample \n{\n static void Main()\n {\n Console.WriteLine(\"This is a test\");\n }\n}";
         CSharpCodeProvider provider = new CSharpCodeProvider();
-   CompilerParameters cp = new CompilerParameters();
+        CompilerParameters cp = new CompilerParameters();
         cp.GenerateExecutable = true;
         cp.OutputAssembly = "Result.exe";
         cp.GenerateInMemory = false;
