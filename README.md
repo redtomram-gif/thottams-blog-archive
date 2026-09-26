@@ -69,7 +69,6 @@ Where a post has an accompanying runnable sample, the code lives in its own repo
 - [blog-dataset-merge-constraint-failure](https://github.com/redtomram-gif/blog-dataset-merge-constraint-failure)
 - [blog-mfc-cstring-getlength](https://github.com/redtomram-gif/blog-mfc-cstring-getlength)
 - [blog-ntsd-stoponexception-sample](https://github.com/redtomram-gif/blog-ntsd-stoponexception-sample)
-- [blog-partition-range-math](https://github.com/redtomram-gif/blog-partition-range-math)
 - [blog-threads-ntsd-breakpoint-sample](https://github.com/redtomram-gif/blog-threads-ntsd-breakpoint-sample)
 
 ## Notes
