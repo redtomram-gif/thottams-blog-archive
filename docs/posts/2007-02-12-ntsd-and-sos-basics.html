@@ -47,9 +47,15 @@
 <li>Watch the instance of sample and its variables</li>
 </ol>
 <p>Let us compile the application with debug enabled. Type</p>
-<p>csc /Debug App.cs</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">csc /Debug App.cs</code></pre>
+</figure>
 <p>This would generate App.exe and App.pdb. Now, let us start debugging this application:</p>
-<p>C:\Blog&gt;ntsd App.exe</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">C:\Blog&gt;ntsd App.exe</code></pre>
+</figure>
 <figure class="code">
 <figcaption>Console</figcaption>
 <pre><code class="hljs">0:000&gt; .symfix
@@ -72,56 +78,65 @@ ESP EIP
         &lt;CLR reg&gt; = 0x01501964
 001bf490 79e8273b [GCFrame: 001bf490]</code></pre>
 </figure>
-<p><code>0:000&gt; !DumpObj 0x01501948</code></p>
-<p>Name: System.String</p>
-<p>MethodTable: 790fc6cc</p>
-<p>EEClass: 790fc62c</p>
-<p>Size: 28(0x1c) bytes</p>
-<p>(C:\Windows\assembly\GAC_32\mscorlib\2.0.0.0__b77a5c561934e089\mscorlib.dll)</p>
-<p>String: Hello</p>
-<p>Fields:</p>
-<p>MT Field Offset Type VT Attr Value Name</p>
-<p>790ff7f0 4000096 4 System.Int32 0 instance 6 m_arrayLength</p>
-<p>790ff7f0 4000097 8 System.Int32 0 instance 5 m_stringLength</p>
-<p>790fe2dc 4000098 c System.Char 0 instance 48 m_firstChar</p>
-<p>790fc6cc 4000099 10 System.String 0 shared static Empty &gt;&gt; Domain:Value 003507e8:790d7eb4 &lt;&lt;</p>
-<p>7913cb00 400009a 14 System.Char[] 0 shared static WhitespaceChars &gt;&gt; Domain:Value 003507e8:01501548 &lt;&lt;</p>
-<p><code>0:000&gt; !DumpObj 0x01501964</code></p>
-<p>Name: sample</p>
-<p>MethodTable: 002a301c</p>
-<p>EEClass: 002a1200</p>
-<p>Size: 12(0xc) bytes</p>
-<p>(C:\blog\app.exe)</p>
-<p>Fields:</p>
-<p>MT Field Offset Type VT Attr Value Name</p>
-<p>790fc6cc 4000001 4 System.String 0 instance 00000000 str</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">0:000&gt; !DumpObj 0x01501948
+Name: System.String
+MethodTable: 790fc6cc
+EEClass: 790fc62c
+Size: 28(0x1c) bytes
+(C:\Windows\assembly\GAC_32\mscorlib\2.0.0.0__b77a5c561934e089\mscorlib.dll)
+String: Hello
+Fields:
+MT       Field    Offset Type            VT Attr    Value    Name
+790ff7f0 4000096  4      System.Int32     0 instance 6        m_arrayLength
+790ff7f0 4000097  8      System.Int32     0 instance 5        m_stringLength
+790fe2dc 4000098  c      System.Char      0 instance 48       m_firstChar
+790fc6cc 4000099  10     System.String    0 shared   static   Empty    &gt;&gt; Domain:Value 003507e8:790d7eb4 &lt;&lt;
+7913cb00 400009a  14     System.Char[]    0 shared   static   WhitespaceChars &gt;&gt; Domain:Value 003507e8:01501548 &lt;&lt;</code></pre>
+</figure>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">0:000&gt; !DumpObj 0x01501964
+Name: sample
+MethodTable: 002a301c
+EEClass: 002a1200
+Size: 12(0xc) bytes
+(C:\blog\app.exe)
+Fields:
+MT       Field    Offset Type            VT Attr    Value    Name
+790fc6cc 4000001  4      System.String    0 instance 00000000 str</code></pre>
+</figure>
 <figure class="code">
 <figcaption>Console</figcaption>
 <pre><code class="hljs">// Type in a couple of “p” until you get to the place where the local variable is assgned the value “Member Variable”
-0:000&gt; !DumpObj 0x01501964</code></pre>
+0:000&gt; !DumpObj 0x01501964
+Name: sample
+MethodTable: 000c301c
+EEClass: 000c1200
+Size: 12(0xc) bytes
+(C:\blog\app.exe)
+Fields:
+MT       Field    Offset Type            VT Attr    Value    Name
+790fc6cc 4000001  4      System.String    0 instance 01411970 str</code></pre>
 </figure>
-<p>Name: sample</p>
-<p>MethodTable: 000c301c</p>
-<p>EEClass: 000c1200</p>
-<p>Size: 12(0xc) bytes</p>
-<p>(C:\blog\app.exe)</p>
-<p>Fields:</p>
-<p>MT Field Offset Type VT Attr Value Name</p>
-<p>790fc6cc 4000001 4 System.String 0 instance 01411970 str</p>
-<p><code>0:000&gt;  !DumpObj 01411970</code></p>
-<p>Name: System.String</p>
-<p>MethodTable: 790fc6cc</p>
-<p>EEClass: 790fc62c</p>
-<p>Size: 48(0x30) bytes</p>
-<p>(C:\Windows\assembly\GAC_32\mscorlib\2.0.0.0__b77a5c561934e089\mscorlib.dll)</p>
-<p>String: Member Variable</p>
-<p>Fields:</p>
-<p>MT Field Offset Type VT Attr Value Name</p>
-<p>790ff7f0 4000096 4 System.Int32 0 instance 16 m_arrayLength</p>
-<p>790ff7f0 4000097 8 System.Int32 0 instance 15 m_stringLength</p>
-<p>790fe2dc 4000098 c System.Char 0 instance 4d m_firstChar</p>
-<p>790fc6cc 4000099 10 System.String 0 shared static Empty &gt;&gt; Domain:Value 001007c8:790d7eb4 &lt;&lt;</p>
-<p>7913cb00 400009a 14 System.Char[] 0 shared static WhitespaceChars &gt;&gt; Domain:Value 001007c8:01411548 &lt;&lt;</p>
+<figure class="code">
+<figcaption>Console</figcaption>
+<pre><code class="hljs">0:000&gt;  !DumpObj 01411970
+Name: System.String
+MethodTable: 790fc6cc
+EEClass: 790fc62c
+Size: 48(0x30) bytes
+(C:\Windows\assembly\GAC_32\mscorlib\2.0.0.0__b77a5c561934e089\mscorlib.dll)
+String: Member Variable
+Fields:
+MT       Field    Offset Type            VT Attr    Value    Name
+790ff7f0 4000096  4      System.Int32     0 instance 16       m_arrayLength
+790ff7f0 4000097  8      System.Int32     0 instance 15       m_stringLength
+790fe2dc 4000098  c      System.Char      0 instance 4d       m_firstChar
+790fc6cc 4000099  10     System.String    0 shared   static   Empty    &gt;&gt; Domain:Value 001007c8:790d7eb4 &lt;&lt;
+7913cb00 400009a  14     System.Char[]    0 shared   static   WhitespaceChars &gt;&gt; Domain:Value 001007c8:01411548 &lt;&lt;</code></pre>
+</figure>
 <h2>Comments</h2>
 <ul>
 <li><p><strong>Anonymous</strong><br>February 13, 2007<br>Unfortunately, much of this does not currently work for the public. For example, the version of SOS that ships with the 2.0 CLR is old and does not include the !bpmd command. (There are, of course, more manual ways to set a managed breakpoint.) There is no 2.0 version of SOS currently included in the debugging tools distribution.</p>
