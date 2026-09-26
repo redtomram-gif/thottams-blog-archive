@@ -34,17 +34,17 @@ class DomSample {
 }
 ```
 
-<configuration>
 
 ```xml
+<configuration>
    <runtime>
       <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
          <probing privatePath="v1" />
       </assemblyBinding>
    </runtime>
+</configuration>
 ```
 
-</configuration>
 
 Make sure that you create a path v1 under APPBASE and create a Foo.cs which is compiled and signed to Foo.dll. Copy the following source to Foo.cs and comple it to Foo.dll and sign it with the key (see my article on signinig)
 
@@ -251,17 +251,17 @@ SecurityDescriptor: 00306b88
 
 Let us modify the above sample and add a config TypeSampleLoadFrom.exe.config as follows
 
-<configuration>
 
 ```xml
+<configuration>
    <runtime>
       <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
          <probing privatePath="v1" />
       </assemblyBinding>
    </runtime>
+</configuration>
 ```
 
-</configuration>
 
 You will get the output V1 Type = Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94.
 

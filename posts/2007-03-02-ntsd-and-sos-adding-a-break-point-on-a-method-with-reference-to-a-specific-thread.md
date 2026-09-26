@@ -222,11 +222,7 @@ thread!sample.ThreadMethod()+0x29 [c:\test\thread.cs @ 10]:
 ```text
 0:000> ~3 bp 00dd01f8
 0:000> g
-```
-
 Breakpoint 0 hit
-
-```text
 eax=01381a00 ebx=00000001 ecx=01382014 edx=01381a00 esi=01382014 edi=01381a00
 eip=00dd01f8 esp=00edf8a0 ebp=01381afc iopl=0 nv up ei pl nz na po nc
 cs=001b ss=0023 ds=0023 es=0023 fs=003b gs=0000 efl=00000202
@@ -246,11 +242,7 @@ thread!sample.ThreadMethod()+0x38:
       Start: mscorwks!Thread::intermediateThreadProc (79ecafc5)
       Priority: 0 Priority class: 32 Affinity: 3
 0:000> g
-```
-
 Breakpoint 0 hit
-
-```text
 eax=01381a00 ebx=00000001 ecx=01382014 edx=01381a00 esi=01382014 edi=01381a00
 eip=00dd01f8 esp=00edf8a0 ebp=01381afc iopl=0 nv up ei pl nz na po nc
 cs=001b ss=0023 ds=0023 es=0023 fs=003b gs=0000 efl=00000202

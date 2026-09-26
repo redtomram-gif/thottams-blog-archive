@@ -55,15 +55,15 @@ Now you can select individual MDA’s that you want in three different ways as m
 
 Let us produce sample.exe.mda.config file as below:
 
-<mdaConfig>
 
 ```xml
+<mdaConfig>
   <assistants>
     <pInvokeStackImbalance enable="true"/>
   </assistants>
+</mdaConfig>
 ```
 
-</mdaConfig>
 
 This enables the pInvokeStackImbalance MDA which will fire off when it finds irregularities in marshalling.
 

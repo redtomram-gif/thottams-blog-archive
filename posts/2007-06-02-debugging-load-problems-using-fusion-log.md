@@ -78,17 +78,17 @@ LOG: Attempting download of new URL file:///C:/blog/june/Foo/Foo.EXE.
 
 If you notice it clearly tells you the various paths the binder searched to find the file. Let us add some oribing paths to this executables configuration and see what happens. Let us create the file DomSample.exe.config and add the following to it:
 
-<configuration>
 
 ```xml
+<configuration>
    <runtime>
       <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
          <probing privatePath="BAR" />
       </assemblyBinding>
    </runtime>
+</configuration>
 ```
 
-</configuration>
 
 If you run the executable now you will find that the binder searches in a few more locations to find the assembly Foo this time. The results from the log look as below:
 

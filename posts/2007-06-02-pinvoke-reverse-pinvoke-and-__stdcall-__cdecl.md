@@ -17,11 +17,7 @@ Compile: cl /LD nat.cpp
 #include <stdio.h>
 #include <string.h>
 typedef void ( *callback)(wchar_t * str);
-```
-
 extern "C" __declspec(dllexport) void caller(wchar_t * input, int count, callback call)
-
-```cpp
 {
     for(int i = 0; i < count; i++)
     {
@@ -63,11 +59,7 @@ Compile: cl /LD nat.cpp
 #include <stdio.h>
 #include <string.h>
 typedef void (__stdcall *callback)(wchar_t * str);
-```
-
 extern "C" __declspec(dllexport) void __stdcall caller(wchar_t * input, int count, callback call)
-
-```cpp
 {
     for(int i = 0; i < count; i++)
     {

@@ -55,28 +55,18 @@ C:\Blog>ntsd App.exe
 0:000> !bpmd App.exe sample.MyMethod
 0:000> g
 0:000> !clrstack –a
-```
-
 OS Thread Id: 0x154c (0)
-
 ESP EIP
-
 001bf268 009700f0 sample.MyMethod(System.String)
-
-```text
     PARAMETERS:
         this = 0x01501964
         arg = 0x01501948
-```
-
 001bf26c 009700a9 sample.Main()
-
-```text
     LOCALS:
         <CLR reg> = 0x01501964
+001bf490 79e8273b [GCFrame: 001bf490]
 ```
 
-001bf490 79e8273b [GCFrame: 001bf490]
 
 `0:000> !DumpObj 0x01501948`
 

@@ -80,11 +80,7 @@ Child-SP RetAddr Call Site
     LOCALS:
         0x000000000019ee78 = 0x000000000000003c
         0x000000000019ee7c = 0x0000000000000000
-```
-
 000000000019eec0 000007fefa3f2672 Program.Main(System.String[])
-
-```text
     PARAMETERS:
         args = 0x0000000002603338
     LOCALS:

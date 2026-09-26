@@ -20,43 +20,27 @@ using System;
 using System.Reflection;
 using System.Reflection.Emit;
 /*
-```
-
-* class Enclosing
-
-```csharp
-* {
-    * public void Enclosing()
-    * {
-        * Console.WriteLine("Hello");
-        * }
-```
-
-* class Nested1
-
-```csharp
-* {
-    * int a;
-    * int b;
-    * Nested2 c;
-    * }
-```
-
-* class Nested2
-
-```csharp
-* {
-    * int a;
-    * int b;
-    * }
-* Nested1 a;
-* Nested2 b;
-* }
-```
-
-*/
-
-```csharp
+ * class Enclosing
+ * {
+ *     public void Enclosing()
+ *     {
+ *         Console.WriteLine("Hello");
+ *     }
+ *     class Nested1
+ *     {
+ *         int a;
+ *         int b;
+ *         Nested2 c;
+ *     }
+ *     class Nested2
+ *     {
+ *         int a;
+ *         int b;
+ *     }
+ *     Nested1 a;
+ *     Nested2 b;
+ * }
+ */
 public interface IHelloWorld
 {
     void HelloWorld();

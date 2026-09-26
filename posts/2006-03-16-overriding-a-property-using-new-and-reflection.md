@@ -16,11 +16,7 @@ class Base {
     public string MyName {
         set {}
         get{ return "Hello";}
-```
-
-}a
-
-```csharp
+    }
 }
 class Derived : Base {
     public new int MyName {

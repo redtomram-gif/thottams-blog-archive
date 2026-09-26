@@ -57,9 +57,9 @@ I also wrote the following configuration file such that the appropriate listener
 
 ETW.exe.config
 
-<configuration>
 
 ```xml
+<configuration>
   <system.diagnostics>
     <sources>
       <source name="TraceSourceApp" switchName="SourceSwitch" switchType="System.Diagnostics.SourceSwitch">
@@ -81,9 +81,9 @@ ETW.exe.config
                initializeData="{BA2DC22C-CCCE-4D17-AFC9-9811DD739970}" />
     </sharedListeners>
   </system.diagnostics>
+</configuration>
 ```
 
-</configuration>
 
 I compiled the cs file as csc ETW.cs /d:TRACE and got etw.exe. On running etw.exe I see the trace messages in the screen. This is because of the fact that consolelistener is added as a listener.
 

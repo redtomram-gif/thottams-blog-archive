@@ -85,9 +85,9 @@ Let us create a config file for the application as below:
 
 Application.exe.config:
 
-<configuration>
 
 ```xml
+<configuration>
    <runtime>
       <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
          <dependentAssembly>
@@ -101,9 +101,9 @@ Application.exe.config:
          </dependentAssembly>
       </assemblyBinding>
    </runtime>
+</configuration>
 ```
 
-</configuration>
 
 If you run the application, you will get the following output:
 
@@ -113,9 +113,9 @@ Inside HelperMethod: Version = helper, Version=1.0.0.0, Culture=neutral, PublicK
 
 In order to bind the application to version 2.0.0.0 of the helper assembly, let us add a bindingRedirect which moves version 1.0.0.0 to 2.0.0.0.
 
-<configuration>
 
 ```xml
+<configuration>
    <runtime>
       <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
          <dependentAssembly>
@@ -130,9 +130,9 @@ In order to bind the application to version 2.0.0.0 of the helper assembly, let 
          </dependentAssembly>
       </assemblyBinding>
    </runtime>
+</configuration>
 ```
 
-</configuration>
 
 Now if you run the application you will see the following output:
 
