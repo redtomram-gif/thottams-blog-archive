@@ -94,7 +94,7 @@ String: Hello
 
 Fields:
 
-`MT Field Offset Type VT Attr Value Name`
+MT Field Offset Type VT Attr Value Name
 
 790ff7f0 4000096 4 System.Int32 0 instance 6 m_arrayLength
 
@@ -120,7 +120,7 @@ Size: 12(0xc) bytes
 
 Fields:
 
-`MT Field Offset Type VT Attr Value Name`
+MT Field Offset Type VT Attr Value Name
 
 790fc6cc 4000001 4 System.String 0 instance 00000000 str
 
@@ -141,7 +141,7 @@ Size: 12(0xc) bytes
 
 Fields:
 
-`MT Field Offset Type VT Attr Value Name`
+MT Field Offset Type VT Attr Value Name
 
 790fc6cc 4000001 4 System.String 0 instance 01411970 str
 
@@ -161,7 +161,7 @@ String: Member Variable
 
 Fields:
 
-`MT Field Offset Type VT Attr Value Name`
+MT Field Offset Type VT Attr Value Name
 
 790ff7f0 4000096 4 System.Int32 0 instance 16 m_arrayLength
 

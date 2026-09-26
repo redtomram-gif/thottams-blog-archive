@@ -103,7 +103,7 @@ a. Throw new ArgumentException()
 
 b. Throw new ArgumentException(innerException)
 
-```text
+```csharp
 c. Throw e;
 d. Throw;
 ```
@@ -124,7 +124,7 @@ a. Throw new ArgumentException(innerException); (or)
 
 2. If you want to log contextual information and pass on the same exception
 
-```text
+```csharp
 a. Throw;
 If you use the finally pattern as below, then you don’t need the throw;
 ```

@@ -11,7 +11,7 @@ Generic argument is not allowed in the constructor. When I compile the code belo
 
 error CS1519: Invalid token '(' in class, struct, or interface
 
-`member declaration`
+member declaration
 
 The reason is simple. You can have a class Foo<T> and a class Foo as described in my previous post. Now when you says
 

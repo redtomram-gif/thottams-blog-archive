@@ -69,9 +69,10 @@ Let us compile the two versions of the helper methods and place them in the GAC 
 
 C:\temp\AppDomain>DomMain.exe
 
+```text
 V1 Type = Helper, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94
-
 V2 Type = Helper, Version=2.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94
+```
 
 The types are different
 

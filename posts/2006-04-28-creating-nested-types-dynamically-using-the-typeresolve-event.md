@@ -24,14 +24,12 @@ using System.Reflection.Emit;
 
 * class Enclosing
 
-`* {`
-
-* public void Enclosing()
-
 ```csharp
 * {
-    * Console.WriteLine("Hello");
-    * }
+    * public void Enclosing()
+    * {
+        * Console.WriteLine("Hello");
+        * }
 ```
 
 * class Nested1

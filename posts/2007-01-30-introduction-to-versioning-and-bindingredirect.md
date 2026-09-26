@@ -109,7 +109,7 @@ If you run the application, you will get the following output:
 
 Inside HelperMethod: Version = helper, Version=1.0.0.0, Culture=neutral, PublicK
 
-eyToken=bcabfaff346163aa
+`eyToken=bcabfaff346163aa`
 
 In order to bind the application to version 2.0.0.0 of the helper assembly, let us add a bindingRedirect which moves version 1.0.0.0 to 2.0.0.0.
 
@@ -138,7 +138,7 @@ Now if you run the application you will see the following output:
 
 Inside HelperMethod: Version = helper, Version=2.0.0.0, Culture=neutral, PublicK
 
-eyToken=bcabfaff346163aa
+`eyToken=bcabfaff346163aa`
 
 ## Comments
 

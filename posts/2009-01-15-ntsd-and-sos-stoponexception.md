@@ -57,13 +57,16 @@ ntsd program.exe
 
 sxe ld mscorwks
 
-```text
 g
+
+```text
 .loadby sos msorwks
 !StopOnException -Create System.ArgumentException 1
-g
-!ClrStack -a
 ```
+
+g
+
+`!ClrStack -a`
 
 OS Thread Id: 0x103c (0)
 
@@ -97,7 +100,7 @@ Message: Value does not fall within the expected range.
 
 InnerException: <none>
 
-StackTrace (generated):
+`StackTrace (generated):`
 
 <none>
 

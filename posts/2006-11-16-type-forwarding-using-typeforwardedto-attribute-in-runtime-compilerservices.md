@@ -73,8 +73,9 @@ Re-publish the original assembly, but this time with a type forwarded
 using System;
 using System.Runtime.CompilerServices;
 [assembly:TypeForwardedTo(typeof(ClassToBeForwardedLater))]
-Let us compile the original library as below
 ```
+
+Let us compile the original library as below
 
 csc /t:library /r:newlibrary.dll original.cs
 

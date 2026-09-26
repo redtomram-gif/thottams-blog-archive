@@ -7,7 +7,7 @@ source: https://learn.microsoft.com/en-us/archive/blogs/thottams/load-contexts-a
 
 # Load contexts and Type.GetType
 
-`Type.GetType(AN,T) actually translates to Assembly.Load(AN).GetType(T). This actually can be the cause of many confusions. Often programmers end up in a situation where they have explicitly loaded the assembly, but Type.GetType is not able to find the type from the assembly they just loaded.`
+Type.GetType(AN,T) actually translates to Assembly.Load(AN).GetType(T). This actually can be the cause of many confusions. Often programmers end up in a situation where they have explicitly loaded the assembly, but Type.GetType is not able to find the type from the assembly they just loaded.
 
 Let us look into the sample below. Let us do a Type.GetType for Foo and provide the path to the location of Foo in the config file as mentioned below.
 
@@ -61,7 +61,7 @@ public class Foo {
 
 If you run TypeSample.exe you will get the following output
 
-V1 Type = Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94
+`V1 Type = Foo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1faea1974f697f94`
 
 If you run the sample under ntsd you will notice that Foo.dll is loaded from directory v1 in the default AppDomain
 
@@ -85,7 +85,7 @@ Name: None
 
 --------------------------------------
 
-Shared Domain: 7a391138
+`Shared Domain: 7a391138`
 
 LowFrequencyHeap: 7a39115c
 
@@ -191,7 +191,7 @@ Name: None
 
 --------------------------------------
 
-Shared Domain: 7a391138
+`Shared Domain: 7a391138`
 
 LowFrequencyHeap: 7a39115c
 
@@ -285,7 +285,7 @@ Name: None
 
 --------------------------------------
 
-Shared Domain: 7a391138
+`Shared Domain: 7a391138`
 
 LowFrequencyHeap: 7a39115c
 

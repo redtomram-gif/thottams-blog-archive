@@ -18,11 +18,7 @@ Managed C++ code:
 using namespace System;
 #include <stdio.h>
 #include <wchar.h>
-```
-
 __declspec(dllexport) void NativeFlatMethod(const wchar_t *szParam)
-
-```cpp
 {
     wprintf(L"%s \n", szParam);
 }
@@ -30,16 +26,14 @@ __declspec(dllexport) void NativeFlatMethod(const wchar_t *szParam)
 
 __gc public class FlatAPIWrapper
 
-`{`
-
-public:
-
 ```csharp
-static void NativeFlatMethodWrapper(System::String *szParam)
 {
-    const wchar_t __pin *pChar = PtrToStringChars(szParam);
-    NativeFlatMethod(pChar);
-}
+    public:
+    static void NativeFlatMethodWrapper(System::String *szParam)
+    {
+        const wchar_t __pin *pChar = PtrToStringChars(szParam);
+        NativeFlatMethod(pChar);
+    }
 };
 ```
 

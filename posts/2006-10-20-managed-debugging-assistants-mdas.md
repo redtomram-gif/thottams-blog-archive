@@ -71,7 +71,7 @@ This enables the pInvokeStackImbalance MDA which will fire off when it finds irr
 
 Set the environment variable `COMPLUS_MDA as mentioned below.`
 
-`COMPLUS_MDA=` pInvokeStackImbalance
+`COMPLUS_MDA= pInvokeStackImbalance`
 
 **3. Enabling MDA’s from Visual Studio**
 

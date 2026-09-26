@@ -65,33 +65,22 @@ public class Program
 
 This works like a charm. I initially had problems with this VB code. I looked at the IL code for both and figured out that I had constructed structures in C# for Process_Information, Security_Attricutes etc, but had marked them as classes in VB. This was mking the call to fail. I figured this out after looking into the IL from VB and C# to see what was different between the two. I changed the VB to struct and it works like a charm in VB too. Check the VB code below!
 
+```vb
 Imports System.Runtime.InteropServices
-
 Imports System.Security.Permissions
-
 Imports System.Reflection
-
 Module Module1
-
 Sub Main()
-
 StartupNotepad()
-
-`Console.ReadLine()`
-
+Console.ReadLine()
 End Sub
-
 Sub StartupNotepad()
-
 Dim retValue As Boolean
-
 Dim pInfo As PROCESS_INFORMATION = New PROCESS_INFORMATION()
-
 Dim sInfo As STARTUPINFO = New STARTUPINFO()
-
 retValue = CreateProcess("c:\\windows\\system32\\NotePad.exe", Nothing, IntPtr.Zero, IntPtr.Zero, False, 0, IntPtr.Zero, Nothing, sInfo, pInfo)
-
 End Sub
+```
 
 <StructLayout(LayoutKind.Sequential)> _
 
@@ -105,7 +94,7 @@ Public dwProcessID As UInteger
 
 Public dwThreadID As UInteger
 
-End Structure 'PROCESS_INFORMATION
+`End Structure 'PROCESS_INFORMATION`
 
 <StructLayout(LayoutKind.Sequential)> _
 
@@ -117,7 +106,7 @@ Public lpSecurityDescriptor As IntPtr
 
 Public bInheritHandle As Boolean
 
-End Structure 'SECURITY_ATTRIBUTES
+`End Structure 'SECURITY_ATTRIBUTES`
 
 <StructLayout(LayoutKind.Sequential)> _
 
@@ -159,11 +148,11 @@ Public hStdOutput As IntPtr
 
 Public hStdError As IntPtr
 
-End Structure 'STARTINFO
+`End Structure 'STARTINFO`
 
 <DllImport("kernel32.dll")> _
 
-Function CreateProcess( _
+`Function CreateProcess( _`
 
 ByVal lpApplicationName As String, _
 
@@ -185,9 +174,10 @@ ByRef lpStartupInfo As STARTUPINFO, _
 
 ByRef lpProcessInformation As PROCESS_INFORMATION) As Boolean
 
+```vb
 End Function
-
 End Module
+```
 
 ## Comments
 

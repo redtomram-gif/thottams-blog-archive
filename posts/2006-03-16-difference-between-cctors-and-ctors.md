@@ -36,46 +36,36 @@ class Demo
         // Call to get a constructor that does not take any parameters using the BindingFlags.Static will return the .cctor which
         // is the static constructor, but this cannot be invoked
         //
-```
-
-ConstructorInfo ctor = typeof(Test).GetConstructor(
-
-BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null,
-
-```csharp
-CallingConventions.Standard, paramtypes, null);
-// The below snippet of code will return 3 constructors
-//
-ConstructorInfo[] c = typeof(Test).GetConstructors(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-// Reflection returns the static constructor for the type as well which cannot be invoked explicitly
-// In the example below you will see a list of constructors including the cctor which is the only one that does not take any parameters
-// This cannot be invoked.
-foreach (ConstructorInfo c1 in c)
-{
-    Console.WriteLine(c1.ToString());
-}
-// The below snippet of code will return 2 constructors
-//
-```
-
-ctor = typeof(Test).GetConstructor(
-
-BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null,
-
-```csharp
-CallingConventions.Standard, paramtypes, null);
-c = typeof(Test).GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-// Reflection returns the static constructor for the type as well which cannot be invoked explicitly
-// In the example below you will see a list of constructors including the cctor which is the only one that does not take any parameters
-// This cannot be invoked.
-foreach (ConstructorInfo c1 in c)
-{
-    Console.WriteLine(c1.ToString());
-}
-// This constructor cannot be invoked as this is .cctor for the type. You will get a System.MemberAccessException
-//
-ctor.Invoke(Type.EmptyTypes);
-}
+        ConstructorInfo ctor = typeof(Test).GetConstructor(
+            BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null,
+            CallingConventions.Standard, paramtypes, null);
+        // The below snippet of code will return 3 constructors
+        //
+        ConstructorInfo[] c = typeof(Test).GetConstructors(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        // Reflection returns the static constructor for the type as well which cannot be invoked explicitly
+        // In the example below you will see a list of constructors including the cctor which is the only one that does not take any parameters
+        // This cannot be invoked.
+        foreach (ConstructorInfo c1 in c)
+        {
+            Console.WriteLine(c1.ToString());
+        }
+        // The below snippet of code will return 2 constructors
+        //
+        ctor = typeof(Test).GetConstructor(
+            BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null,
+            CallingConventions.Standard, paramtypes, null);
+        c = typeof(Test).GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        // Reflection returns the static constructor for the type as well which cannot be invoked explicitly
+        // In the example below you will see a list of constructors including the cctor which is the only one that does not take any parameters
+        // This cannot be invoked.
+        foreach (ConstructorInfo c1 in c)
+        {
+            Console.WriteLine(c1.ToString());
+        }
+        // This constructor cannot be invoked as this is .cctor for the type. You will get a System.MemberAccessException
+        //
+        ctor.Invoke(Type.EmptyTypes);
+    }
 }
 ```
 
