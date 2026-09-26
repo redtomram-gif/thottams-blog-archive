@@ -141,6 +141,12 @@ figure.code figcaption {
   border-bottom: 1px solid var(--line);
   padding: 9px 14px;
 }
+figure.code figcaption .lang {
+  float: right;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  opacity: 0.75;
+}
 figure.code pre {
   margin: 0;
   padding: 14px 16px;

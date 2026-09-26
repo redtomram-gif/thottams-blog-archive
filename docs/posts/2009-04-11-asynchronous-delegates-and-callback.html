@@ -17,7 +17,7 @@
 <p class="meta">
   <time>2009-04-11</time>
   <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/asynchronous-delegates-and-callback">original post</a>
-  <a class="repo" href="https://github.com/redtomram-gif/blog-async-delegate-callback">code sample &rarr;</a>
+  <a class="repo" href="https://redtomram-gif.github.io/blog-async-delegate-callback/">code sample &rarr;</a>
 </p>
 <p>I was debugging some issue related to asynchronous delegates and wanted to share that information with everyone.</p>
 <p>When you do a BeginInvoke the delegate is invoked on a thread from the thread pool and on completion the callback is also called on the same thread pool thread. Now, any exceptions that is thrown on this thread cannot be caught by the main thread and so will crash the process. If you want to handle the exception, then you have to catch the expected exception in the callback and store it to some state and rethrow the exception from the main thread so that the callers above you can handle it gracefully.</p>

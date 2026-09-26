@@ -17,7 +17,7 @@
 <p class="meta">
   <time>2008-04-30</time>
   <a href="https://learn.microsoft.com/en-us/archive/blogs/thottams/unhandled-exception-handler-unhandledexceptioneventhandler-to-collect-more-information-about-unexpected-exceptions">original post</a>
-  <a class="repo" href="https://github.com/redtomram-gif/blog-appdomain-unhandled-exception">code sample &rarr;</a>
+  <a class="repo" href="https://redtomram-gif.github.io/blog-appdomain-unhandled-exception/">code sample &rarr;</a>
 </p>
 <p>To continue on the exception post from last week I did a bit more research and learnt some more. I thought that I will share that with everyone. We had some interesting conversations in our team about exception handling and the following thought came up.</p>
 <p>.NET gives you an option to write an unhandled exception handler which can be used to catch exceptions that you did not expect in your code and hence did not handle in your catch block. These are errors in the code as you did not expect them and should fail the application. This interestingly works even if you “throw;” or “throw new Exception(..)” from within the catch block.</p>
